@@ -1,0 +1,2676 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>ROBOplan – Offline-Demo</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: #24272c;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+  }
+
+  /* iPad Gehäuse */
+  .ipad {
+    width: min(94vw, 1100px, calc(94dvh * 4 / 3));
+    aspect-ratio: 4 / 3;
+    padding: 14px;
+    background: linear-gradient(
+      135deg, #a5a7ab, #e3e4e6 35%,
+      #74777d 75%, #c8c9cc
+    );
+    border-radius: 42px;
+    box-shadow:
+      0 25px 65px rgba(0,0,0,.55),
+      inset 0 0 3px #fff;
+  }
+
+  /* Schwarzer Displayrahmen */
+  .bezel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #101114;
+    border-radius: 31px;
+    display: flex;
+    align-items: center;
+    padding: 14px 58px;
+  }
+
+  /* Bildschirm */
+  .screen {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    max-height: 100%;
+    border-radius: 5px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 0 0 2px #050505;
+  }
+
+  .screen iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: white;
+  }
+
+  /* Frontkamera links */
+  .camera {
+    position: absolute;
+    left: 25px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle at 35% 35%,
+      #305078, #080c18 65%, #000
+    );
+    border: 2px solid #22252a;
+    box-shadow: 0 0 0 2px #090a0d;
+  }
+
+  /* Homebutton rechts */
+  .home {
+    position: absolute;
+    right: 17px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 2px solid #303238;
+    background: linear-gradient(
+      145deg, #17181a, #08090b
+    );
+    box-shadow:
+      inset 0 1px 3px #000,
+      0 1px 1px #444;
+    display: grid;
+    place-items: center;
+  }
+
+  .home::after {
+    content: "";
+    width: 13px;
+    height: 13px;
+    border: 1.5px solid #55585e;
+    border-radius: 3px;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="ipad">
+  <div class="bezel">
+
+    <div class="camera"></div>
+
+    <div class="screen">
+      <iframe srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;de&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;utf-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1, viewport-fit=cover&quot;&gt;
+    &lt;meta name=&quot;theme-color&quot; content=&quot;#f4f7f8&quot;&gt;
+    &lt;title&gt;
+      ROBOplan
+    &lt;/title&gt;
+    &lt;style&gt;
+:root {
+  --ink:#203b38;
+  --muted:#7c8987;
+  --green:#29765e;
+  --line:#e5ebe8;
+  --bg:#f4f7f6
+}
+* {
+  box-sizing:border-box
+}
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font:14px -apple-system,BlinkMacSystemFont,&#x27;Segoe UI&#x27;,sans-serif
+}
+button,a {
+  -webkit-tap-highlight-color:transparent
+}
+button {
+  font:inherit;
+  cursor:pointer
+}
+button:focus-visible,a:focus-visible {
+  outline:3px solid #51a789;
+  outline-offset:4px
+}
+header {
+  height:88px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  padding:0 36px;
+  border-bottom:1px solid var(--line);
+  gap:50px
+}
+.brand {
+  font-size:26px;
+  font-weight:750;
+  letter-spacing:-1.5px;
+  display:flex;
+  gap:10px;
+  align-items:center
+}
+.logo {
+  display:grid;
+  place-items:center;
+  background:var(--green);
+  width:35px;
+  height:35px;
+  border-radius:12px;
+  color:white;
+  font-size:24px
+}
+nav {
+  display:flex;
+  gap:9px;
+  height:100%;
+  align-items:center
+}
+nav a {
+  padding:13px 20px;
+  text-decoration:none;
+  color:#71817d;
+  border-radius:10px;
+  font-weight:600;
+  display:flex;
+  gap:10px;
+  align-items:center
+}
+nav a.active {
+  background:var(--green);
+  color:#fff
+}
+.headright {
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:18px
+}
+.connection {
+  font-size:12px;
+  color:#5c7770
+}
+.voice-assistant {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  flex-shrink:0;
+  width:auto;
+  height:44px;
+  padding:9px 13px;
+  white-space:nowrap;
+  font-size:12px;
+  font-weight:600;
+  border:1px solid var(--green);
+  border-radius:9px;
+  background:var(--green);
+  color:#fff
+}
+.dot {
+  display:inline-block;
+  width:7px;
+  height:7px;
+  border-radius:100%;
+  background:#409770;
+  margin-right:6px
+}
+.avatar {
+  background:#edf1ec;
+  border:1px solid #dce5df;
+  border-radius:50%;
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  font-size:12px;
+  font-weight:700
+}
+main {
+  max-width:1560px;
+  margin:auto;
+  padding:32px 36px
+}
+.intro {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:26px
+}
+h1 {
+  font-size:28px;
+  letter-spacing:-.8px;
+  margin:0 0 8px
+}
+.sub {
+  color:var(--muted);
+  margin:0;
+  font-size:13px
+}
+.day {
+  text-align:right;
+  font-size:13px;
+  line-height:1.8
+}
+.layout {
+  display:grid;
+  grid-template-columns:minmax(265px,.82fr) minmax(0,1.8fr);
+  gap:24px
+}
+.left {
+  display:flex;
+  flex-direction:column;
+  gap:22px
+}
+.panel,.robot {
+  background:white;
+  border:1px solid var(--line);
+  border-radius:17px;
+  overflow:hidden
+}
+.panelhead {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:19px 20px
+}
+h2 {
+  font-size:15px;
+  margin:0
+}
+.tiny {
+  font-size:11px;
+  color:var(--muted)
+}
+.map {
+  position:relative;
+  overflow:hidden;
+  background:#dce4d4;
+  isolation:isolate
+}
+.map svg.land {
+  width:100%;
+  height:100%;
+  position:absolute;
+  inset:0
+}
+.overview {
+  height:300px;
+  margin:0 8px 8px;
+  border-radius:11px
+}
+.maplabel {
+  position:absolute;
+  left:16px;
+  bottom:16px;
+  background:#fffdf7ed;
+  border:1px solid #fff;
+  border-radius:7px;
+  padding:8px 10px;
+  font-size:10px;
+  letter-spacing:.4px;
+  color:#5c6c60
+}
+.maptools {
+  position:absolute;
+  bottom:13px;
+  right:12px;
+  display:flex;
+  gap:5px
+}
+.maptools button {
+  width:31px;
+  height:31px;
+  border:1px solid #dfe6dc;
+  background:white;
+  border-radius:7px;
+  color:var(--ink);
+  font-size:19px
+}
+.pin {
+  position:absolute;
+  background:var(--pin,#29765e);
+  color:white;
+  border:3px solid white;
+  border-radius:50%;
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  box-shadow:0 0 0 12px color-mix(in srgb,var(--pin,#29765e) 15%,transparent),0 3px 8px #28423430;
+  font-size:12px;
+  font-weight:700;
+  z-index:2
+}
+.pin.selected {
+  box-shadow:0 0 0 18px #29765e30,0 3px 8px #28423430
+}
+.weather {
+  padding:20px
+}
+.weather-top {
+  display:flex;
+  justify-content:space-between;
+  align-items:center
+}
+.weather-main {
+  display:flex;
+  align-items:center;
+  gap:18px;
+  margin:22px 0
+}
+.sun {
+  color:#e9b746;
+  font-size:58px;
+  line-height:1
+}
+.temp {
+  font-size:36px;
+  font-weight:600;
+  letter-spacing:-1px
+}
+.temp small {
+  font-size:21px
+}
+.weather-main p {
+  margin:3px 0;
+  color:var(--muted);
+  font-size:12px
+}
+.weather-row {
+  display:flex;
+  justify-content:space-between;
+  border-top:1px solid #edf1ee;
+  padding:12px 0;
+  font-size:12px
+}
+.weather-row:last-child {
+  padding-bottom:0
+}
+.weather-row span {
+  color:#7e8d88
+}
+.fleetbar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:0 0 15px
+}
+.fleetbar h2 {
+  font-size:16px
+}
+.live {
+  color:var(--green);
+  font-size:12px;
+  background:#eaf2ec;
+  border-radius:20px;
+  padding:7px 10px
+}
+.robots {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px
+}
+.robot {
+  padding:20px;
+  transition:box-shadow .2s,transform .2s
+}
+.robot:hover {
+  box-shadow:0 7px 25px #284e3d0b;
+  transform:translateY(-2px)
+}
+.robothead {
+  display:flex;
+  justify-content:space-between;
+  align-items:center
+}
+.robotname {
+  display:flex;
+  gap:10px;
+  align-items:center
+}
+.roboticon {
+  background:#f1f5f1;
+  border-radius:9px;
+  width:35px;
+  height:35px;
+  display:grid;
+  place-items:center;
+  color:var(--green)
+}
+.robot h3 {
+  font-size:16px;
+  margin:0 0 4px;
+  letter-spacing:-.2px
+}
+.robotid {
+  font-size:10px;
+  color:var(--muted);
+  letter-spacing:.7px
+}
+.battery {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:11px;
+  color:#6d7c75
+}
+.battery i {
+  height:11px;
+  width:21px;
+  border:1px solid #85978b;
+  border-radius:3px;
+  padding:2px;
+  position:relative
+}
+.battery i:after {
+  content:&#x27;&#x27;;
+  position:absolute;
+  width:2px;
+  height:5px;
+  background:#85978b;
+  right:-3px;
+  top:2px
+}
+.battery b {
+  display:block;
+  height:100%;
+  background:#76a681;
+  width:var(--b)
+}
+.statusline {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:17px
+}
+.badge {
+  font-size:10px;
+  color:var(--green);
+  background:#eef5ef;
+  padding:5px 8px;
+  border-radius:5px
+}
+.area {
+  font-size:11px;
+  color:var(--muted)
+}
+.metrics {
+  display:flex;
+  align-items:center;
+  gap:21px;
+  margin:17px 0
+}
+.ring {
+  width:77px;
+  height:77px;
+  border-radius:50%;
+  background:conic-gradient(var(--green) calc(var(--p)*1%),#eaf0ec 0);
+  display:grid;
+  place-items:center;
+  position:relative
+}
+.ring:before {
+  content:&#x27;&#x27;;
+  position:absolute;
+  inset:6px;
+  background:white;
+  border-radius:50%
+}
+.ring strong {
+  position:relative;
+  font-size:20px;
+  letter-spacing:-.6px
+}
+.ring strong small {
+  font-size:11px
+}
+.remaining {
+  border-left:1px solid var(--line);
+  padding-left:20px
+}
+.remaining span {
+  display:block;
+  color:var(--muted);
+  font-size:10px;
+  margin-bottom:5px
+}
+.remaining strong {
+  display:block;
+  font-size:19px;
+  letter-spacing:-.4px
+}
+.remaining small {
+  display:block;
+  color:var(--muted);
+  font-size:10px;
+  margin-top:5px
+}
+.mini {
+  height:108px;
+  border-radius:9px;
+  width:100%;
+  border:0;
+  display:block;
+  text-align:left
+}
+.mini .pin {
+  top:38%;
+  left:50%;
+  width:29px;
+  height:29px;
+  font-size:10px
+}
+.mini .maplabel {
+  bottom:9px;
+  left:10px;
+  padding:5px 7px;
+  font-size:9px
+}
+.robotfoot {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:13px;
+  font-size:10px;
+  color:var(--muted)
+}
+.detail {
+  background:none;
+  border:0;
+  color:var(--green);
+  font-size:11px;
+  font-weight:600;
+  padding:6px 0 6px 10px
+}
+.footer {
+  display:flex;
+  justify-content:space-between;
+  margin-top:24px;
+  color:#8b9791;
+  font-size:10px
+}
+.demo {
+  padding:4px 6px;
+  border:1px solid #dfe6df;
+  border-radius:4px;
+  letter-spacing:.5px
+}
+.placeholder {
+  padding:65px 30px;
+  background:white;
+  border:1px solid var(--line);
+  border-radius:16px
+}
+.placeholder h2 {
+  font-size:25px;
+  margin:12px 0
+}
+.placeholder p {
+  color:var(--muted)
+}
+.primary {
+  background:var(--green);
+  border:0;
+  border-radius:9px;
+  padding:13px 18px;
+  color:white;
+  margin-top:15px
+}
+dialog {
+  border:1px solid var(--line);
+  border-radius:20px;
+  max-width:440px;
+  width:calc(100% - 32px);
+  padding:28px;
+  color:var(--ink);
+  box-shadow:0 20px 80px #102a3430
+}
+dialog::backdrop {
+  background:#173d3655;
+  backdrop-filter:blur(3px)
+}
+dialog h2 {
+  font-size:23px;
+  margin:10px 0
+}
+dialog p {
+  line-height:1.7;
+  color:#71817b
+}
+.dialogrow {
+  display:flex;
+  justify-content:space-between;
+  padding:13px 0;
+  border-bottom:1px solid var(--line)
+}
+.close {
+  float:right;
+  border:0;
+  background:#f0f4f0;
+  border-radius:50%;
+  width:32px;
+  height:32px;
+  font-size:20px
+}
+.notice {
+  font-size:11px!important
+}
+[hidden] {
+  display:none!important
+}
+@media(min-width:1400px) {
+  .overview {
+    height:340px
+  }
+  .mini {
+    height:139px
+  }
+  .robot {
+    padding:23px
+  }
+  .weather {
+    padding:24px
+  }
+}
+@media(max-width:1050px) {
+  header {
+    padding:0 24px;
+    gap:24px
+  }
+  .connection {
+    display:none
+  }
+  main {
+    padding:25px 24px
+  }
+  .layout {
+    gap:18px;
+    grid-template-columns:minmax(240px,.8fr) minmax(0,1.8fr)
+  }
+  .robot {
+    padding:15px
+  }
+  .robots {
+    gap:15px
+  }
+  .metrics {
+    gap:13px
+  }
+  .remaining {
+    padding-left:13px
+  }
+  .remaining strong {
+    font-size:17px
+  }
+  .area {
+    font-size:10px
+  }
+  .ring {
+    width:66px;
+    height:66px
+  }
+  .overview {
+    height:280px
+  }
+}
+@media(max-width:760px) {
+  header {
+    height:auto;
+    min-height:76px;
+    flex-wrap:wrap;
+    padding:17px 18px;
+    gap:16px
+  }
+  .headright {
+    position:absolute;
+    right:18px;
+    top:18px
+  }
+  nav {
+    order:3;
+    width:100%;
+    gap:5px
+  }
+  nav a {
+    flex:1;
+    justify-content:center;
+    padding:12px 6px;
+    font-size:12px
+  }
+  .brand {
+    font-size:24px
+  }
+  main {
+    padding:24px 16px
+  }
+  .intro {
+    align-items:flex-start
+  }
+  .day {
+    font-size:11px
+  }
+  .layout {
+    grid-template-columns:1fr
+  }
+  .left {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px
+  }
+  .overview {
+    height:245px
+  }
+  .weather {
+    padding:16px
+  }
+  .weather-row {
+    font-size:10px;
+    padding:10px 0
+  }
+  .weather-main {
+    margin:15px 0;
+    gap:9px
+  }
+  .temp {
+    font-size:30px
+  }
+  .sun {
+    font-size:42px
+  }
+  .weather-top .tiny {
+    display:none
+  }
+  .panelhead {
+    padding:16px
+  }
+  .fleetbar {
+    margin-top:8px
+  }
+  .robots {
+    gap:14px
+  }
+  .robothead {
+    align-items:flex-start
+  }
+  .battery {
+    font-size:10px
+  }
+  .roboticon {
+    display:none
+  }
+  .statusline {
+    gap:5px
+  }
+  .metrics {
+    gap:10px
+  }
+  .ring {
+    width:60px;
+    height:60px
+  }
+  .remaining {
+    padding-left:10px
+  }
+  .remaining strong {
+    font-size:15px
+  }
+  .robot {
+    padding:14px
+  }
+  .mini {
+    height:100px
+  }
+  .area {
+    max-width:68px;
+    text-align:right
+  }
+  .footer {
+    gap:12px
+  }
+}
+@media(max-width:380px) {
+  .robots,.left {
+    grid-template-columns:1fr
+  }
+  .day {
+    display:none
+  }
+  .overview {
+    height:230px
+  }
+}
+/* Tablet-Dashboard: nur die Roboterliste scrollt. */
+html,body {
+  width:100%;
+  height:100%;
+  overflow:hidden
+}
+body {
+  display:flex;
+  flex-direction:column
+}
+body&gt;header {
+  flex:0 0 88px;
+  position:relative;
+  z-index:5
+}
+body&gt;main {
+  width:100%;
+  max-width:1560px;
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  padding:16px 24px 10px;
+  overflow:hidden
+}
+#home {
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  min-height:0;
+  overflow:hidden
+}
+#home[hidden] {
+  display:none
+}
+.intro {
+  flex:0 0 auto;
+  margin-bottom:14px
+}
+.layout {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:16px;
+  flex:1;
+  min-height:0;
+  overflow:hidden
+}
+.left {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:minmax(0,1.2fr) minmax(0,.8fr);
+  gap:14px;
+  min-height:0;
+  overflow:hidden
+}
+.left&gt;.panel {
+  min-width:0;
+  min-height:0
+}
+.left&gt;.panel:first-child {
+  display:flex;
+  flex-direction:column
+}
+.left&gt;.panel:first-child .panelhead {
+  flex:0 0 auto;
+  padding:13px 16px
+}
+.overview {
+  height:auto!important;
+  flex:1;
+  min-height:0;
+  margin:0 8px 8px
+}
+.weather {
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  padding:14px 18px!important;
+  overflow:hidden
+}
+.weather-main {
+  margin:5px 0;
+  gap:12px
+}
+.weather-row {
+  padding:7px 0
+}
+.layout&gt;section {
+  min-height:0;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden
+}
+.fleetbar {
+  flex:0 0 auto;
+  margin-bottom:10px
+}
+.robots {
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  align-content:start;
+  grid-auto-rows:max-content;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  padding:1px 5px 8px 1px;
+  gap:12px
+}
+.robot {
+  min-width:0;
+  padding:14px!important
+}
+.mini {
+  height:92px!important
+}
+.metrics {
+  margin:10px 0
+}
+.statusline {
+  margin-top:10px
+}
+.robotfoot {
+  margin-top:8px
+}
+.footer {
+  flex:0 0 auto;
+  margin-top:9px;
+  padding-bottom:2px
+}
+#other:not([hidden]) {
+  overflow-y:auto;
+  min-height:0
+}
+@media(max-width:760px) {
+  body&gt;header {
+    height:76px;
+    min-height:76px;
+    flex:0 0 76px;
+    flex-wrap:nowrap;
+    padding:8px 12px;
+    gap:12px
+  }
+  .headright {
+    position:static;
+    margin-left:auto
+  }
+  nav {
+    order:0;
+    width:auto;
+    flex:1;
+    gap:2px
+  }
+  nav a {
+    padding:8px 5px;
+    font-size:10px
+  }
+  .brand {
+    font-size:20px
+  }
+  body&gt;main {
+    padding:10px 12px 6px
+  }
+  .intro {
+    margin-bottom:8px
+  }
+  h1 {
+    font-size:21px;
+    margin-bottom:3px
+  }
+  .sub {
+    font-size:11px
+  }
+  .day {
+    font-size:10px
+  }
+  .layout {
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:10px
+  }
+  .left {
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:minmax(0,1.2fr) minmax(0,.8fr);
+    gap:10px
+  }
+  .weather {
+    padding:10px!important
+  }
+  .weather-main {
+    gap:7px;
+    margin:3px 0
+  }
+  .sun {
+    font-size:31px
+  }
+  .temp {
+    font-size:25px
+  }
+  .temp small {
+    font-size:14px
+  }
+  .weather-row {
+    font-size:10px;
+    padding:5px 0
+  }
+  .panelhead {
+    padding:10px!important
+  }
+  .robots {
+    grid-template-columns:minmax(0,1fr)
+  }
+  .robot {
+    padding:12px!important
+  }
+  .roboticon {
+    display:grid
+  }
+  .mini {
+    height:80px!important
+  }
+  .footer {
+    font-size:9px
+  }
+}
+#fields {
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  gap:16px
+}
+.field-heading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between
+}
+.field-layout {
+  flex:1;
+  min-height:0;
+  display:grid;
+  grid-template-columns:minmax(0,2fr) minmax(260px,1fr);
+  gap:20px
+}
+.field-map {
+  min-height:0;
+  border:1px solid var(--line);
+  border-radius:17px;
+  background:#e4ebdc;
+  overflow:hidden;
+  position:relative
+}
+.field-map svg {
+  display:block;
+  width:100%;
+  height:100%
+}
+.field-shape {
+  cursor:pointer;
+  stroke:#fff;
+  stroke-width:4;
+  transition:fill .2s
+}
+.field-shape.selected {
+  stroke:#29765e;
+  stroke-width:5
+}
+.field-shape:focus-visible {
+  outline:none;
+  stroke:#203b38;
+  stroke-width:7
+}
+.field-list {
+  overflow-y:auto;
+  min-height:0;
+  padding:0 5px 5px 0;
+  display:flex;
+  flex-direction:column;
+  gap:12px
+}
+.field-card {
+  flex-shrink:0;
+  background:white;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:18px
+}
+.field-card.selected {
+  border-color:var(--green);
+  box-shadow:inset 3px 0 var(--green)
+}
+.field-card-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px
+}
+.field-select {
+  border:0;
+  background:none;
+  color:var(--ink);
+  font-size:17px;
+  font-weight:650;
+  padding:0
+}
+.field-info {
+  border:1px solid var(--line);
+  background:#f1f6f2;
+  color:var(--green);
+  border-radius:8px;
+  padding:7px 12px
+}
+.field-card p {
+  margin:10px 0;
+  color:var(--muted);
+  font-size:12px
+}
+.field-card strong {
+  color:var(--ink)
+}
+.field-robots {
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-top:14px
+}
+.field-robots span {
+  background:#eaf3ee;
+  color:var(--green);
+  padding:6px 9px;
+  border-radius:6px;
+  font-size:11px
+}
+.field-legend {
+  position:absolute;
+  bottom:14px;
+  left:14px;
+  background:#ffffffed;
+  padding:10px 13px;
+  border-radius:8px;
+  font-size:11px;
+  color:var(--muted)
+}
+@media(max-width:760px) {
+  .field-layout {
+    grid-template-columns:minmax(0,1.5fr) minmax(200px,1fr);
+    gap:10px
+  }
+  .field-card {
+    padding:13px
+  }
+  .field-heading h1 {
+    font-size:21px
+  }
+  header nav a {
+    gap:2px
+  }
+  .brand {
+    letter-spacing:-1px
+  }
+  header {
+    gap:16px
+  }
+  nav a {
+    padding-left:10px;
+    padding-right:10px
+  }
+}
+@media(max-width:500px) {
+  .field-layout {
+    grid-template-columns:1fr;
+    grid-template-rows:minmax(180px,1fr) minmax(0,1fr)
+  }
+  body&gt;header {
+    flex-wrap:wrap;
+    height:auto;
+    flex-basis:auto
+  }
+  nav {
+    order:3;
+    width:100%;
+    flex-basis:100%
+  }
+  nav a {
+    font-size:9px
+  }
+}
+/* Kompakte Navigation mit festen Symbolgrößen. */
+body&gt;header {
+  gap:28px
+}
+nav {
+  gap:5px;
+  min-width:0;
+  height:auto;
+  padding:5px;
+  background:#f3f6f3;
+  border:1px solid var(--line);
+  border-radius:14px
+}
+nav a {
+  flex:0 0 auto;
+  gap:8px;
+  padding:11px 14px;
+  white-space:nowrap;
+  font-size:13px;
+  border-radius:10px;
+  transition:background .15s,color .15s
+}
+nav a svg {
+  display:block;
+  width:19px;
+  height:19px;
+  flex:0 0 19px
+}
+nav a:hover {
+  background:#e8efea;
+  color:var(--green)
+}
+nav a.active {
+  background:var(--green);
+  color:white;
+  box-shadow:0 2px 5px #203b3815
+}
+@media(max-width:1050px) {
+  body&gt;header {
+    gap:16px
+  }
+  nav a {
+    padding:10px;
+    font-size:12px
+  }
+  .headright {
+    gap:10px
+  }
+}
+@media(max-width:760px) {
+  body&gt;header {
+    flex-wrap:wrap;
+    height:auto;
+    flex-basis:auto;
+    padding:10px 12px;
+    gap:10px
+  }
+  .headright {
+    position:static;
+    margin-left:auto
+  }
+  nav {
+    order:3;
+    flex:1 0 100%;
+    width:100%;
+    gap:3px;
+    padding:4px
+  }
+  nav a {
+    flex:1 1 0;
+    justify-content:center;
+    gap:6px;
+    padding:10px 4px;
+    font-size:11px
+  }
+  nav a svg {
+    width:17px;
+    height:17px;
+    flex-basis:17px
+  }
+}
+@media(max-width:380px) {
+  nav a {
+    font-size:10px;
+    gap:4px
+  }
+  nav a svg {
+    width:15px;
+    height:15px;
+    flex-basis:15px
+  }
+}
+.map-viewport {
+  touch-action:none;
+  cursor:grab;
+  user-select:none;
+  isolation:isolate
+}
+.map-viewport.dragging {
+  cursor:grabbing
+}
+.map-scene {
+  position:absolute;
+  inset:0;
+  transform-origin:0 0;
+  will-change:transform
+}
+.map-scene&gt;svg {
+  width:100%;
+  height:100%;
+  display:block
+}
+.map-controls {
+  position:absolute;
+  right:10px;
+  top:10px;
+  z-index:4;
+  display:flex;
+  gap:4px;
+  cursor:default
+}
+.map-controls button {
+  display:grid;
+  place-items:center;
+  width:32px;
+  height:32px;
+  padding:0;
+  border:1px solid #d5dfd5;
+  border-radius:7px;
+  background:#fffffff2;
+  color:var(--ink);
+  font-size:20px;
+  box-shadow:0 2px 5px #203b3810
+}
+.map-controls button:disabled {
+  opacity:.45;
+  cursor:default
+}
+.mini .map-controls {
+  top:5px;
+  right:5px;
+  gap:3px
+}
+.mini .map-controls button {
+  width:24px;
+  height:24px;
+  font-size:16px
+}
+.maplabel,.field-legend {
+  pointer-events:none;
+  z-index:3
+}
+/* Disposition: Aufgabenpuffer und editierbarer Beispielplan. */
+#auftragsverwaltung{flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;overflow:auto}
+.dispatch-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.dispatch-heading h1{font-size:24px;margin:5px 0}.dispatch-heading p{margin:0}.dispatch-steps{display:flex;gap:22px;align-items:center;color:var(--muted);font-size:11px;padding:10px 14px;background:#eaf0ec;border-radius:9px}.dispatch-steps strong{color:var(--green)}
+.dispatch-layout{display:grid;grid-template-columns:minmax(250px,.85fr) minmax(0,1.8fr);gap:16px;flex:1;min-height:0}.task-buffer{display:flex;flex-direction:column;min-height:0;overflow:hidden}.task-buffer .panelhead{padding:16px;flex-wrap:wrap;gap:8px}.count{font-size:11px;background:#eaf0ec;border-radius:5px;padding:3px 6px;margin-left:5px}.buffer-hint{margin:0 16px 12px;font-size:11px;color:var(--muted)}.dispatch-tasks{overflow:auto;flex:1;min-height:100px;padding:0 12px;display:flex;flex-direction:column;gap:8px}.dispatch-task{border:1px solid var(--line);border-radius:9px;padding:11px;display:flex;gap:10px;background:#fff}.task-number{width:26px;height:26px;display:grid;place-items:center;background:#edf2ed;border-radius:6px;font-size:11px;flex-shrink:0}.dispatch-task h3{margin:0 0 5px;font-size:13px}.dispatch-task p{font-size:11px;color:var(--muted);margin:0}.task-operation{font-size:10px;color:#8a6c32;background:#f6f0e1;border-radius:4px;padding:4px 6px;align-self:flex-start;margin-left:auto;white-space:nowrap}.add-task{margin:12px;border:1px dashed #a9bcb1;border-radius:8px;padding:10px;background:#f7faf8;color:var(--green)}.buffer-footer{border-top:1px solid var(--line);padding:13px 16px;display:grid;gap:5px;font-size:11px}.buffer-footer span{color:var(--muted);font-size:10px}.dispatch-workspace{display:grid;grid-template-rows:minmax(180px,.85fr) minmax(280px,1.3fr);min-height:0;gap:12px;overflow:auto}.dispatch-map-wrap{position:relative;border:1px solid var(--line);border-radius:13px;overflow:hidden;background:#e4ebdc;min-height:180px}.dispatch-map{position:absolute;inset:0}.dispatch-map&gt;svg{width:100%;height:100%}.dispatch-map-caption{position:absolute;top:12px;left:12px;background:#fffffff2;padding:9px 11px;border-radius:7px;font-size:12px;font-weight:600;pointer-events:none}.dispatch-map-caption span{display:block;font-size:9px;color:var(--muted);font-weight:400;margin-top:4px}.dispatch-map-key{position:absolute;bottom:10px;left:12px;font-size:9px;background:#ffffffdf;padding:5px 8px;border-radius:4px;pointer-events:none}.plan-panel{padding:15px;min-width:0;overflow:auto}.plan-heading{display:flex;justify-content:space-between;gap:10px;align-items:center}.plan-heading h2{margin:0;font-size:16px}.plan-heading p{font-size:10px;color:var(--muted);margin:5px 0}.suggest-button{background:#eaf3ee;border:1px solid #bdd4c6;border-radius:7px;padding:9px 10px;color:var(--green);font-size:11px;white-space:nowrap}.plan-rationale{font-size:10px;background:#f0f5f1;padding:9px;border-radius:6px;margin:10px 0;color:var(--green)}.robot-plans{display:grid;gap:8px}.robot-plan{display:grid;grid-template-columns:100px 1fr;gap:8px;align-items:start;border-bottom:1px solid var(--line);padding-bottom:8px}.plan-robot{font-size:12px;font-weight:650;padding-top:6px}.plan-robot small{display:block;font-weight:400;color:var(--muted);font-size:9px;margin-top:5px}.plan-jobs{display:flex;gap:6px;flex-wrap:wrap}.plan-job{background:#f7f9f7;border:1px solid #dce6df;border-radius:6px;padding:7px;font-size:10px;flex:1;min-width:100px}.plan-job b{display:block;font-size:10px;margin-bottom:4px}.job-controls{display:flex;gap:4px;margin-top:6px}.job-controls button{border:1px solid #dce6df;background:white;color:var(--green);border-radius:3px;font-size:10px}.job-controls select{max-width:95px;font:inherit;border:1px solid #dce6df;background:white;color:var(--ink);border-radius:3px}.plan-footer{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}.plan-footer span{font-size:10px;color:var(--muted)}.plan-footer .primary{margin:0;font-size:11px;padding:10px}.task-label{display:grid;gap:7px;margin:16px 0;font-size:12px}.task-label select{padding:10px;border:1px solid #c7d6cc;border-radius:7px;background:#fff;font:inherit}
+@media(max-width:760px){.dispatch-heading h1{font-size:19px}.dispatch-heading .demo{display:none}.dispatch-layout{grid-template-columns:230px minmax(300px,1fr);min-height:510px}.dispatch-steps{gap:10px;font-size:10px}.plan-heading{align-items:start;flex-direction:column}.robot-plan{grid-template-columns:75px 1fr}.dispatch-workspace{grid-template-rows:180px minmax(320px,1fr)}}
+@media(max-width:550px){.dispatch-layout{display:flex;flex-direction:column;min-height:auto}.task-buffer{min-height:360px}.dispatch-workspace{display:flex;flex-direction:column;overflow:visible}.dispatch-map-wrap{height:230px}.plan-panel{overflow:visible}.dispatch-steps{gap:6px;font-size:9px}.dispatch-heading h1{font-size:18px}}
+
+.voice-assistant svg{width:22px;height:22px;flex-shrink:0}
+.voice-assistant:hover{background:#205f4b}
+@media(max-width:1050px){.headright .connection{display:none}}
+@media(max-width:380px){.voice-assistant{padding:8px 10px;font-size:11px}}
+
+/* Kompakte Schlagliste mit nativen, per Tastatur bedienbaren Klappzeilen. */
+.field-list{gap:7px}
+.field-accordion{padding:0;overflow:hidden;border-radius:9px}
+.field-accordion summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 13px;cursor:pointer;list-style:none;font-size:14px;font-weight:650}
+.field-accordion summary::-webkit-details-marker{display:none}
+.field-accordion summary small{font-size:11px;font-weight:400;color:var(--muted);white-space:nowrap}
+.field-accordion summary:focus-visible{outline:2px solid var(--green);outline-offset:-3px}
+.field-chevron{font-size:18px;color:var(--muted);transition:transform .15s}
+.field-accordion[open] .field-chevron{transform:rotate(180deg)}
+.field-accordion[open] summary{border-bottom:1px solid var(--line);background:#f7faf8}
+.field-expanded{padding:3px 13px 12px}
+.field-facts{margin:0}
+.field-facts&gt;div{padding:10px 0;display:grid;gap:4px;border-bottom:1px solid var(--line)}
+.field-facts dt{font-size:10px;color:var(--muted)}
+.field-facts dd{margin:0;font-size:12px;font-weight:550;line-height:1.4}
+.field-activity h4{font-size:10px;color:var(--muted);font-weight:500;margin:12px 0 8px}
+.field-active-robot{padding:8px 9px;background:#edf5ef;border-radius:6px;margin-top:6px;display:grid;gap:5px;font-size:11px}
+.field-active-robot span{padding-left:13px;color:#5c7770;font-size:10px}
+.field-active-robot .dot{width:6px;height:6px}
+.field-activity p{font-size:11px;margin:6px 0}
+.header-clock{display:grid;text-align:right;gap:3px;white-space:nowrap;min-width:95px}.header-clock time{font-size:17px;font-weight:600;letter-spacing:.5px;font-variant-numeric:tabular-nums}.header-clock span{font-size:10px;color:var(--muted)}
+.headright .connection{display:none}
+body&gt;header{gap:18px}.headright{gap:14px}
+.suggested-action{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.suggested-action button{padding:6px 8px;border:1px solid #bfd4c7;background:#edf5ef;border-radius:5px;color:var(--green);font-size:10px;white-space:nowrap}
+#field-planner{display:flex;flex-direction:column;flex:1;min-height:0;gap:14px;overflow:auto}.planner-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}.planner-back{background:white;border:1px solid #cbd9d0;border-radius:9px;padding:12px 18px;color:var(--ink);font-size:14px;font-weight:600}.planner-title{display:flex;justify-content:space-between;align-items:center}.planner-title h1{margin:0 0 5px;font-size:25px}.planner-title p{margin:0}.planner-layout{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(260px,1fr);gap:18px;flex:1;min-height:0}.planner-map-panel{display:flex;flex-direction:column;min-height:0}.planner-settings{padding:20px;overflow:auto}.planner-settings h2{margin:0;font-size:17px}#task-map-slot{position:relative;flex:1;min-height:260px;background:#edf1e7;border:1px solid #d8e0d3;border-radius:14px;overflow:hidden}#task-route-map{position:absolute;inset:0;overflow:hidden}.route-legend{display:flex;justify-content:space-between;gap:10px;font-size:10px;padding:13px 0 6px;color:#62756c}.route-legend&gt;span{display:flex;align-items:center;gap:7px}.route-gradient{display:inline-block;width:50px;height:5px;background:linear-gradient(90deg,#2eab53,#c39f2c,#be3e3e);border-radius:5px}.route-note{font-size:10px;color:var(--muted);margin:4px 0}.input-unit{display:flex;align-items:center;gap:8px}.input-unit input{width:100%;padding:10px;border:1px solid #c7d6cc;border-radius:7px;font:inherit}.planner-specs&gt;div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:13px 0;font-size:11px}.planner-specs span{color:var(--muted)}.planner-specs strong{font-weight:550;text-align:right}.planner-help{font-size:11px;line-height:1.6;color:var(--muted);padding:10px 0}.planner-save{display:grid;gap:8px}.planner-save span{font-size:11px;color:var(--green);line-height:1.5}.planner-save .primary{margin:0}.primary:disabled{opacity:.65;cursor:default}
+@media(max-width:1100px) and (min-width:761px){body&gt;header{padding:0 18px;gap:12px}header .brand{font-size:23px}header nav a{padding:10px 8px;font-size:11px;gap:5px}.headright{gap:9px}.header-clock{min-width:87px}.voice-assistant{padding:9px;font-size:11px}.avatar{display:none}}
+@media(max-width:760px){.header-clock time{font-size:15px}.header-clock span{font-size:9px}.planner-layout{grid-template-columns:minmax(0,1.3fr) minmax(220px,1fr);gap:12px}.planner-settings{padding:14px}.planner-title h1{font-size:21px}.planner-back{padding:10px 12px;font-size:12px}.route-legend{flex-wrap:wrap}}
+@media(max-width:550px){.planner-layout{display:flex;flex-direction:column}.planner-map-panel{min-height:330px}.planner-heading .tiny{display:none}.planner-settings{overflow:visible}.header-clock{min-width:82px}.headright{gap:8px}header .brand{font-size:18px}header .avatar{display:none}.voice-assistant{font-size:10px;padding:8px}.voice-assistant svg{width:18px}}
+
+.planner-heading{justify-content:flex-start;flex-wrap:wrap;gap:18px}.planner-breadcrumb{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.planner-breadcrumb&gt;span:first-child{font-size:13px;color:var(--muted)}.planner-breadcrumb h1{font-size:20px;margin:0}.planner-breadcrumb .sub{font-size:11px}.planner-suggestion{font-size:11px;line-height:1.6;color:var(--muted);margin:9px 0 16px}@media(max-width:760px){.planner-heading{gap:10px}.planner-breadcrumb{gap:7px}.planner-breadcrumb h1{font-size:17px}}
+.seed-mode{display:flex;align-items:center;gap:7px;background:#edf4f1;border-radius:6px;padding:10px;font-size:10px;line-height:1.4;color:var(--green)}.seed-mode-dot{width:6px;height:6px;background:var(--green);border-radius:50%;flex-shrink:0}.seed-caption{font-size:10px;line-height:1.5;color:var(--muted)}#seed-settings select{width:100%;min-width:0;font-size:11px}.seed-map-key{position:absolute;left:12px;bottom:12px;z-index:4;width:218px;padding:12px;background:#fffffff2;border:1px solid #dce5dc;border-radius:9px;box-shadow:0 2px 8px #203b3810;pointer-events:none}.seed-map-key&gt;strong{display:block;font-size:11px}.seed-key-sub{display:block;font-size:9px;color:var(--muted);margin:5px 0 9px}.seed-zone-row{display:grid;grid-template-columns:10px 68px 1fr;align-items:center;gap:7px;margin:6px 0;font-size:10px;font-variant-numeric:tabular-nums}.seed-zone-row i{width:9px;height:9px;border-radius:2px}.seed-zone-row b{height:5px;background:#93aaa1;max-width:100%;min-width:15px;border-radius:2px}.seed-tram-key{display:block;font-size:10px;color:#283e51;border-top:1px solid var(--line);margin-top:9px;padding-top:8px}.planner-settings{min-width:0}.seed-zone-row b{width:var(--bar,40%)}
+@media(max-width:760px){.seed-map-key{width:185px;left:8px;bottom:8px;padding:9px}.seed-map-key&gt;strong{font-size:10px}.seed-zone-row{grid-template-columns:8px 62px 1fr;font-size:9px;gap:5px}}
+.direction-settings{border-top:1px solid var(--line);margin-top:16px;padding-top:14px}.standard-direction{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:10px;color:var(--muted)}.standard-direction strong{font-size:11px;color:var(--ink);font-weight:550;white-space:nowrap}.direction-settings .task-label{margin-bottom:6px}.direction-preview-note{display:block;font-size:9px;color:var(--muted)}
+
+/* Kartenlegende innerhalb der Vorschau. */
+#task-map-slot&gt;.route-legend{position:absolute;right:12px;top:12px;z-index:4;padding:9px 11px;background:#fffffff2;border:1px solid #dce5dc;border-radius:7px;pointer-events:none}
+.seed-mode{cursor:pointer}.seed-mode input{margin:0;accent-color:var(--green);flex-shrink:0}
+
+/* Schlagkartei und seitenfüllende Karten */
+.field-summary-actions{display:flex;align-items:center;gap:12px}.field-info-button{border:1px solid #c9dbd2;border-radius:9px;padding:8px 12px;background:#eef6f1;color:#29765e;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}.map-expand{position:absolute;top:14px;left:14px;z-index:15;width:46px;height:46px;border:1px solid #ccd8d0;background:#fff;border-radius:12px;box-shadow:0 3px 12px #243c2320;color:#29765e;font-size:31px;cursor:pointer;touch-action:manipulation}.map-viewport.map-expanded{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;max-height:none!important;border-radius:0!important;z-index:1000!important;background:#edf1e6}.record-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px;height:calc(100vh - 185px);overflow:auto;padding-bottom:16px}.record-left,.record-right{display:flex;flex-direction:column;gap:16px;min-width:0}.record-map-panel{padding:16px;flex:1;min-height:340px;display:flex;flex-direction:column}.record-map-toolbar{display:flex;gap:12px;margin-bottom:12px}.record-map-toolbar label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#68796f;flex:1}.record-map-toolbar select{padding:10px;border:1px solid #d3ddd6;border-radius:8px;background:white;color:#284537;font:inherit;font-size:14px}#record-map-slot{flex:1;min-height:240px}#record-map{position:relative;width:100%;height:100%;min-height:240px;border-radius:12px;overflow:hidden}#record-map-key{display:flex;gap:15px;flex-wrap:wrap;padding-top:12px;font-size:12px}#record-map-key span{display:flex;align-items:center;gap:6px}#record-map-key i{width:12px;height:12px;border-radius:3px}.record-weather,.record-section{padding:20px}.record-weather h2,.record-section h2{font-size:19px;margin:10px 0 15px}.record-weather h2 small{font-size:13px;font-weight:400;margin-left:12px}.weather-values{display:flex;justify-content:space-between;gap:10px}.weather-values span{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#6c7e72}.weather-values b{font-size:14px;color:#2b4939}.record-weather p,.record-explanation,.record-demo{font-size:12px;color:#738176;line-height:1.6}.record-facts{margin:0}.record-facts&gt;div{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid #edf1ee}.record-facts dt{font-size:13px;color:#718176}.record-facts dd{margin:0;font-size:14px;font-weight:600}.record-work{display:flex;gap:15px;align-items:center;padding:14px 0;border-top:1px solid #edf1ee}.record-work time{font-size:12px;color:#738176}.record-work div{display:flex;flex-direction:column;gap:6px;flex:1}.record-work strong{font-size:14px}.record-work span{font-size:12px;color:#738176}.record-work&gt;b{color:#29765e}.record-suggestions{background:#f0f7f2;border:1px solid #d5e6da}.record-suggestions&gt;p{line-height:1.6}.record-demo{margin:0 4px}#field-record[hidden]{display:none}@media(max-width:800px){.record-layout{grid-template-columns:1fr;height:auto;max-height:calc(100dvh - 180px)}.record-map-panel{min-height:400px}.record-map-toolbar{flex-wrap:wrap}}
+
+/* Zeitrahmen jeder Aufgabe und farbige Kennzeichnung im Einsatzplan. */
+.priority-select{border-top:1px solid var(--line);padding-top:16px;margin-top:16px}.priority-immediate{--priority-color:#bf5b51}.priority-week{--priority-color:#ba8a30}.priority-month{--priority-color:#5082a5}.priority-flexible{--priority-color:#758379}.priority-badge i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--priority-color);flex-shrink:0}.priority-badge{display:flex;align-items:center;gap:6px;width:fit-content;margin-top:7px;padding:4px 7px;border-radius:6px;background:#f0f4f1;font-size:10px;line-height:1.5;color:#506359}
+/* Disposition: maßstäbliche Zeitstränge und räumliche Einsatzvorschau. */
+.disposition-v2{gap:14px!important;overflow:hidden!important}.dispatch-toolbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-shrink:0}.dispatch-toolbar h1{font-size:23px;margin:0 0 4px}.dispatch-toolbar p{font-size:11px;color:var(--muted);margin:0}.dispatch-toolbar-actions{display:flex;gap:8px;align-items:center}.dispatch-toolbar-actions .primary{font-size:11px;padding:10px 13px;margin:0}.dispatch-board{display:grid;grid-template-columns:245px minmax(0,1fr);gap:14px;flex:1;min-height:0;overflow:hidden}.dispatch-storage{display:flex;flex-direction:column;min-height:0;overflow:hidden}.storage-heading{padding:16px 14px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}.storage-heading h2{font-size:15px;margin:7px 0 0}.storage-heading .tiny{font-size:9px;letter-spacing:1px}.storage-add{border:1px solid #d4e2d9;border-radius:8px;background:#eff5f1;color:var(--green);width:30px;height:30px;font-size:22px}.dispatch-storage .buffer-hint{font-size:10px;line-height:1.6;margin:0 14px 14px}.dispatch-storage .dispatch-tasks{padding:0 10px 10px;gap:10px}.stored-task{border:1px solid #dce5df;border-radius:10px;padding:12px;background:#fff;flex-shrink:0}.stored-task-top{display:flex;align-items:center;gap:5px;font-size:10px}.stored-task-top&gt;span:last-child{margin-left:auto;color:var(--muted);white-space:nowrap}.stored-task h3{font-size:14px;margin:9px 0 5px}.stored-task p{font-size:10px;color:var(--muted);margin:0}.stored-task .priority-badge{font-size:9px}.stored-task label{display:grid;gap:5px;font-size:9px;color:var(--muted);margin-top:12px}.stored-task select{width:100%;font:inherit;font-size:11px;padding:8px;border:1px solid #cadbd0;background:#f5f9f6;color:var(--green);border-radius:6px}.task-type-dot{width:7px;height:7px;border-radius:2px}.task-type-dot.tillage{background:#ad8c56}.task-type-dot.seed{background:#4c8966}.task-type-dot.hoe{background:#8c78ab}.storage-empty{padding:20px 10px;color:var(--muted);font-size:12px;line-height:1.7}.storage-empty strong{color:var(--green)}.storage-empty a{color:var(--green);font-size:11px}.dispatch-storage .buffer-footer{font-size:10px;line-height:1.5;padding:12px 14px}.dispatch-storage .buffer-footer span{font-size:9px}.dispatch-planning{display:grid;grid-template-rows:minmax(325px,1.1fr) minmax(220px,1fr);gap:14px;min-height:0;overflow:auto}.schedule-panel{padding:14px 0 0;display:flex;flex-direction:column;min-height:0;overflow:hidden}.schedule-heading{padding:0 14px;display:flex;justify-content:space-between;align-items:start;gap:12px}.schedule-heading h2{font-size:16px;margin:0 0 5px}.schedule-heading&gt;div&gt;span{font-size:10px;color:var(--muted)}.schedule-legend{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;max-width:350px}.schedule-legend span{display:flex;align-items:center;gap:4px;font-size:9px;white-space:nowrap;color:#65766f}.schedule-legend span:before{content:&#x27;&#x27;;width:8px;height:8px;border-radius:2px;background:var(--block-color)}.legend-tillage{--block-color:#bc9d6a}.legend-seed{--block-color:#70a183}.legend-hoe{--block-color:#a692bc}.legend-setup{--block-color:#d7b968}.legend-drive{--block-color:#90b6d1}.schedule-navigation{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 14px 9px}.schedule-days{display:flex;gap:3px;flex-wrap:wrap}.schedule-days button{border:1px solid transparent;background:none;color:#78877e;padding:6px 7px;border-radius:6px;font-size:10px}.schedule-days button.selected{background:#eaf3ed;color:var(--green);border-color:#d8e7dd;font-weight:600}.schedule-navigation&gt;label{display:flex;align-items:center;gap:6px;font-size:9px;color:var(--muted);white-space:nowrap}.schedule-navigation select{font:inherit;font-size:10px;border:1px solid var(--line);padding:5px;border-radius:5px;background:white;color:var(--ink)}.schedule-grid{flex:1;min-height:0;overflow:auto}.schedule-axis,.timeline-row{display:grid;grid-template-columns:143px minmax(0,1fr)}.schedule-axis{height:30px;position:sticky;top:0;z-index:3;background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.schedule-axis&gt;span{font-size:9px;color:var(--muted);padding:9px 14px}.schedule-axis&gt;div{position:relative;overflow:hidden}.schedule-axis&gt;div&gt;span{position:absolute;top:8px;font-size:9px;color:#718378;font-variant-numeric:tabular-nums;white-space:nowrap}.schedule-axis small{margin-left:4px;font-size:8px}.timeline-row{height:47px;border-bottom:1px solid #edf1ee}.timeline-robot-label{border:0;border-right:1px solid var(--line);background:white;text-align:left;padding:8px 12px;color:var(--ink);min-width:0}.timeline-robot-label strong{display:flex;align-items:center;gap:6px;font-size:11px}.timeline-robot-label i{width:7px;height:7px;border-radius:50%}.timeline-robot-label small{display:block;font-size:8px;color:var(--muted);margin-top:4px;white-space:nowrap}.timeline-row.selected .timeline-robot-label{background:#edf5f0;box-shadow:inset 3px 0 var(--green)}.timeline-lane{position:relative;overflow:hidden;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(16.6667% - 1px),#e9eeeb calc(16.6667% - 1px),#e9eeeb 16.6667%)}.timeline-row.selected .timeline-lane{background-color:#f7faf8}.timeline-idle{position:absolute;left:15px;top:17px;font-size:9px;color:#a1ada6}.time-block{position:absolute;top:5px;height:36px;border:1px solid #ffffff90;border-radius:5px;text-align:left;padding:5px 7px;overflow:hidden;color:#254336;white-space:nowrap;min-width:0}.time-block strong{display:block;font-size:10px;overflow:hidden;text-overflow:ellipsis}.time-block span{display:block;font-size:8px;opacity:.8;margin-top:3px;overflow:hidden;text-overflow:ellipsis}.time-block.block-tillage{background:#eadbc0;color:#6b542f}.time-block.block-seed{background:#cde3d4;color:#285b3a}.time-block.block-hoe{background:#ded4eb;color:#5d4479}.time-block.block-setup{background:repeating-linear-gradient(135deg,#f1e4ba,#f1e4ba 4px,#e8d89f 4px,#e8d89f 6px);color:#816729;padding:5px 2px}.time-block.block-drive{background:#d0e3f1;color:#37647e;padding:5px 2px}.time-block.selected-task{border-color:#476956;box-shadow:inset 0 0 0 1px #47695630}.time-block:hover{filter:brightness(.96)}.time-navigation{padding:8px 12px;display:flex;align-items:center;gap:10px;flex-shrink:0;border-top:1px solid var(--line)}.time-navigation button{width:25px;height:25px;border:1px solid var(--line);border-radius:5px;background:#f8faf8;color:var(--green)}.time-navigation input{flex:1;min-width:40px;accent-color:var(--green);height:5px;cursor:ew-resize}.time-navigation output{font-size:9px;min-width:68px;color:#6f8076;font-variant-numeric:tabular-nums}.robot-route-panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(245px,.95fr);overflow:hidden;min-height:220px}.robot-route-map-wrap{position:relative;background:#e4ebdc;min-height:220px;overflow:hidden;border-right:1px solid var(--line)}.robot-route-map-key{position:absolute;left:10px;bottom:10px;background:#fffffff0;border-radius:6px;padding:7px 8px;display:flex;flex-wrap:wrap;gap:8px;font-size:8px;pointer-events:none;z-index:3}.robot-route-map-key span{display:flex;gap:5px;align-items:center}.road-key:before{content:&#x27;&#x27;;width:15px;border-top:2px dashed #427fad}.track-key:before{content:&#x27;&#x27;;width:15px;border-top:2px solid #39816a}.robot-route-details{padding:14px;overflow:auto;min-height:0}.route-detail-heading .tiny{font-size:8px;letter-spacing:.8px}.route-detail-heading h2{font-size:14px;margin:6px 0}.route-detail-heading p{font-size:9px;color:var(--muted);line-height:1.6;margin:0 0 10px}.route-job{border:1px solid var(--line);border-radius:8px;padding:9px;margin-top:8px}.route-job.active{border-color:#8bb49b;background:#f8fbf9}.route-job-title{display:flex;align-items:center;gap:7px;width:100%;border:0;background:none;text-align:left;padding:0;color:var(--ink)}.route-job-title&gt;span{width:22px;height:22px;display:grid;place-items:center;font-size:10px;background:#eaf2ed;border-radius:5px;flex-shrink:0}.route-job-title strong{font-size:11px}.route-job-title small{display:block;color:var(--muted);font-size:9px;margin-top:4px}.route-job p{font-size:9px;color:var(--muted);margin:9px 0}.route-job-actions{display:flex;gap:4px;align-items:center}.route-job-actions button,.route-job-actions select{border:1px solid #d9e3dc;background:white;color:var(--green);border-radius:4px;font-size:9px;padding:4px}.route-job-actions button:disabled{opacity:.3}.route-job-actions .return-task{margin-left:auto;font-size:8px}.schedule-demo-note{font-size:8px;color:#8b9991;line-height:1.7;margin:12px 0 0}
+@media(max-width:1050px){.dispatch-board{grid-template-columns:210px minmax(0,1fr);gap:10px}.dispatch-planning{gap:10px}.schedule-heading{flex-wrap:wrap;gap:6px}.schedule-legend{justify-content:flex-start;gap:7px;max-width:none}.schedule-axis,.timeline-row{grid-template-columns:117px minmax(0,1fr)}.timeline-robot-label{padding-left:9px}.robot-route-panel{grid-template-columns:minmax(0,1fr) minmax(205px,1fr)}.robot-route-details{padding:10px}.schedule-heading h2{font-size:15px}.schedule-navigation{padding:8px 10px;gap:5px}.schedule-days button{font-size:9px;padding:5px}.dispatch-toolbar h1{font-size:21px}.dispatch-toolbar p{font-size:10px}.dispatch-toolbar-actions .suggest-button{font-size:10px}.dispatch-toolbar-actions .primary{font-size:10px}.schedule-navigation&gt;label{font-size:0}}
+@media(max-width:760px){.disposition-v2{overflow:auto!important}.dispatch-board{overflow:visible;min-height:780px;grid-template-columns:180px minmax(0,1fr)}.dispatch-planning{overflow:visible;grid-template-rows:430px minmax(340px,1fr)}.robot-route-panel{grid-template-columns:1fr;grid-template-rows:220px auto}.robot-route-details{max-height:260px}.dispatch-toolbar{align-items:start;gap:8px}.dispatch-toolbar-actions{flex-direction:column;align-items:stretch}.dispatch-toolbar p{max-width:210px;line-height:1.6}.schedule-axis,.timeline-row{grid-template-columns:95px minmax(0,1fr)}.timeline-robot-label strong{font-size:10px}.timeline-robot-label small{font-size:7px}.schedule-navigation{flex-wrap:wrap}.schedule-heading{padding:0 10px}.time-navigation{gap:5px}.time-navigation output{min-width:60px;font-size:8px}.dispatch-storage .dispatch-tasks{padding:0 7px}.stored-task{padding:9px}.stored-task h3{font-size:12px}.stored-task-top{font-size:9px}.stored-task-top&gt;span:last-child{font-size:8px}.schedule-legend span{font-size:8px}}
+@media(max-width:520px){.dispatch-board{display:flex;flex-direction:column;min-height:0}.dispatch-storage{min-height:240px;max-height:320px;flex-shrink:0}.dispatch-storage .dispatch-tasks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:auto;min-height:80px}.dispatch-storage .buffer-hint{margin-bottom:8px}.storage-heading{padding:10px}.dispatch-planning{display:flex;flex-direction:column}.schedule-panel{height:445px;flex-shrink:0}.robot-route-panel{min-height:450px}.dispatch-toolbar p{max-width:180px}.dispatch-toolbar-actions .primary,.dispatch-toolbar-actions .suggest-button{font-size:9px;padding:8px}.schedule-navigation&gt;label{font-size:9px}.route-job-actions{flex-wrap:wrap}}
+/* iPad: Der Zeitplan ist die Hauptansicht. Aufgaben und Karte öffnen separat. */
+.ipad-disposition{gap:10px!important;overflow:hidden!important}.ipad-disposition .dispatch-toolbar{min-height:40px}.ipad-disposition .dispatch-toolbar h1{font-size:23px;margin:0}.ipad-disposition .dispatch-toolbar-actions{flex-direction:row;align-items:center;gap:9px}.open-storage-button{display:flex;align-items:center;gap:8px;border:1px solid #a9c8b6;color:var(--green);background:#edf5ef;padding:10px 14px;border-radius:9px;font-size:13px;font-weight:600;min-height:44px}.open-storage-button .count{background:#d4e7db;margin:0;font-size:12px}.ipad-disposition .dispatch-toolbar-actions .primary,.ipad-disposition .dispatch-toolbar-actions .suggest-button{font-size:12px;min-height:44px;padding:10px 14px}.ipad-disposition&gt;.schedule-panel{flex:1;min-height:0;height:auto;padding-top:14px}.ipad-disposition .schedule-heading{flex-wrap:nowrap;align-items:center;padding:0 17px}.ipad-disposition .schedule-heading h2{font-size:18px;margin-bottom:3px}.ipad-disposition .schedule-heading&gt;div&gt;span{font-size:11px}.ipad-disposition .schedule-legend{max-width:none;gap:12px}.ipad-disposition .schedule-legend span{font-size:11px}.ipad-disposition .schedule-navigation{padding:9px 17px;flex-wrap:nowrap}.ipad-disposition .schedule-navigation&gt;label{font-size:11px}.ipad-disposition .schedule-navigation select{font-size:12px;min-height:36px;padding:7px 10px}.ipad-disposition .schedule-days{gap:6px}.ipad-disposition .schedule-days button{padding:8px 12px;min-height:36px;font-size:12px}.ipad-disposition .schedule-grid{display:flex;flex-direction:column}.ipad-disposition .schedule-axis,.ipad-disposition .timeline-row{grid-template-columns:165px minmax(0,1fr)}.ipad-disposition .schedule-axis{height:32px;flex-shrink:0}.ipad-disposition .schedule-axis&gt;span{font-size:11px;padding:9px 15px}.ipad-disposition .schedule-axis&gt;div&gt;span{font-size:11px}.ipad-disposition .timeline-robots{display:flex;flex-direction:column;flex:1;min-height:300px}.ipad-disposition .timeline-row{height:auto;flex:1;min-height:50px}.ipad-disposition .timeline-robot-label{padding:8px 15px}.ipad-disposition .timeline-robot-label strong{font-size:13px;gap:8px}.ipad-disposition .timeline-robot-label small{font-size:10px;margin-top:5px}.ipad-disposition .time-block{top:6px;height:calc(100% - 12px);padding:7px 9px;display:flex;flex-direction:column;justify-content:center}.ipad-disposition .time-block strong{font-size:12px;flex-shrink:0}.ipad-disposition .time-block span{font-size:10px;margin-top:4px;flex-shrink:0}.ipad-disposition .time-block.block-drive,.ipad-disposition .time-block.block-setup{padding:5px 2px}.ipad-disposition .time-block.block-drive strong,.ipad-disposition .time-block.block-setup strong{font-size:10px}.ipad-disposition .timeline-idle{font-size:11px;top:50%;transform:translateY(-50%)}.ipad-disposition .time-navigation{padding:8px 15px;gap:14px;min-height:48px}.ipad-disposition .time-navigation button{width:36px;height:32px;font-size:16px}.ipad-disposition .time-navigation input{height:8px}.ipad-disposition .time-navigation output{font-size:12px;min-width:80px}.dispatch-bottom-line{display:flex;justify-content:space-between;gap:12px;font-size:10px;color:var(--muted);flex-shrink:0;min-height:16px;line-height:1.5}.dispatch-dialog-bar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);gap:15px;flex-shrink:0}.dispatch-dialog-bar&gt;strong{font-size:16px}.drawer-close{font-size:13px;font-weight:600;min-height:42px;border:1px solid #cddbd2;background:#f2f6f3;color:var(--green);padding:8px 13px;border-radius:8px}.dispatch-drawer{padding:0;max-width:420px;width:calc(100% - 32px);max-height:85dvh;height:670px;overflow:hidden}.dispatch-drawer[open]{display:flex;flex-direction:column}.dispatch-drawer .dispatch-storage{border:0;border-radius:0;flex:1;min-height:0;max-height:none}.dispatch-drawer .dispatch-tasks{display:flex;flex-direction:column;min-height:0;gap:12px;padding:0 16px 14px}.dispatch-drawer .stored-task{padding:15px}.dispatch-drawer .stored-task h3{font-size:17px}.dispatch-drawer .stored-task-top{font-size:12px}.dispatch-drawer .stored-task-top&gt;span:last-child{font-size:12px}.dispatch-drawer .stored-task p{font-size:12px}.dispatch-drawer .stored-task label{font-size:12px}.dispatch-drawer .stored-task select{min-height:44px;font-size:14px}.dispatch-drawer .stored-task .priority-badge{font-size:11px}.dispatch-drawer .storage-heading h2{font-size:18px}.dispatch-drawer .storage-heading{padding:16px}.dispatch-drawer .storage-add{width:42px;height:42px}.dispatch-drawer .buffer-hint{font-size:12px}.dispatch-inspector{padding:0;width:calc(100% - 40px);max-width:1000px;height:78dvh;max-height:740px;overflow:hidden}.dispatch-inspector[open]{display:flex;flex-direction:column}.dispatch-inspector .robot-route-panel{flex:1;min-height:0;grid-template-columns:minmax(0,1.25fr) minmax(280px,1fr);grid-template-rows:1fr;border:0;border-radius:0}.dispatch-inspector .robot-route-map-wrap{min-height:0}.dispatch-inspector .robot-route-details{padding:20px;max-height:none}.dispatch-inspector .route-detail-heading h2{font-size:20px;line-height:1.4}.dispatch-inspector .route-detail-heading p{font-size:12px}.dispatch-inspector .route-detail-heading .tiny{font-size:10px}.dispatch-inspector .route-job{padding:13px;margin-top:12px}.dispatch-inspector .route-job-title strong{font-size:15px}.dispatch-inspector .route-job-title small{font-size:12px;line-height:1.5}.dispatch-inspector .route-job p{font-size:12px}.dispatch-inspector .route-job-actions button,.dispatch-inspector .route-job-actions select{min-height:40px;font-size:12px;padding:6px 9px}.dispatch-inspector .robot-route-map-key{font-size:11px;padding:10px;gap:12px}.dispatch-inspector .route-job-actions{flex-wrap:wrap}.dispatch-inspector .schedule-demo-note{font-size:10px}
+@media(max-width:1000px){.ipad-disposition .schedule-legend{gap:8px}.ipad-disposition .schedule-legend span{font-size:10px}.ipad-disposition .schedule-heading{gap:8px}.ipad-disposition .dispatch-toolbar h1{font-size:21px}.dispatch-inspector .robot-route-panel{grid-template-columns:minmax(0,1fr) minmax(275px,.9fr)}}
+@media(max-height:730px) and (min-width:761px){.ipad-disposition{gap:7px!important}.ipad-disposition .schedule-navigation{padding-top:5px;padding-bottom:5px}.ipad-disposition .schedule-heading h2{font-size:16px}.ipad-disposition&gt;.schedule-panel{padding-top:10px}.ipad-disposition .timeline-robots{min-height:276px}.ipad-disposition .timeline-row{min-height:46px}.ipad-disposition .time-block{top:4px;height:calc(100% - 8px)}}
+@media(max-width:760px){.ipad-disposition .dispatch-toolbar-actions{gap:5px}.ipad-disposition .dispatch-toolbar-actions .primary,.ipad-disposition .dispatch-toolbar-actions .suggest-button,.open-storage-button{font-size:10px;padding:8px;min-height:40px}.ipad-disposition .schedule-heading{align-items:start;gap:8px}.ipad-disposition .schedule-legend{max-width:300px;gap:6px}.ipad-disposition .schedule-legend span{font-size:9px}.ipad-disposition .schedule-days button{font-size:10px;padding:6px}.ipad-disposition .schedule-axis,.ipad-disposition .timeline-row{grid-template-columns:135px minmax(0,1fr)}.ipad-disposition .time-block strong{font-size:10px}.ipad-disposition .time-block span{font-size:9px}.dispatch-bottom-line&gt;span:last-child{display:none}.dispatch-inspector{height:86dvh}.dispatch-inspector .robot-route-panel{grid-template-columns:1fr;grid-template-rows:minmax(180px,1fr) minmax(150px,1fr)}.dispatch-inspector .robot-route-details{padding:14px}.dispatch-dialog-bar{padding:10px}.dispatch-dialog-bar&gt;strong{font-size:14px}}
+@media(max-width:520px){.ipad-disposition .dispatch-toolbar{flex-wrap:wrap;gap:8px}.ipad-disposition .dispatch-toolbar-actions{width:100%;justify-content:space-between}.ipad-disposition .schedule-heading{flex-wrap:wrap}.ipad-disposition .schedule-heading&gt;div:first-child{display:flex;gap:10px;align-items:center}.ipad-disposition .schedule-heading h2{font-size:15px}.ipad-disposition .schedule-navigation{padding:7px 10px;gap:6px}.ipad-disposition .schedule-navigation&gt;label{font-size:0}.ipad-disposition .schedule-navigation select{font-size:10px}.ipad-disposition .schedule-axis,.ipad-disposition .timeline-row{grid-template-columns:105px minmax(0,1fr)}.ipad-disposition .timeline-robot-label{padding:7px}.ipad-disposition .timeline-robot-label strong{font-size:11px}.ipad-disposition .timeline-robot-label small{font-size:8px}.ipad-disposition .schedule-axis&gt;span{font-size:9px;padding-left:7px}.ipad-disposition .schedule-axis&gt;div&gt;span{font-size:9px}.ipad-disposition .time-block{padding:4px}.ipad-disposition .time-block span{display:none}.ipad-disposition .time-navigation{gap:8px}.ipad-disposition .time-navigation output{font-size:10px;min-width:67px}.dispatch-dialog-bar .drawer-close{font-size:11px;padding:7px}}
+/* Räumlicher Kontext bleibt sichtbar, Details bleiben bei Bedarf erreichbar. */
+.dispatch-map-layout{display:grid;grid-template-columns:minmax(240px,.8fr) minmax(0,1.8fr);gap:12px;flex:1;min-height:0}.dispatch-context-map{display:flex;flex-direction:column;min-height:0;overflow:hidden}.context-map-heading{padding:15px 15px 12px;min-height:92px;flex-shrink:0}.context-map-heading .tiny{font-size:9px;letter-spacing:.8px}.context-map-heading h2{font-size:18px;margin:7px 0 5px}.context-map-heading p{font-size:11px;color:var(--muted);margin:0;line-height:1.5}.dispatch-context-map .robot-route-map-wrap{flex:1;min-height:0;border:0}.dispatch-context-map .robot-route-map-key{left:8px;bottom:8px;font-size:9px;gap:7px;padding:8px}.context-details-button{margin:10px;min-height:42px;border:1px solid #c9dbd0;border-radius:7px;background:#f0f6f2;color:var(--green);font-size:12px;font-weight:600;flex-shrink:0}.dispatch-map-layout&gt;.schedule-panel{min-height:0;height:auto;flex:1}.ipad-disposition .dispatch-map-layout .schedule-heading{padding:0 12px;flex-wrap:wrap;gap:6px}.ipad-disposition .dispatch-map-layout .schedule-heading&gt;div:first-child{display:flex;align-items:center;gap:10px}.ipad-disposition .dispatch-map-layout .schedule-heading h2{font-size:16px;margin:0}.ipad-disposition .dispatch-map-layout .schedule-legend{gap:8px}.ipad-disposition .dispatch-map-layout .schedule-legend span{font-size:9px}.ipad-disposition .dispatch-map-layout .schedule-navigation{padding:8px 10px;gap:5px}.ipad-disposition .dispatch-map-layout .schedule-days{gap:3px}.ipad-disposition .dispatch-map-layout .schedule-days button{font-size:10px;padding:7px}.ipad-disposition .dispatch-map-layout .schedule-navigation&gt;label{font-size:0}.ipad-disposition .dispatch-map-layout .schedule-navigation select{font-size:11px;padding:6px}.ipad-disposition .dispatch-map-layout .schedule-axis,.ipad-disposition .dispatch-map-layout .timeline-row{grid-template-columns:124px minmax(0,1fr)}.ipad-disposition .dispatch-map-layout .timeline-robot-label{padding:8px 10px}.ipad-disposition .dispatch-map-layout .timeline-robot-label strong{font-size:12px}.ipad-disposition .dispatch-map-layout .timeline-robot-label small{font-size:9px}.ipad-disposition .dispatch-map-layout .time-block{padding:5px 6px}.ipad-disposition .dispatch-map-layout .time-block strong{font-size:11px}.ipad-disposition .dispatch-map-layout .time-block span{font-size:9px}.ipad-disposition .dispatch-map-layout .time-block.block-setup,.ipad-disposition .dispatch-map-layout .time-block.block-drive{padding:5px 1px}.ipad-disposition .dispatch-map-layout .time-block.block-setup strong,.ipad-disposition .dispatch-map-layout .time-block.block-drive strong{font-size:8px}.ipad-disposition .dispatch-map-layout .time-navigation{gap:8px;padding:8px 10px}.ipad-disposition .dispatch-map-layout .time-navigation output{font-size:10px;min-width:68px}.ipad-disposition .dispatch-map-layout .timeline-idle{font-size:10px}.dispatch-inspector{max-width:580px}.dispatch-inspector .robot-route-panel{display:block;overflow:auto}.dispatch-inspector .robot-route-details{overflow:visible}
+@media(max-width:760px){.dispatch-map-layout{grid-template-columns:minmax(185px,.7fr) minmax(0,1.4fr);gap:8px}.context-map-heading{padding:12px;min-height:86px}.context-map-heading h2{font-size:16px}.context-map-heading p{font-size:10px}.ipad-disposition .dispatch-map-layout .schedule-axis,.ipad-disposition .dispatch-map-layout .timeline-row{grid-template-columns:105px minmax(0,1fr)}.ipad-disposition .dispatch-map-layout .timeline-robot-label strong{font-size:11px}.ipad-disposition .dispatch-map-layout .timeline-robot-label small{font-size:8px}.ipad-disposition .dispatch-map-layout .schedule-navigation{flex-wrap:wrap}.dispatch-context-map .robot-route-map-key{font-size:8px}.ipad-disposition .dispatch-map-layout .time-navigation output{min-width:57px;font-size:8px}.ipad-disposition .dispatch-map-layout .time-navigation button{width:27px}}
+@media(max-width:550px){.ipad-disposition{overflow:auto!important}.dispatch-map-layout{display:flex;flex-direction:column;overflow:visible;flex:none}.dispatch-context-map{height:260px;flex-shrink:0;position:relative}.context-map-heading{position:absolute;top:10px;left:10px;z-index:3;background:#fffffff0;border-radius:7px;min-height:0;padding:8px 10px;pointer-events:none}.context-map-heading .tiny{display:none}.context-map-heading h2{font-size:14px;margin:0 0 4px}.dispatch-context-map .context-details-button{position:absolute;right:8px;bottom:8px;margin:0;z-index:4;font-size:10px;padding:7px;min-height:36px}.dispatch-context-map .robot-route-map-key{bottom:8px;max-width:140px}.dispatch-map-layout&gt;.schedule-panel{min-height:455px;flex-shrink:0}.ipad-disposition .dispatch-map-layout .schedule-navigation{flex-wrap:nowrap}.ipad-disposition .dispatch-map-layout .time-block span{display:block}}
+/* Arbeitsspeicher als eigene Seite mit sortierbarer Aufgabenliste. */
+.storage-page{display:flex;flex:1;flex-direction:column;min-height:0;gap:18px}.storage-page-heading{display:flex;align-items:center;justify-content:space-between;gap:14px}.storage-page-heading button{min-height:44px}.storage-page-title{display:flex;align-items:center;justify-content:space-between;gap:20px}.storage-page-title h1{font-size:25px;margin:6px 0 0}.storage-page-title .count{font-size:14px;padding:5px 9px;vertical-align:middle}.storage-page-title .tiny{font-size:10px;letter-spacing:.8px}.storage-sort-label{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--muted)}.storage-sort-label select{min-height:44px;border:1px solid #cadbd0;border-radius:8px;padding:9px 12px;background:white;color:var(--ink);font:inherit;font-size:13px}.storage-table-wrap{flex:1;min-height:0;overflow:auto}.storage-table{width:100%;border-collapse:collapse;text-align:left}.storage-table thead{position:sticky;top:0;z-index:2;background:#f5f8f5}.storage-table th{font-weight:500;font-size:11px;letter-spacing:.2px;color:var(--muted);padding:15px 18px;border-bottom:1px solid var(--line);white-space:nowrap}.storage-table td{padding:18px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}.storage-table td&gt;strong{font-size:15px}.storage-table td&gt;small{display:block;color:var(--muted);font-size:11px;margin-top:6px}.storage-operation{display:flex;align-items:center;gap:7px;font-size:13px;white-space:nowrap}.storage-table select{width:100%;min-width:150px;min-height:44px;font:inherit;font-size:12px;color:var(--green);padding:9px;border:1px solid #c5d8cc;background:#f5f9f6;border-radius:7px}.storage-table .priority-badge{font-size:10px;max-width:190px;line-height:1.6}.storage-table .storage-duration{white-space:nowrap;font-variant-numeric:tabular-nums}.storage-table time{white-space:nowrap;font-variant-numeric:tabular-nums}.no-deadline{color:var(--muted);font-size:12px}.storage-page-footer{display:flex;justify-content:space-between;gap:20px;align-items:center;font-size:11px;color:var(--muted);line-height:1.6}.storage-page-footer strong{font-weight:550;color:var(--ink)}
+@media(max-width:1050px){.storage-table th,.storage-table td{padding:14px 12px}.storage-table td{font-size:12px}.storage-table td&gt;strong{font-size:14px}.storage-table .priority-badge{font-size:9px;max-width:165px}.storage-table select{min-width:135px;font-size:11px}.storage-page{gap:14px}}
+@media(max-width:760px){.storage-page-title{align-items:start;gap:12px}.storage-sort-label{flex-direction:column;align-items:start;gap:5px;font-size:11px}.storage-sort-label select{font-size:11px;padding:8px}.storage-page-title h1{font-size:21px}.storage-table{min-width:680px}.storage-page-footer{align-items:start;font-size:10px;gap:12px}.storage-page-heading .planner-back{font-size:12px}.storage-page-heading .suggest-button{font-size:11px}.storage-page{gap:12px}}
+@media(max-width:480px){.storage-page-title{flex-direction:column}.storage-sort-label{flex-direction:row;align-items:center;width:100%}.storage-sort-label select{flex:1;min-width:0}.storage-page-heading{gap:8px}.storage-page-heading button{font-size:10px!important;padding:8px}.storage-page-footer{flex-direction:column;gap:4px}}
+.storage-filters{display:flex;gap:9px;flex-wrap:wrap;flex-shrink:0}.storage-filter{display:flex;align-items:center;gap:11px;min-height:46px;padding:10px 17px;background:#fff;border:1px solid #d2dfd6;border-radius:9px;color:#61776b;font-size:14px;font-weight:550}.storage-filter&gt;span{display:grid;place-items:center;min-width:23px;height:23px;padding:0 5px;background:#edf2ee;border-radius:6px;font-size:11px;color:#718378}.storage-filter.active{background:var(--green);border-color:var(--green);color:white}.storage-filter.active&gt;span{background:#ffffff25;color:white}.storage-filter:hover{border-color:var(--green)}@media(max-width:760px){.storage-filters{gap:7px}.storage-filter{font-size:12px;gap:8px;padding:9px 12px;min-height:44px}}@media(max-width:480px){.storage-filter{padding:8px 10px;font-size:11px;gap:6px}.storage-filters{gap:6px}}
+/* Eine gemeinsame Aufgabendetailseite von allen Aufgabenanzeigen aus. */
+.task-open-link{border:0;background:none;color:var(--ink);padding:3px 0;text-align:left;font:inherit;font-weight:600;cursor:pointer}.task-open-link:hover{color:var(--green);text-decoration:underline}.storage-table td&gt;.task-open-link{font-size:14px;min-height:30px}.task-overview-row{cursor:pointer}.task-overview-row:hover{background:#f7faf8}.task-overview-page{display:flex;flex:1;min-height:0;flex-direction:column;gap:14px}.task-overview-heading{display:flex;align-items:center;gap:16px}.task-overview-heading .suggest-button{margin-left:auto;min-height:42px}.task-overview-heading .tiny{font-size:11px;letter-spacing:.8px}.task-overview-title{display:flex;align-items:center;justify-content:space-between;gap:16px}.task-overview-title h1{font-size:24px;margin:0 0 6px}.task-overview-title p{font-size:12px;color:var(--muted);margin:0}.task-state{padding:9px 12px;background:#eaf3ed;color:var(--green);font-size:11px;border-radius:7px;white-space:nowrap}.task-overview-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,1fr);gap:16px;flex:1;min-height:0}.task-overview-map-panel{padding:13px;display:flex;flex-direction:column;min-height:0;gap:10px}.task-map-switch{display:flex;gap:6px;flex-shrink:0}.task-map-switch button{font-size:12px;min-height:40px;padding:8px 12px;background:#f5f8f5;border:1px solid #d7e2da;color:#728278;border-radius:7px}.task-map-switch button.active{background:var(--green);color:white;border-color:var(--green)}#task-overview-map{position:relative;flex:1;min-height:0;background:#edf1e6;border-radius:10px;overflow:hidden}.task-map-caption{font-size:10px;line-height:1.5;color:var(--muted);flex-shrink:0}.task-overview-information{overflow:auto;min-height:0;display:flex;flex-direction:column;gap:12px;padding-right:4px}.task-info-group{padding:16px;flex-shrink:0}.task-info-group h2{font-size:15px;margin:0 0 10px}.task-info-group dl{margin:0}.task-info-group dl&gt;div{display:flex;justify-content:space-between;gap:20px;padding:10px 0;border-bottom:1px solid var(--line);font-size:12px;line-height:1.5}.task-info-group dl&gt;div:last-child{border:0;padding-bottom:0}.task-info-group dt{color:var(--muted)}.task-info-group dd{margin:0;font-weight:550;text-align:right;max-width:65%}
+@media(max-width:900px){.task-overview-title h1{font-size:21px}.task-overview-layout{grid-template-columns:minmax(0,1fr) minmax(285px,1fr);gap:12px}.task-info-group{padding:13px}.task-info-group dl&gt;div{font-size:11px;gap:12px}.task-overview-heading .tiny{font-size:10px}.task-map-switch button{font-size:11px;padding:8px}}
+@media(max-width:600px){.task-overview-page{overflow:auto}.task-overview-layout{display:flex;flex-direction:column;flex:none}.task-overview-map-panel{height:330px;flex-shrink:0}.task-overview-information{overflow:visible}.task-overview-title{align-items:start;flex-direction:column;gap:9px}.task-overview-heading{gap:9px;flex-wrap:wrap}.task-overview-heading .suggest-button{font-size:10px}.task-overview-title h1{font-size:20px}.task-overview-heading .planner-back{font-size:12px}}
+
+&lt;/style&gt;
+    
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;header&gt;
+      &lt;div class=&quot;brand&quot;&gt;
+        &lt;span class=&quot;logo&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 40 40&quot; width=&quot;35&quot; height=&quot;35&quot; fill=&quot;none&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; role=&quot;img&quot; aria-label=&quot;Feldroboter mit Funkwellen&quot;&gt;
+            &lt;path d=&quot;M6 34h28M11 37h18&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; opacity=&quot;.4&quot;/&gt;
+            &lt;/path&gt;
+            &lt;rect x=&quot;7&quot; y=&quot;22&quot; width=&quot;6&quot; height=&quot;10&quot; rx=&quot;2&quot; fill=&quot;currentColor&quot;/&gt;
+            &lt;/rect&gt;
+            &lt;rect x=&quot;27&quot; y=&quot;22&quot; width=&quot;6&quot; height=&quot;10&quot; rx=&quot;2&quot; fill=&quot;currentColor&quot;/&gt;
+            &lt;/rect&gt;
+            &lt;path d=&quot;M13 18h14l3 10H10l3-10Z&quot; fill=&quot;currentColor&quot;/&gt;
+            &lt;/path&gt;
+            &lt;path d=&quot;M16 21h8&quot; stroke=&quot;#29765e&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot;/&gt;
+            &lt;/path&gt;
+            &lt;path d=&quot;M20 18v-5&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot;/&gt;
+            &lt;/path&gt;
+            &lt;circle cx=&quot;20&quot; cy=&quot;11&quot; r=&quot;2&quot; fill=&quot;currentColor&quot;/&gt;
+            &lt;/circle&gt;
+            &lt;path d=&quot;M14.5 6a7.5 7.5 0 0 0 0 10M25.5 6a7.5 7.5 0 0 1 0 10M10.5 3a12 12 0 0 0 0 16M29.5 3a12 12 0 0 1 0 16&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot;/&gt;
+            &lt;/path&gt;
+          &lt;/svg&gt;
+        &lt;/span&gt;
+        ROBOplan
+      &lt;/div&gt;
+      &lt;nav aria-label=&quot;Hauptnavigation&quot;&gt;
+        &lt;a href=&quot;#home&quot; data-page=&quot;home&quot; class=&quot;active&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.7&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;
+            &lt;path d=&quot;m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z&quot;/&gt;
+            &lt;/path&gt;
+          &lt;/svg&gt;
+          &lt;span&gt;
+            Übersicht
+          &lt;/span&gt;
+        &lt;/a&gt;
+        &lt;a href=&quot;#ackerschlagskarte&quot; data-page=&quot;ackerschlagskarte&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.7&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;
+            &lt;path d=&quot;m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2Z M9 3v16M15 5v16&quot;/&gt;
+            &lt;/path&gt;
+          &lt;/svg&gt;
+          &lt;span&gt;
+            Ackerschläge
+          &lt;/span&gt;
+        &lt;/a&gt;
+        &lt;a href=&quot;#roboterverwaltung&quot; data-page=&quot;roboterverwaltung&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.7&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;
+            &lt;rect x=&quot;5&quot; y=&quot;9&quot; width=&quot;14&quot; height=&quot;10&quot; rx=&quot;3&quot;/&gt;
+            &lt;/rect&gt;
+            &lt;path d=&quot;M12 9V5M9 3a5 5 0 0 0 0 4m6-4a5 5 0 0 1 0 4M3 13v5m18-5v5M9 13h6&quot;/&gt;
+            &lt;/path&gt;
+          &lt;/svg&gt;
+          &lt;span&gt;
+            Roboter
+          &lt;/span&gt;
+        &lt;/a&gt;
+        &lt;a href=&quot;#auftragsverwaltung&quot; data-page=&quot;auftragsverwaltung&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.7&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;
+            &lt;rect x=&quot;4&quot; y=&quot;4&quot; width=&quot;16&quot; height=&quot;17&quot; rx=&quot;2&quot;/&gt;
+            &lt;/rect&gt;
+            &lt;path d=&quot;M9 3h6v4H9ZM8 12l2 2 5-4M8 18h8&quot;/&gt;
+            &lt;/path&gt;
+          &lt;/svg&gt;
+          &lt;span&gt;
+            Disposition
+          &lt;/span&gt;
+        &lt;/a&gt;
+      &lt;/nav&gt;
+      &lt;div class=&quot;headright&quot;&gt;
+        &lt;div class=&quot;header-clock&quot;&gt;&lt;time id=&quot;header-time&quot;&gt;&lt;/time&gt;&lt;span id=&quot;header-date&quot;&gt;&lt;/span&gt;&lt;/div&gt;
+        &lt;span class=&quot;connection&quot;&gt;
+          &lt;i class=&quot;dot&quot;&gt;
+          &lt;/i&gt;
+          System verbunden
+        &lt;/span&gt;
+        &lt;button type=&quot;button&quot; class=&quot;voice-assistant&quot; aria-label=&quot;KI-Assistent für Spracheingaben&quot; title=&quot;KI-Assistent für Spracheingaben&quot;&gt;
+          &lt;svg viewBox=&quot;0 0 24 24&quot; width=&quot;26&quot; height=&quot;26&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;
+            &lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;12&quot; rx=&quot;3&quot;/&gt;
+            &lt;path d=&quot;M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8&quot;/&gt;
+          &lt;/svg&gt;
+          &lt;span&gt;KI-Assistent&lt;/span&gt;
+        &lt;/button&gt;
+        &lt;div class=&quot;avatar&quot; aria-label=&quot;Profil MK&quot;&gt;
+          MK
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/header&gt;
+    &lt;main id=&quot;page-content&quot;&gt;
+&lt;!-- Inhalt der Unterseite; eingebunden durch app.html. --&gt;
+&lt;section id=&quot;home&quot;&gt;
+  &lt;div class=&quot;layout&quot;&gt;
+    &lt;aside class=&quot;left&quot;&gt;
+      &lt;section class=&quot;panel&quot;&gt;
+        &lt;div class=&quot;panelhead&quot;&gt;
+          &lt;h2&gt;
+            Einsatzgebiet
+          &lt;/h2&gt;
+          &lt;span class=&quot;tiny&quot;&gt;
+            4 Roboter im Einsatz · 2 auf dem Hof
+          &lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;map overview&quot; id=&quot;overview&quot;&gt;
+          &lt;span class=&quot;maplabel&quot;&gt;
+            HOF GRÜNPARK · 8 FELDER
+          &lt;/span&gt;
+          &lt;div class=&quot;maptools&quot;&gt;
+            &lt;button aria-label=&quot;Karte vergrößern&quot; id=&quot;zoomIn&quot;&gt;
+              +
+            &lt;/button&gt;
+            &lt;button aria-label=&quot;Karte verkleinern&quot; id=&quot;zoomOut&quot;&gt;
+              −
+            &lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+      &lt;section class=&quot;panel weather&quot;&gt;
+        &lt;div class=&quot;weather-top&quot;&gt;
+          &lt;h2&gt;
+            Wetter am aktuellen Standort
+          &lt;/h2&gt;
+          &lt;span class=&quot;tiny&quot;&gt;
+            Grünpark
+          &lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;weather-main&quot;&gt;
+          &lt;span class=&quot;sun&quot;&gt;
+            ☀
+          &lt;/span&gt;
+          &lt;div&gt;
+            &lt;div class=&quot;temp&quot;&gt;
+              18
+              &lt;small&gt;
+                °C
+              &lt;/small&gt;
+            &lt;/div&gt;
+            &lt;p&gt;
+              Sonnig, beste Bedingungen
+            &lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;weather-row&quot;&gt;
+          &lt;span&gt;
+            ♧
+            &amp;nbsp;
+            Niederschlag
+          &lt;/span&gt;
+          &lt;strong&gt;
+            2,4 mm
+          &lt;/strong&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;weather-row&quot;&gt;
+          &lt;span&gt;
+            ☂
+            &amp;nbsp;
+            Regenwahrscheinlichkeit
+          &lt;/span&gt;
+          &lt;strong&gt;
+            15 %
+          &lt;/strong&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;weather-row&quot;&gt;
+          &lt;span&gt;
+            ≋
+            &amp;nbsp;
+            Wind aus NW
+          &lt;/span&gt;
+          &lt;strong&gt;
+            12 km/h
+          &lt;/strong&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;weather-row&quot;&gt;
+          &lt;span&gt;
+            ♧
+            &amp;nbsp;
+            Gefühlte Temperatur
+          &lt;/span&gt;
+          &lt;strong&gt;
+            17 °C
+          &lt;/strong&gt;
+        &lt;/div&gt;
+      &lt;/section&gt;
+    &lt;/aside&gt;
+    &lt;section&gt;
+      &lt;div class=&quot;fleetbar&quot;&gt;
+        &lt;h2&gt;
+          Deine Roboter
+          &lt;span style=&quot;color:#95a29b;font-weight:400;margin-left:5px&quot;&gt;
+            06
+          &lt;/span&gt;
+        &lt;/h2&gt;
+        &lt;span class=&quot;live&quot;&gt;
+          &lt;i class=&quot;dot&quot;&gt;
+          &lt;/i&gt;
+          4 im Einsatz · 2 auf dem Hof
+        &lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;robots&quot; id=&quot;robots&quot;&gt;
+      &lt;/div&gt;
+    &lt;/section&gt;
+  &lt;/div&gt;
+&lt;/section&gt;
+
+&lt;!-- Inhalt der Unterseite; eingebunden durch app.html. --&gt;
+&lt;section hidden id=&quot;fields&quot; aria-label=&quot;Ackerschlagskarte&quot;&gt;
+  &lt;div class=&quot;field-layout&quot;&gt;
+    &lt;div class=&quot;field-map&quot;&gt;
+      &lt;div id=&quot;field-map-content&quot; style=&quot;width:100%;height:100%&quot;&gt;
+      &lt;/div&gt;
+      &lt;span class=&quot;field-legend&quot;&gt;
+        ● Roboter · ▣ Feldeinfahrten · Schematische Karte
+      &lt;/span&gt;
+    &lt;/div&gt;
+    &lt;aside class=&quot;panel&quot; style=&quot;display:flex;flex-direction:column;min-height:0&quot;&gt;
+      &lt;div class=&quot;panelhead&quot;&gt;
+        &lt;h2&gt;
+          Feldliste
+        &lt;/h2&gt;
+        &lt;span class=&quot;tiny&quot;&gt;
+          8 Schläge
+        &lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;field-list&quot; id=&quot;field-list&quot; style=&quot;margin:0 10px 10px&quot;&gt;
+      &lt;/div&gt;
+    &lt;/aside&gt;
+  &lt;/div&gt;
+  &lt;section id=&quot;field-record&quot; hidden&gt;&lt;/section&gt;
+  &lt;section id=&quot;field-planner&quot; hidden&gt;
+    &lt;div class=&quot;planner-heading&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;planner-back&quot; onclick=&quot;closeFieldPlanner()&quot;&gt;← Zurück zu den Ackerschlägen&lt;/button&gt;&lt;div class=&quot;planner-breadcrumb&quot;&gt;&lt;span&gt;Ackerschläge&lt;/span&gt;&lt;span aria-hidden=&quot;true&quot;&gt;/&lt;/span&gt;&lt;h1 id=&quot;planner-name&quot;&gt;&lt;/h1&gt;&lt;span id=&quot;planner-meta&quot; class=&quot;sub&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;planner-layout&quot;&gt;
+      &lt;div class=&quot;planner-map-panel&quot;&gt;&lt;div id=&quot;task-map-slot&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+      &lt;aside class=&quot;panel planner-settings&quot;&gt;&lt;h2&gt;Aufgabenvorschlag&lt;/h2&gt;&lt;label class=&quot;task-label&quot;&gt;Arbeit&lt;select id=&quot;planner-operation&quot;&gt;&lt;option&gt;Grubbern tief&lt;/option&gt;&lt;option&gt;Grubbern flach&lt;/option&gt;&lt;option value=&quot;Säen&quot;&gt;Säen / Drillen&lt;/option&gt;&lt;option&gt;Hacken&lt;/option&gt;&lt;option&gt;Striegeln&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;label class=&quot;task-label&quot; id=&quot;depth-label&quot;&gt;Arbeitstiefe &lt;span class=&quot;input-unit&quot;&gt;&lt;input id=&quot;planner-depth&quot; type=&quot;number&quot; value=&quot;15&quot; min=&quot;3&quot; max=&quot;35&quot; step=&quot;1&quot;&gt; cm&lt;/span&gt;&lt;/label&gt;&lt;label class=&quot;task-label&quot;&gt;Arbeitsgeschwindigkeit&lt;span class=&quot;input-unit&quot;&gt;&lt;input id=&quot;planner-speed&quot; type=&quot;number&quot; min=&quot;1&quot; max=&quot;30&quot; step=&quot;0.5&quot; value=&quot;12&quot; required&gt; km/h&lt;/span&gt;&lt;/label&gt;&lt;div id=&quot;seed-settings&quot; hidden&gt;&lt;label class=&quot;task-label&quot;&gt;Frucht&lt;select id=&quot;seed-crop&quot;&gt;&lt;/select&gt;&lt;/label&gt;&lt;label class=&quot;task-label&quot;&gt;Saatstärke · Basis&lt;select id=&quot;seed-rate&quot;&gt;&lt;option value=&quot;2800000&quot;&gt;2.800.000 Körner/ha · 280 Körner/m²&lt;/option&gt;&lt;option value=&quot;3200000&quot; selected&gt;3.200.000 Körner/ha · 320 Körner/m²&lt;/option&gt;&lt;option value=&quot;3600000&quot;&gt;3.600.000 Körner/ha · 360 Körner/m²&lt;/option&gt;&lt;option value=&quot;4000000&quot;&gt;4.000.000 Körner/ha · 400 Körner/m²&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;label class=&quot;seed-mode&quot;&gt;&lt;input type=&quot;checkbox&quot; id=&quot;seed-application-map&quot; checked&gt;Teilflächenspezifisch nach Applikationskarte&lt;/label&gt;&lt;label class=&quot;task-label&quot;&gt;Fahrgassenabstand&lt;select id=&quot;tramline-spacing&quot;&gt;&lt;option value=&quot;0&quot;&gt;Keine Fahrgassen&lt;/option&gt;&lt;option value=&quot;12&quot;&gt;12 m&lt;/option&gt;&lt;option value=&quot;18&quot;&gt;18 m&lt;/option&gt;&lt;option value=&quot;24&quot; selected&gt;24 m&lt;/option&gt;&lt;option value=&quot;30&quot;&gt;30 m&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;/div&gt;&lt;div class=&quot;direction-settings&quot;&gt;&lt;div class=&quot;standard-direction&quot;&gt;&lt;span&gt;Standard-Bearbeitungsrichtung&lt;/span&gt;&lt;strong id=&quot;standard-direction&quot;&gt;&lt;/strong&gt;&lt;/div&gt;&lt;label class=&quot;task-label&quot;&gt;Bearbeitungsrichtung&lt;span class=&quot;input-unit&quot;&gt;&lt;input id=&quot;planner-angle&quot; type=&quot;number&quot; min=&quot;0&quot; max=&quot;359&quot; step=&quot;1&quot; value=&quot;0&quot; required&gt; °&lt;/span&gt;&lt;/label&gt;&lt;/div&gt;&lt;label class=&quot;task-label&quot;&gt;Anzahl Vorgewendebahnen&lt;select id=&quot;headland-count&quot;&gt;&lt;option value=&quot;0&quot;&gt;0 · ohne Vorgewende&lt;/option&gt;&lt;option value=&quot;1&quot;&gt;1 Bahn&lt;/option&gt;&lt;option value=&quot;2&quot; selected&gt;2 Bahnen&lt;/option&gt;&lt;option value=&quot;3&quot;&gt;3 Bahnen&lt;/option&gt;&lt;option value=&quot;4&quot;&gt;4 Bahnen&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;div class=&quot;planner-specs&quot;&gt;&lt;div&gt;&lt;span&gt;Spurlinien&lt;/span&gt;&lt;strong id=&quot;planner-track-count&quot;&gt;&lt;/strong&gt;&lt;/div&gt;&lt;/div&gt;&lt;label class=&quot;task-label priority-select&quot;&gt;Priorität &amp; Zeitrahmen&lt;select id=&quot;planner-priority&quot; name=&quot;planner-priority&quot;&gt;&lt;option value=&quot;immediate&quot;&gt;Sofort · So bald wie möglich&lt;/option&gt;&lt;option value=&quot;week&quot;&gt;Zeitnah · Innerhalb einer Woche&lt;/option&gt;&lt;option value=&quot;month&quot;&gt;Geplant · Innerhalb von vier Wochen&lt;/option&gt;&lt;option value=&quot;flexible&quot; selected&gt;Flexibel · Ohne Zeitvorgabe&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;div class=&quot;planner-save&quot;&gt;&lt;span id=&quot;planner-save-status&quot; role=&quot;status&quot;&gt;&lt;/span&gt;&lt;button class=&quot;primary&quot; id=&quot;planner-save-button&quot; type=&quot;button&quot; onclick=&quot;saveFieldTask()&quot;&gt;In Aufgabenspeicher übertragen&lt;/button&gt;&lt;/div&gt;&lt;/aside&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+&lt;/section&gt;
+
+&lt;section id=&quot;roboterverwaltung&quot; class=&quot;placeholder&quot; hidden&gt;
+  &lt;span class=&quot;tiny&quot;&gt;
+    ROBOplan / IN VORBEREITUNG
+  &lt;/span&gt;
+  &lt;h2&gt;
+    Roboterverwaltung
+  &lt;/h2&gt;
+  &lt;p&gt;
+    Hier entsteht im nächsten Schritt die passende Unterseite.
+  &lt;/p&gt;
+  &lt;button class=&quot;primary&quot; onclick=&quot;location.hash=&#x27;home&#x27;&quot;&gt;
+    Zur Übersicht
+  &lt;/button&gt;
+&lt;/section&gt;
+
+&lt;section id=&quot;auftragsverwaltung&quot; class=&quot;disposition-v2 ipad-disposition&quot; hidden aria-label=&quot;Disposition&quot;&gt;
+  &lt;div class=&quot;dispatch-toolbar&quot;&gt;&lt;div&gt;&lt;h1&gt;Disposition&lt;/h1&gt;&lt;/div&gt;&lt;div class=&quot;dispatch-toolbar-actions&quot;&gt;&lt;button class=&quot;open-storage-button&quot; onclick=&quot;location.hash=&#x27;arbeitsspeicher&#x27;&quot;&gt;Offene Aufgaben &lt;span id=&quot;open-task-count&quot; class=&quot;count&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button class=&quot;suggest-button&quot; id=&quot;suggest-plan&quot;&gt;✧ Vorschlag&lt;/button&gt;&lt;button class=&quot;primary&quot; id=&quot;accept-plan&quot;&gt;Einsatzplan übernehmen&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;div class=&quot;dispatch-map-layout&quot;&gt;&lt;aside class=&quot;panel dispatch-context-map&quot;&gt;&lt;div class=&quot;context-map-heading&quot;&gt;&lt;span class=&quot;tiny&quot;&gt;FLÄCHENÜBERSICHT&lt;/span&gt;&lt;h2 id=&quot;map-selection-title&quot;&gt;Roboter 5&lt;/h2&gt;&lt;p id=&quot;map-selection-caption&quot;&gt;Alle zugewiesenen Flächen&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;robot-route-map-wrap&quot;&gt;&lt;div id=&quot;dispatch-map&quot; class=&quot;dispatch-map&quot;&gt;&lt;/div&gt;&lt;div class=&quot;robot-route-map-key&quot;&gt;&lt;span class=&quot;road-key&quot;&gt;Autonome Straßenfahrt&lt;/span&gt;&lt;span class=&quot;track-key&quot;&gt;Spurlinien&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;button class=&quot;context-details-button&quot; onclick=&quot;document.getElementById(&#x27;dispatch-inspector&#x27;).showModal()&quot;&gt;Einsatzdetails öffnen ↗&lt;/button&gt;&lt;/aside&gt;
+      &lt;section class=&quot;panel schedule-panel&quot; aria-label=&quot;Zeitplan der Roboter&quot;&gt;&lt;div class=&quot;schedule-heading&quot;&gt;&lt;div&gt;&lt;h2&gt;Einsatzplan&lt;/h2&gt;&lt;span id=&quot;schedule-date-caption&quot;&gt;&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;schedule-legend&quot;&gt;&lt;span class=&quot;legend-tillage&quot;&gt;Grubbern&lt;/span&gt;&lt;span class=&quot;legend-seed&quot;&gt;Säen&lt;/span&gt;&lt;span class=&quot;legend-hoe&quot;&gt;Hacken / Striegeln&lt;/span&gt;&lt;span class=&quot;legend-setup&quot;&gt;Rüsten&lt;/span&gt;&lt;span class=&quot;legend-drive&quot;&gt;Straßenfahrt&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;
+        &lt;div class=&quot;schedule-navigation&quot;&gt;&lt;div id=&quot;schedule-days&quot; class=&quot;schedule-days&quot;&gt;&lt;/div&gt;&lt;label&gt;Ansicht &lt;select id=&quot;schedule-scale&quot;&gt;&lt;option value=&quot;480&quot;&gt;8 Stunden&lt;/option&gt;&lt;option value=&quot;720&quot; selected&gt;12 Stunden&lt;/option&gt;&lt;option value=&quot;1440&quot;&gt;24 Stunden&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;/div&gt;
+        &lt;div class=&quot;schedule-grid&quot;&gt;&lt;div class=&quot;schedule-axis&quot;&gt;&lt;span&gt;Roboter / Gerät&lt;/span&gt;&lt;div id=&quot;schedule-ticks&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;div id=&quot;robot-plans&quot; class=&quot;timeline-robots&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+        &lt;div class=&quot;time-navigation&quot;&gt;&lt;button type=&quot;button&quot; id=&quot;schedule-back&quot; aria-label=&quot;Zeitfenster zurück&quot;&gt;←&lt;/button&gt;&lt;input id=&quot;schedule-slider&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;3600&quot; step=&quot;15&quot; value=&quot;360&quot; aria-label=&quot;Zeitfenster im Einsatzplan verschieben&quot;&gt;&lt;button type=&quot;button&quot; id=&quot;schedule-forward&quot; aria-label=&quot;Zeitfenster vor&quot;&gt;→&lt;/button&gt;&lt;output id=&quot;schedule-window&quot;&gt;&lt;/output&gt;&lt;/div&gt;
+      &lt;/section&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;dispatch-bottom-line&quot;&gt;&lt;span id=&quot;plan-status&quot; role=&quot;status&quot;&gt;Entwurf · Vorschlag noch nicht übernommen&lt;/span&gt;&lt;span&gt;Auftrag antippen → Fläche auf der Karte&lt;/span&gt;&lt;/div&gt;
+&lt;/section&gt;
+&lt;section id=&quot;arbeitsspeicher&quot; class=&quot;storage-page&quot; hidden aria-label=&quot;Arbeitsspeicher&quot;&gt;
+  &lt;div class=&quot;storage-page-heading&quot;&gt;&lt;button class=&quot;planner-back&quot; onclick=&quot;location.hash=&#x27;auftragsverwaltung&#x27;&quot;&gt;← Zurück zur Disposition&lt;/button&gt;&lt;button class=&quot;suggest-button&quot; onclick=&quot;document.getElementById(&#x27;new-task&#x27;).showModal()&quot;&gt;+ Aufgabe hinzufügen&lt;/button&gt;&lt;/div&gt;
+  &lt;div class=&quot;storage-page-title&quot;&gt;&lt;div&gt;&lt;span class=&quot;tiny&quot;&gt;DISPOSITION / ARBEITSSPEICHER&lt;/span&gt;&lt;h1&gt;Offene Aufgaben &lt;span id=&quot;buffer-count&quot; class=&quot;count&quot;&gt;&lt;/span&gt;&lt;/h1&gt;&lt;/div&gt;&lt;label class=&quot;storage-sort-label&quot;&gt;Sortieren nach&lt;select id=&quot;storage-sort&quot;&gt;&lt;option value=&quot;field&quot;&gt;Name der Fläche · A–Z&lt;/option&gt;&lt;option value=&quot;operation&quot;&gt;Aufgabe · A–Z&lt;/option&gt;&lt;option value=&quot;deadline&quot;&gt;Ablaufdatum · früheste zuerst&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;/div&gt;
+  &lt;div id=&quot;storage-filters&quot; class=&quot;storage-filters&quot; role=&quot;group&quot; aria-label=&quot;Nach Arbeitsart filtern&quot;&gt;&lt;/div&gt;
+  &lt;div class=&quot;panel storage-table-wrap&quot;&gt;&lt;table class=&quot;storage-table&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;th scope=&quot;col&quot;&gt;Fläche&lt;/th&gt;&lt;th scope=&quot;col&quot;&gt;Aufgabe&lt;/th&gt;&lt;th scope=&quot;col&quot;&gt;Dauer&lt;/th&gt;&lt;th scope=&quot;col&quot;&gt;Ablaufdatum&lt;/th&gt;&lt;th scope=&quot;col&quot;&gt;Roboter zuweisen&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody id=&quot;dispatch-tasks&quot;&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;
+  &lt;div class=&quot;storage-page-footer&quot;&gt;&lt;strong id=&quot;buffer-area&quot;&gt;&lt;/strong&gt;&lt;span&gt;Zuweisen übernimmt die Aufgabe direkt in den Zeitplan.&lt;/span&gt;&lt;/div&gt;
+&lt;/section&gt;
+&lt;dialog id=&quot;dispatch-inspector&quot; class=&quot;dispatch-inspector&quot; aria-label=&quot;Robotereinsatz&quot;&gt;&lt;div class=&quot;dispatch-dialog-bar&quot;&gt;&lt;strong&gt;Einsatzdetails&lt;/strong&gt;&lt;button class=&quot;drawer-close&quot; onclick=&quot;this.closest(&#x27;dialog&#x27;).close()&quot;&gt;Zurück zum Zeitplan ×&lt;/button&gt;&lt;/div&gt;
+      &lt;section class=&quot;panel robot-route-panel&quot;&gt;&lt;div class=&quot;robot-route-details&quot;&gt;&lt;div class=&quot;route-detail-heading&quot;&gt;&lt;span class=&quot;tiny&quot;&gt;AUSGEWÄHLTER ROBOTER&lt;/span&gt;&lt;h2 id=&quot;route-robot-title&quot;&gt;&lt;/h2&gt;&lt;p id=&quot;route-robot-summary&quot;&gt;&lt;/p&gt;&lt;/div&gt;&lt;div id=&quot;route-jobs&quot;&gt;&lt;/div&gt;&lt;p class=&quot;schedule-demo-note&quot;&gt;Planungsdemo · Dauer und Fahrwege beispielhaft. Keine Roboter werden gestartet.&lt;/p&gt;&lt;/div&gt;&lt;/section&gt;&lt;/dialog&gt;
+&lt;dialog id=&quot;new-task&quot;&gt;&lt;button class=&quot;close&quot; aria-label=&quot;Schließen&quot; onclick=&quot;this.closest(&#x27;dialog&#x27;).close()&quot;&gt;×&lt;/button&gt;&lt;span class=&quot;tiny&quot;&gt;AUFGABEN SPEICHERN&lt;/span&gt;&lt;h2&gt;Neue Aufgabe&lt;/h2&gt;&lt;p&gt;Zuerst Schlag und Arbeit festlegen. Die Zuweisung erfolgt später.&lt;/p&gt;&lt;form id=&quot;task-form&quot;&gt;&lt;label class=&quot;task-label&quot;&gt;Ackerschlag&lt;select id=&quot;task-field&quot;&gt;&lt;/select&gt;&lt;/label&gt;&lt;label class=&quot;task-label&quot;&gt;Arbeit&lt;select id=&quot;task-operation&quot;&gt;&lt;option&gt;Grubbern tief&lt;/option&gt;&lt;option&gt;Grubbern flach&lt;/option&gt;&lt;option&gt;Säen&lt;/option&gt;&lt;option&gt;Hacken&lt;/option&gt;&lt;option&gt;Striegeln&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;label class=&quot;task-label priority-select&quot;&gt;Priorität &amp; Zeitrahmen&lt;select id=&quot;task-priority&quot; name=&quot;task-priority&quot;&gt;&lt;option value=&quot;immediate&quot;&gt;Sofort · So bald wie möglich&lt;/option&gt;&lt;option value=&quot;week&quot;&gt;Zeitnah · Innerhalb einer Woche&lt;/option&gt;&lt;option value=&quot;month&quot;&gt;Geplant · Innerhalb von vier Wochen&lt;/option&gt;&lt;option value=&quot;flexible&quot; selected&gt;Flexibel · Ohne Zeitvorgabe&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;button class=&quot;primary&quot; type=&quot;submit&quot;&gt;Aufgabe speichern&lt;/button&gt;&lt;/form&gt;&lt;/dialog&gt;
+&lt;section id=&quot;aufgabendetail&quot; class=&quot;task-overview-page&quot; hidden aria-label=&quot;Aufgabenübersicht&quot;&gt;
+  &lt;div class=&quot;task-overview-heading&quot;&gt;&lt;button class=&quot;planner-back&quot; onclick=&quot;closeTaskOverview()&quot;&gt;← Zurück&lt;/button&gt;&lt;span class=&quot;tiny&quot; id=&quot;task-overview-id&quot;&gt;&lt;/span&gt;&lt;button class=&quot;suggest-button&quot; id=&quot;task-overview-assign&quot; onclick=&quot;location.hash=&#x27;arbeitsspeicher&#x27;&quot;&gt;Im Arbeitsspeicher zuweisen ↗&lt;/button&gt;&lt;/div&gt;
+  &lt;div class=&quot;task-overview-title&quot;&gt;&lt;div&gt;&lt;h1 id=&quot;task-overview-title&quot;&gt;&lt;/h1&gt;&lt;p id=&quot;task-overview-subtitle&quot;&gt;&lt;/p&gt;&lt;/div&gt;&lt;span id=&quot;task-overview-status&quot; class=&quot;task-state&quot;&gt;&lt;/span&gt;&lt;/div&gt;
+  &lt;div class=&quot;task-overview-layout&quot;&gt;&lt;section class=&quot;panel task-overview-map-panel&quot;&gt;&lt;div class=&quot;task-map-switch&quot; role=&quot;group&quot; aria-label=&quot;Kartendarstellung&quot;&gt;&lt;button id=&quot;task-map-field&quot; onclick=&quot;setTaskOverviewMap(&#x27;field&#x27;)&quot;&gt;Fläche &amp; Spurlinien&lt;/button&gt;&lt;button id=&quot;task-map-road&quot; onclick=&quot;setTaskOverviewMap(&#x27;road&#x27;)&quot;&gt;Anfahrt&lt;/button&gt;&lt;/div&gt;&lt;div id=&quot;task-overview-map&quot; class=&quot;map&quot;&gt;&lt;/div&gt;&lt;div id=&quot;task-overview-map-caption&quot; class=&quot;task-map-caption&quot;&gt;&lt;/div&gt;&lt;/section&gt;&lt;div id=&quot;task-overview-information&quot; class=&quot;task-overview-information&quot;&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;/section&gt;
+
+&lt;/main&gt;
+    &lt;dialog id=&quot;details&quot;&gt;
+      &lt;button class=&quot;close&quot; aria-label=&quot;Schließen&quot; onclick=&quot;this.closest(&#x27;dialog&#x27;).close()&quot;&gt;
+        ×
+      &lt;/button&gt;
+      &lt;span class=&quot;tiny&quot;&gt;
+        DETAILS
+      &lt;/span&gt;
+      &lt;h2 id=&quot;detailTitle&quot;&gt;
+      &lt;/h2&gt;
+      &lt;p id=&quot;detailArea&quot;&gt;
+      &lt;/p&gt;
+      &lt;div id=&quot;detailRows&quot;&gt;
+      &lt;/div&gt;
+      &lt;p class=&quot;notice&quot;&gt;
+        Demodaten. Eine Verbindung zu den Robotern wird später ergänzt.
+      &lt;/p&gt;
+      &lt;button class=&quot;primary&quot; onclick=&quot;document.getElementById(&#x27;details&#x27;).close()&quot;&gt;
+        Zurück zur Übersicht
+      &lt;/button&gt;
+    &lt;/dialog&gt;
+  &lt;script&gt;
+// Gemeinsame Kartendaten, Darstellung und Interaktionen.
+const taskPriorities={immediate:{label:&#x27;Sofort&#x27;,time:&#x27;So bald wie möglich&#x27;},week:{label:&#x27;Zeitnah&#x27;,time:&#x27;Innerhalb einer Woche&#x27;},month:{label:&#x27;Geplant&#x27;,time:&#x27;Innerhalb von vier Wochen&#x27;},flexible:{label:&#x27;Flexibel&#x27;,time:&#x27;Ohne Zeitvorgabe&#x27;}};
+function priorityBadge(task){const key=Object.hasOwn(taskPriorities,task.priority)?task.priority:&#x27;flexible&#x27;;const p=taskPriorities[key];return `&lt;span class=&quot;priority-badge priority-${key}&quot; title=&quot;${p.time}&quot;&gt;&lt;i aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;${p.label} · ${p.time}&lt;/span&gt;`;}
+
+const fields=[
+  {
+    &quot;id&quot;: 1,
+    &quot;name&quot;: &quot;Hinterm Haus&quot;,
+    &quot;crop&quot;: &quot;Weizen&quot;,
+    &quot;area&quot;: &quot;8,4 ha&quot;,
+    &quot;task&quot;: &quot;Hacken&quot;,
+    &quot;note&quot;: &quot;Bearbeitung läuft&quot;,
+    &quot;robots&quot;: [
+      1,
+      2
+    ],
+    &quot;x&quot;: 160,
+    &quot;y&quot;: 185,
+    &quot;path&quot;: &quot;M65 70Q145 35 245 65L255 245L165 280L60 250Z&quot;,
+    &quot;entry&quot;: [
+      170,
+      278
+    ]
+  },
+  {
+    &quot;id&quot;: 2,
+    &quot;name&quot;: &quot;Lerchenfeld&quot;,
+    &quot;crop&quot;: &quot;Zuckerrüben&quot;,
+    &quot;area&quot;: &quot;5,2 ha&quot;,
+    &quot;task&quot;: &quot;Keine Behandlung&quot;,
+    &quot;note&quot;: &quot;Aktuell kein Auftrag geplant&quot;,
+    &quot;robots&quot;: [],
+    &quot;x&quot;: 795,
+    &quot;y&quot;: 105,
+    &quot;path&quot;: &quot;M580 55L970 55L985 118Q820 120 710 164L580 240Z&quot;,
+    &quot;entry&quot;: [
+      710,
+      164
+    ]
+  },
+  {
+    &quot;id&quot;: 3,
+    &quot;name&quot;: &quot;Ortberg&quot;,
+    &quot;crop&quot;: &quot;Mais&quot;,
+    &quot;area&quot;: &quot;6,8 ha&quot;,
+    &quot;task&quot;: &quot;Keine Behandlung&quot;,
+    &quot;note&quot;: &quot;Aktuell kein Auftrag geplant&quot;,
+    &quot;robots&quot;: [],
+    &quot;x&quot;: 790,
+    &quot;y&quot;: 395,
+    &quot;path&quot;: &quot;M720 240Q840 195 980 205L975 585L670 540L535 410Q630 335 720 240Z&quot;,
+    &quot;entry&quot;: [
+      680,
+      268
+    ]
+  },
+  {
+    &quot;id&quot;: 4,
+    &quot;name&quot;: &quot;Bachwiese&quot;,
+    &quot;crop&quot;: &quot;Weizen&quot;,
+    &quot;area&quot;: &quot;4,6 ha&quot;,
+    &quot;task&quot;: &quot;Hacken&quot;,
+    &quot;note&quot;: &quot;Bearbeitung läuft&quot;,
+    &quot;robots&quot;: [
+      3
+    ],
+    &quot;x&quot;: 170,
+    &quot;y&quot;: 475,
+    &quot;path&quot;: &quot;M55 365L185 390L342 477L265 615Q135 645 65 585Z&quot;,
+    &quot;entry&quot;: [
+      342,
+      477
+    ]
+  },
+  {
+    &quot;id&quot;: 5,
+    &quot;name&quot;: &quot;An den Pappeln&quot;,
+    &quot;crop&quot;: &quot;Gerste&quot;,
+    &quot;area&quot;: &quot;7,1 ha&quot;,
+    &quot;task&quot;: &quot;Striegeln&quot;,
+    &quot;note&quot;: &quot;Bearbeitung läuft&quot;,
+    &quot;robots&quot;: [
+      4
+    ],
+    &quot;x&quot;: 490,
+    &quot;y&quot;: 563,
+    &quot;path&quot;: &quot;M448 485L605 548L636 615L373 575Z&quot;,
+    &quot;entry&quot;: [
+      435,
+      505
+    ]
+  },
+  {
+    &quot;id&quot;: 6,
+    &quot;name&quot;: &quot;Lange Wiese&quot;,
+    &quot;crop&quot;: &quot;Grünland&quot;,
+    &quot;area&quot;: &quot;3,9 ha&quot;,
+    &quot;task&quot;: &quot;Keine Behandlung&quot;,
+    &quot;note&quot;: &quot;Aktuell kein Auftrag geplant&quot;,
+    &quot;robots&quot;: [],
+    &quot;x&quot;: 805,
+    &quot;y&quot;: 790,
+    &quot;path&quot;: &quot;M706 683L974 776L970 854L645 850Z&quot;,
+    &quot;entry&quot;: [
+      755,
+      700
+    ]
+  },
+  {
+    &quot;id&quot;: 7,
+    &quot;name&quot;: &quot;Mühlenkamp&quot;,
+    &quot;crop&quot;: &quot;Raps&quot;,
+    &quot;area&quot;: &quot;9,3 ha&quot;,
+    &quot;task&quot;: &quot;Keine Behandlung&quot;,
+    &quot;note&quot;: &quot;Aktuell kein Auftrag geplant&quot;,
+    &quot;robots&quot;: [],
+    &quot;x&quot;: 455,
+    &quot;y&quot;: 755,
+    &quot;path&quot;: &quot;M345 651L610 683L580 852L310 844Z&quot;,
+    &quot;entry&quot;: [
+      390,
+      657
+    ]
+  },
+  {
+    &quot;id&quot;: 8,
+    &quot;name&quot;: &quot;Sonnenstück&quot;,
+    &quot;crop&quot;: &quot;Kartoffeln&quot;,
+    &quot;area&quot;: &quot;6,2 ha&quot;,
+    &quot;task&quot;: &quot;Keine Behandlung&quot;,
+    &quot;note&quot;: &quot;Aktuell kein Auftrag geplant&quot;,
+    &quot;robots&quot;: [],
+    &quot;x&quot;: 365,
+    &quot;y&quot;: 180,
+    &quot;path&quot;: &quot;M280 60L510 65L535 245L405 354L285 300Z&quot;,
+    &quot;entry&quot;: [
+      405,
+      354
+    ]
+  }
+];
+const data=[ {
+  id:1,p:65,b:78,time:&#x27;1 h 25 min&#x27;,area:&#x27;Nordwiese&#x27;,color:&#x27;#2d82b7&#x27;,x:63,y:27
+}, {
+  id:2,p:32,b:54,time:&#x27;2 h 10 min&#x27;,area:&#x27;Sportplatz&#x27;,color:&#x27;#d77b6d&#x27;,x:35,y:44
+}, {
+  id:3,p:48,b:62,time:&#x27;1 h 50 min&#x27;,area:&#x27;Westpark&#x27;,color:&#x27;#368b69&#x27;,x:24,y:72
+}, {
+  id:4,p:81,b:89,time:&#x27;45 min&#x27;,area:&#x27;Südwiese&#x27;,color:&#x27;#c9a145&#x27;,x:74,y:77
+}, {
+  id:5,p:24,b:71,time:&#x27;2 h 35 min&#x27;,area:&#x27;Ostfeld&#x27;,color:&#x27;#8c71b5&#x27;,x:81,y:46
+}, {
+  id:6,p:57,b:66,time:&#x27;1 h 15 min&#x27;,area:&#x27;Obstwiese&#x27;,color:&#x27;#bc8748&#x27;,x:46,y:64
+}
+];
+data.forEach(r=&gt; {
+  const f=fields.find(f=&gt;f.robots.includes(r.id));
+  r.atFarm=!f;
+  r.area=f?f.name:&#x27;Hof Grünpark&#x27;;
+  r.status=f?f.task:&#x27;Auf dem Hof&#x27;;
+  const offset=f&amp;&amp;f.robots.length&gt;1?(f.robots.indexOf(r.id)===0?-40:40):0;
+  r.x=f?(f.x+offset)/10.4:(r.id===5?120:180)/10.4;
+  r.y=f?(f.y+25)/9:790/9;
+  if(!f) {
+    r.p=0;
+    r.time=&#x27;Kein Auftrag&#x27;
+  }
+}
+);
+function landscape(n=0) {
+  const interactive=n===&#x27;fields&#x27;;
+  return `&lt;svg class=&quot;land&quot; viewBox=&quot;0 0 1040 900&quot; preserveAspectRatio=&quot;none&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; role=&quot;img&quot; aria-label=&quot;Hofkarte mit acht benannten Feldern, Straßen, Teich und Hof&quot;&gt;
+    &lt;defs&gt;
+    &lt;pattern id=&quot;rows-${n}&quot; width=&quot;13&quot; height=&quot;13&quot; patternUnits=&quot;userSpaceOnUse&quot; patternTransform=&quot;rotate(18)&quot;&gt;
+    &lt;path d=&quot;M0 0V13&quot; stroke=&quot;#6b9052&quot; stroke-width=&quot;2&quot; opacity=&quot;.16&quot;/&gt;
+    &lt;/pattern&gt;
+    &lt;/defs&gt;
+    &lt;rect width=&quot;1040&quot; height=&quot;900&quot; fill=&quot;#e4ebdc&quot;/&gt;
+    &lt;path d=&quot;M230 795Q285 755 320 660T435 455Q510 370 585 300T735 190Q865 140 1060 157M435 455Q320 375 200 330T-20 300M350 600Q510 635 635 650T1060 765&quot; fill=&quot;none&quot; stroke=&quot;#bfc7b3&quot; stroke-width=&quot;23&quot;/&gt;
+    &lt;path d=&quot;M230 795Q285 755 320 660T435 455Q510 370 585 300T735 190Q865 140 1060 157M435 455Q320 375 200 330T-20 300M350 600Q510 635 635 650T1060 765&quot; fill=&quot;none&quot; stroke=&quot;#eee8d5&quot; stroke-width=&quot;16&quot;/&gt;
+    &lt;path d=&quot;M230 795Q285 755 320 660T435 455Q510 370 585 300T735 190Q865 140 1060 157M435 455Q320 375 200 330T-20 300M350 600Q510 635 635 650T1060 765&quot; fill=&quot;none&quot; stroke=&quot;#d5cbb2&quot; stroke-width=&quot;1.5&quot;/&gt;${fields.map((f,i)=&gt;`&lt;g&gt;
+    &lt;path ${interactive?`class=&quot;field-shape ${f.id===1?&#x27;selected&#x27;:&#x27;&#x27;}&quot; data-field=&quot;${f.id}&quot; tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;${f.name} auswählen&quot;`:&#x27;&#x27;} d=&quot;${f.path}&quot; fill=&quot;${[&#x27;#bed39e&#x27;,&#x27;#d6d0a0&#x27;,&#x27;#b0c997&#x27;,&#x27;#c8d9ad&#x27;,&#x27;#d2d9a5&#x27;,&#x27;#b2cda7&#x27;,&#x27;#d6ce99&#x27;,&#x27;#c2d29d&#x27;][i]}&quot; stroke=&quot;#fffdf3&quot; stroke-width=&quot;4&quot;/&gt;
+    &lt;path d=&quot;${f.path}&quot; fill=&quot;url(#rows-${n})&quot; pointer-events=&quot;none&quot;/&gt;
+    &lt;text x=&quot;${f.x}&quot; y=&quot;${f.y-24}&quot; fill=&quot;#365442&quot; text-anchor=&quot;middle&quot; font-family=&quot;sans-serif&quot; font-size=&quot;21&quot; font-weight=&quot;600&quot; pointer-events=&quot;none&quot;&gt;${f.name}&lt;/text&gt;
+    &lt;/g&gt;`).join(&#x27;&#x27;)}${fields.map(f=&gt;{const [x,y]=f.entry;const links={1:[175,322],2:[735,190],3:[680,225],4:[385,495],5:[420,480],6:[755,685],7:[390,615],8:[420,440]};const [sx,sy]=links[f.id];return `&lt;path d=&quot;M${sx} ${sy}L${x} ${y}&quot; stroke=&quot;#e9dec2&quot; stroke-width=&quot;11&quot; fill=&quot;none&quot; stroke-linecap=&quot;round&quot;/&gt;
+    &lt;g pointer-events=&quot;none&quot;&gt;
+    &lt;title&gt;Feldeinfahrt ${f.name}&lt;/title&gt;
+    &lt;circle cx=&quot;${x}&quot; cy=&quot;${y}&quot; r=&quot;11&quot; fill=&quot;#fffaf0&quot; stroke=&quot;#9a743c&quot; stroke-width=&quot;2&quot;/&gt;
+    &lt;path d=&quot;M${x-5} ${y+4}v-8h10v8M${x-5} ${y}h10&quot; stroke=&quot;#9a743c&quot; stroke-width=&quot;2&quot; fill=&quot;none&quot;/&gt;
+    &lt;/g&gt;`}).join(&#x27;&#x27;)}&lt;path d=&quot;M65 665Q125 625 200 660Q265 695 215 765Q165 810 85 770Q35 735 65 665Z&quot; fill=&quot;#aacdd0&quot; stroke=&quot;#d4e1cd&quot; stroke-width=&quot;12&quot;/&gt;
+    &lt;text x=&quot;140&quot; y=&quot;720&quot; fill=&quot;#577f85&quot; font-family=&quot;sans-serif&quot; font-size=&quot;18&quot; text-anchor=&quot;middle&quot;&gt;Dorfteich&lt;/text&gt;
+    &lt;g fill=&quot;#759265&quot;&gt;${Array.from({length:10},(_,i)=&gt;`&lt;ellipse cx=&quot;${470+i*17}&quot; cy=&quot;${625+i*2}&quot; rx=&quot;8&quot; ry=&quot;15&quot;/&gt;`).join(&#x27;&#x27;)}&lt;/g&gt;
+    &lt;path d=&quot;M70 795Q130 760 200 775L282 786L286 854L67 860Z&quot; fill=&quot;#d3d2c2&quot;/&gt;
+    &lt;g stroke=&quot;#f6f4e9&quot; stroke-width=&quot;3&quot;&gt;
+    &lt;rect x=&quot;75&quot; y=&quot;810&quot; width=&quot;110&quot; height=&quot;40&quot; rx=&quot;3&quot; fill=&quot;#8a9885&quot;/&gt;
+    &lt;rect x=&quot;220&quot; y=&quot;690&quot; width=&quot;50&quot; height=&quot;85&quot; rx=&quot;3&quot; fill=&quot;#929e8a&quot;/&gt;
+    &lt;path d=&quot;M215 797h65v53h-65Z&quot; fill=&quot;#faf8ed&quot;/&gt;
+    &lt;path d=&quot;M208 798l40-32 40 32Z&quot; fill=&quot;#71887a&quot;/&gt;
+    &lt;/g&gt;
+    &lt;text x=&quot;175&quot; y=&quot;880&quot; text-anchor=&quot;middle&quot; fill=&quot;#536c5a&quot; font-family=&quot;sans-serif&quot; font-size=&quot;21&quot; font-weight=&quot;600&quot;&gt;Hof Grünpark&lt;/text&gt;${interactive?`&lt;g&gt;${data.map(r=&gt;`&lt;g role=&quot;button&quot; tabindex=&quot;0&quot; aria-label=&quot;Roboter ${r.id} anzeigen&quot; onclick=&quot;openRobot(${r.id})&quot; onkeydown=&quot;if(event.key===&#x27;Enter&#x27;||event.key===&#x27; &#x27;){event.preventDefault();openRobot(${r.id})}&quot; style=&quot;cursor:pointer&quot;&gt;
+    &lt;circle cx=&quot;${r.x*10.4}&quot; cy=&quot;${r.y*9}&quot; r=&quot;27&quot; fill=&quot;${r.color}&quot; opacity=&quot;.18&quot;/&gt;
+    &lt;circle cx=&quot;${r.x*10.4}&quot; cy=&quot;${r.y*9}&quot; r=&quot;17&quot; fill=&quot;${r.color}&quot; stroke=&quot;white&quot; stroke-width=&quot;3&quot;/&gt;
+    &lt;text x=&quot;${r.x*10.4}&quot; y=&quot;${r.y*9+5}&quot; fill=&quot;white&quot; text-anchor=&quot;middle&quot; font-size=&quot;14&quot; font-family=&quot;sans-serif&quot;&gt;${r.id}&lt;/text&gt;
+    &lt;/g&gt;`).join(&#x27;&#x27;)}&lt;/g&gt;`:&#x27;&#x27;}&lt;/svg&gt;`
+}
+const overview=document.getElementById(&#x27;overview&#x27;);
+overview.insertAdjacentHTML(&#x27;afterbegin&#x27;,landscape(0));
+data.forEach(r=&gt; {
+  overview.insertAdjacentHTML(&#x27;beforeend&#x27;,`&lt;button class=&quot;pin&quot; aria-label=&quot;Roboter ${r.id} anzeigen&quot; style=&quot;left:${r.x}%;top:${r.y}%;--pin:${r.color}&quot; onclick=&quot;openRobot(${r.id})&quot;&gt;${r.id}&lt;/button&gt;`);
+  document.getElementById(&#x27;robots&#x27;).insertAdjacentHTML(&#x27;beforeend&#x27;,`&lt;article class=&quot;robot&quot;&gt;
+    &lt;div class=&quot;robothead&quot;&gt;
+    &lt;div class=&quot;robotname&quot;&gt;
+    &lt;span class=&quot;roboticon&quot;&gt;▰&lt;/span&gt;
+    &lt;div&gt;
+    &lt;h3&gt;Roboter ${r.id}&lt;/h3&gt;
+    &lt;span class=&quot;robotid&quot;&gt;MW–00${r.id}&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;span class=&quot;battery&quot;&gt;
+    &lt;i&gt;
+    &lt;b style=&quot;--b:${r.b}%;${r.b&lt;60?&#x27;background:#d4b462&#x27;:&#x27;&#x27;}&quot;&gt;
+    &lt;/b&gt;
+    &lt;/i&gt;${r.b}%&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;statusline&quot;&gt;
+    &lt;span class=&quot;badge&quot;&gt;● &amp;nbsp; ${r.status}&lt;/span&gt;
+    &lt;span class=&quot;area&quot;&gt;${r.area}&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;metrics&quot;&gt;
+    &lt;div class=&quot;ring&quot; style=&quot;--p:${r.p}&quot; role=&quot;img&quot; aria-label=&quot;${r.p} Prozent erledigt&quot;&gt;
+    &lt;strong&gt;${r.p}&lt;small&gt;%&lt;/small&gt;
+    &lt;/strong&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;remaining&quot;&gt;
+    &lt;span&gt;${r.atFarm?&#x27;Status&#x27;:&#x27;Verbleibende Zeit&#x27;}&lt;/span&gt;
+    &lt;strong&gt;${r.time}&lt;/strong&gt;
+    &lt;small&gt;${r.atFarm?&#x27;Bereit für den nächsten Einsatz&#x27;:&#x27;Auftrag zu &#x27;+r.p+&#x27; % erledigt&#x27;}&lt;/small&gt;
+    &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;map mini&quot; aria-label=&quot;Karte für Roboter ${r.id}&quot;&gt;${landscape(r.id)}&lt;span class=&quot;pin&quot; style=&quot;--pin:${r.color};left:${r.x}%;top:${r.y}%&quot;&gt;${r.id}&lt;/span&gt;
+    &lt;span class=&quot;maplabel&quot;&gt;${r.area}&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;robotfoot&quot;&gt;
+    &lt;span&gt;
+    &lt;i class=&quot;dot&quot; style=&quot;width:5px;height:5px&quot;&gt;
+    &lt;/i&gt;Signal stabil&lt;/span&gt;
+    &lt;button class=&quot;detail&quot; onclick=&quot;openRobot(${r.id})&quot;&gt;Details ansehen &amp;nbsp; ↗&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;/article&gt;`)
+}
+);
+function openRobot(id) {
+  const r=data.find(x=&gt;x.id===id);
+  document.getElementById(&#x27;detailTitle&#x27;).textContent=&#x27;Roboter &#x27;+id;
+  document.getElementById(&#x27;detailArea&#x27;).textContent=r.area+&#x27; · MW–00&#x27;+id;
+  document.getElementById(&#x27;detailRows&#x27;).innerHTML=[[&#x27;Status&#x27;,r.status],[&#x27;Fortschritt&#x27;,r.p+&#x27; %&#x27;],[&#x27;Akku&#x27;,r.b+&#x27; %&#x27;],[&#x27;Verbleibende Zeit&#x27;,r.time]].map(([k,v])=&gt;`&lt;div class=&quot;dialogrow&quot;&gt;
+    &lt;span&gt;${k}&lt;/span&gt;
+    &lt;strong&gt;${v}&lt;/strong&gt;
+    &lt;/div&gt;`).join(&#x27;&#x27;);
+  document.getElementById(&#x27;details&#x27;).showModal()
+}
+document.getElementById(&#x27;details&#x27;).addEventListener(&#x27;click&#x27;,e=&gt; {
+  if(e.target===e.currentTarget)e.currentTarget.close()
+}
+);
+// Beispielhistorie und Maßnahmen dienen ausschließlich der Oberflächendarstellung.
+const fieldPlanning = {
+  1: {last:&#x27;Säen (Weizen)&#x27;, next:&#x27;Hacken · in Bearbeitung&#x27;},
+  2: {last:&#x27;Zuckerrüben geerntet&#x27;, next:&#x27;Grubbern (flach)&#x27;},
+  3: {last:&#x27;Mais geerntet&#x27;, next:&#x27;Grubbern (tief)&#x27;},
+  4: {last:&#x27;Säen (Weizen)&#x27;, next:&#x27;Hacken · in Bearbeitung&#x27;},
+  5: {last:&#x27;Säen (Gerste)&#x27;, next:&#x27;Striegeln · in Bearbeitung&#x27;},
+  6: {last:&#x27;Mahd&#x27;, next:&#x27;Keine Maßnahme vorgesehen&#x27;},
+  7: {last:&#x27;Raps geerntet&#x27;, next:&#x27;Grubbern (flach)&#x27;},
+  8: {last:&#x27;Kartoffeln geerntet&#x27;, next:&#x27;Säen (Weizen)&#x27;}
+};
+fields.find(f=&gt;f.id===2).crop=&#x27;Winterweizen&#x27;;
+fields.find(f=&gt;f.id===3).crop=&#x27;Winterweizen&#x27;;
+fields.find(f=&gt;f.id===7).crop=&#x27;Winterweizen&#x27;;
+fields.find(f=&gt;f.id===8).crop=&#x27;Winterweizen&#x27;;
+document.getElementById(&#x27;field-list&#x27;).innerHTML=fields.map(f=&gt;`&lt;details class=&quot;field-card field-accordion ${f.id===1?&#x27;selected&#x27;:&#x27;&#x27;}&quot; id=&quot;field-card-${f.id}&quot; ${f.id===1?&#x27;open&#x27;:&#x27;&#x27;}&gt;
+  &lt;summary onclick=&quot;highlightField(${f.id})&quot;&gt;&lt;span&gt;${f.name} &lt;small&gt;(${f.area})&lt;/small&gt;&lt;/span&gt;&lt;span class=&quot;field-summary-actions&quot;&gt;&lt;button type=&quot;button&quot; class=&quot;field-info-button&quot; aria-label=&quot;Schlagkartei ${f.name} öffnen&quot; onclick=&quot;event.preventDefault();event.stopPropagation();openFieldRecord(${f.id})&quot;&gt;ⓘ Info&lt;/button&gt;&lt;span class=&quot;field-chevron&quot; aria-hidden=&quot;true&quot;&gt;⌄&lt;/span&gt;&lt;/span&gt;&lt;/summary&gt;
+  &lt;div class=&quot;field-expanded&quot;&gt;
+    &lt;dl class=&quot;field-facts&quot;&gt;
+      &lt;div&gt;&lt;dt&gt;Aktuelle Frucht&lt;/dt&gt;&lt;dd&gt;${f.crop}&lt;/dd&gt;&lt;/div&gt;
+      &lt;div&gt;&lt;dt&gt;Letzter Arbeitsschritt&lt;/dt&gt;&lt;dd&gt;${fieldPlanning[f.id].last}&lt;/dd&gt;&lt;/div&gt;
+      &lt;div&gt;&lt;dt&gt;Vorgeschlagene Maßnahme&lt;/dt&gt;&lt;dd class=&quot;suggested-action&quot;&gt;&lt;span&gt;${fieldPlanning[f.id].next}&lt;/span&gt;&lt;button type=&quot;button&quot; onclick=&quot;openFieldPlanner(${f.id})&quot;&gt;Aufgabe planen ↗&lt;/button&gt;&lt;/dd&gt;&lt;/div&gt;
+    &lt;/dl&gt;
+    &lt;div class=&quot;field-activity&quot;&gt;&lt;h4&gt;Aktuell auf der Fläche&lt;/h4&gt;${f.robots.length?f.robots.map(id=&gt;`&lt;div class=&quot;field-active-robot&quot;&gt;&lt;strong&gt;&lt;i class=&quot;dot&quot;&gt;&lt;/i&gt;Roboter ${id}&lt;/strong&gt;&lt;span&gt;${f.task===&#x27;Hacken&#x27;?&#x27;Hacke&#x27;:&#x27;Striegel&#x27;} · ${f.task}&lt;/span&gt;&lt;/div&gt;`).join(&#x27;&#x27;):&#x27;&lt;p&gt;Keine Roboter im Einsatz&lt;/p&gt;&#x27;}&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/details&gt;`).join(&#x27;&#x27;);
+document.getElementById(&#x27;field-map-content&#x27;).innerHTML=landscape(&#x27;fields&#x27;);
+function highlightField(id) {
+  document.querySelectorAll(&#x27;.field-shape&#x27;).forEach(el=&gt; {
+    const active=Number(el.dataset.field)===id;
+    el.classList.toggle(&#x27;selected&#x27;,active);
+    el.setAttribute(&#x27;aria-pressed&#x27;,String(active))
+  }
+  );
+  document.querySelectorAll(&#x27;.field-card&#x27;).forEach(el=&gt;el.classList.toggle(&#x27;selected&#x27;,el.id===&#x27;field-card-&#x27;+id));
+ }
+function selectField(id) {
+  highlightField(id);
+  document.getElementById(&#x27;field-card-&#x27;+id).open=true;
+  document.getElementById(&#x27;field-card-&#x27;+id).scrollIntoView( {
+    block:&#x27;nearest&#x27;,behavior:&#x27;smooth&#x27;
+  }
+  )
+}
+function showField(id) {
+  selectField(id);
+  const f=fields.find(f=&gt;f.id===id);
+  document.getElementById(&#x27;detailTitle&#x27;).textContent=f.name;
+  document.getElementById(&#x27;detailArea&#x27;).textContent=f.crop+&#x27; · &#x27;+f.area;
+  document.getElementById(&#x27;detailRows&#x27;).innerHTML=[[&#x27;Auftrag&#x27;,f.task],[&#x27;Bearbeitung&#x27;,f.note],[&#x27;Roboter&#x27;,f.robots.map(id=&gt;&#x27;Roboter &#x27;+id).join(&#x27;, &#x27;)||&#x27;Keine zugewiesen&#x27;]].map(([k,v])=&gt;`&lt;div class=&quot;dialogrow&quot;&gt;
+    &lt;span&gt;${k}&lt;/span&gt;
+    &lt;strong&gt;${v}&lt;/strong&gt;
+    &lt;/div&gt;`).join(&#x27;&#x27;);
+  document.getElementById(&#x27;details&#x27;).showModal()
+}
+document.querySelectorAll(&#x27;.field-shape&#x27;).forEach(el=&gt; {
+  el.setAttribute(&#x27;aria-pressed&#x27;,String(el.dataset.field===&#x27;1&#x27;));
+  el.addEventListener(&#x27;click&#x27;,()=&gt;selectField(Number(el.dataset.field)));
+  el.addEventListener(&#x27;keydown&#x27;,e=&gt; {
+    if(e.key===&#x27;Enter&#x27;||e.key===&#x27; &#x27;) {
+      e.preventDefault();
+      selectField(Number(el.dataset.field))
+    }
+  }
+  )
+}
+);
+function route()  {
+  const requested = location.hash.slice(1) || &#x27;home&#x27;;
+  const detailMatch=requested.match(/^aufgabe-(\d+)$/);
+  const page = detailMatch?&#x27;aufgabendetail&#x27;:[&#x27;home&#x27;, &#x27;ackerschlagskarte&#x27;, &#x27;roboterverwaltung&#x27;, &#x27;auftragsverwaltung&#x27;, &#x27;arbeitsspeicher&#x27;].includes(requested) ? requested : &#x27;home&#x27;;
+  const sections =  {
+    home: &#x27;home&#x27;, ackerschlagskarte: &#x27;fields&#x27;, roboterverwaltung: &#x27;roboterverwaltung&#x27;, auftragsverwaltung: &#x27;auftragsverwaltung&#x27;, arbeitsspeicher: &#x27;arbeitsspeicher&#x27;, aufgabendetail: &#x27;aufgabendetail&#x27;
+  }
+  ;
+  Object.entries(sections).forEach(([name, id]) =&gt;  {
+    document.getElementById(id).hidden = name !== page;
+  }
+  );
+  document.querySelectorAll(&#x27;nav a&#x27;).forEach(link =&gt;  {
+    const active = link.dataset.page === ([&#x27;arbeitsspeicher&#x27;,&#x27;aufgabendetail&#x27;].includes(page)?&#x27;auftragsverwaltung&#x27;:page);
+    link.classList.toggle(&#x27;active&#x27;, active);
+    if (active) link.setAttribute(&#x27;aria-current&#x27;, &#x27;page&#x27;);
+    else link.removeAttribute(&#x27;aria-current&#x27;);
+  }
+  );
+}
+window.addEventListener(&#x27;hashchange&#x27;,route);
+window.addEventListener(&#x27;hashchange&#x27;,()=&gt;{const match=location.hash.match(/^#aufgabe-(\d+)$/);if(match&amp;&amp;window.dispatchReady)renderTaskOverview(Number(match[1]));});
+route();
+function enableMap(container) {
+  container.classList.add(&#x27;map-viewport&#x27;);
+  container.querySelectorAll(&#x27;.maptools&#x27;).forEach(el=&gt;el.remove());
+  const scene=document.createElement(&#x27;div&#x27;);
+  scene.className=&#x27;map-scene&#x27;;
+  const source=container.querySelector(&#x27;#field-map-content&#x27;);
+  if(source) {
+    while(source.firstChild)scene.append(source.firstChild);
+    source.remove()
+  }
+  else Array.from(container.children).filter(el=&gt;el.matches(&#x27;svg,.pin&#x27;)).forEach(el=&gt;scene.append(el));
+  container.prepend(scene);
+  const controls=document.createElement(&#x27;div&#x27;);
+  controls.className=&#x27;map-controls&#x27;;
+  controls.innerHTML=`&lt;button type=&quot;button&quot; aria-label=&quot;Karte vergrößern&quot; title=&quot;Vergrößern&quot;&gt;+&lt;/button&gt;
+    &lt;button type=&quot;button&quot; aria-label=&quot;Karte verkleinern&quot; title=&quot;Verkleinern&quot;&gt;−&lt;/button&gt;
+    &lt;button type=&quot;button&quot; aria-label=&quot;Kartenansicht zurücksetzen&quot; title=&quot;Ansicht zurücksetzen&quot;&gt;↺&lt;/button&gt;`;
+  container.append(controls);
+  const expand=document.createElement(&#x27;button&#x27;);
+  expand.type=&#x27;button&#x27;;expand.className=&#x27;map-expand&#x27;;expand.textContent=&#x27;⤢&#x27;;expand.title=&#x27;Karte auf ganze Seite vergrößern&#x27;;expand.setAttribute(&#x27;aria-label&#x27;,expand.title);expand.setAttribute(&#x27;aria-pressed&#x27;,&#x27;false&#x27;);
+  expand.onclick=()=&gt;{const active=container.classList.toggle(&#x27;map-expanded&#x27;);expand.textContent=active?&#x27;⤡&#x27;:&#x27;⤢&#x27;;expand.title=active?&#x27;Zur ursprünglichen Kartenansicht&#x27;:&#x27;Karte auf ganze Seite vergrößern&#x27;;expand.setAttribute(&#x27;aria-label&#x27;,expand.title);expand.setAttribute(&#x27;aria-pressed&#x27;,String(active));requestAnimationFrame(()=&gt;window.dispatchEvent(new Event(&#x27;resize&#x27;)));};
+  container.append(expand);
+  const [plus,minus,reset]=controls.children;
+  let scale=1,x=0,y=0,drag=null,suppressClick=false;
+  const proportional = container.id === &#x27;overview&#x27; || container.id === &#x27;dispatch-map&#x27; || container.id === &#x27;task-route-map&#x27; || container.id === &#x27;record-map&#x27; || container.id === &#x27;task-overview-map&#x27;;
+  let aspect=Number(container.dataset.aspect) || 1040/900;
+  let mapWidth=0,mapHeight=0,offsetX=0,offsetY=0;
+  function render() {
+    const w=container.clientWidth,h=container.clientHeight;
+    aspect=Number(container.dataset.aspect)||1040/900;
+    if (proportional) {
+      // Fit the map and its marker layer together, preserving the 1040:900 ratio.
+      mapWidth = Math.min(w, h * aspect);
+      mapHeight = mapWidth / aspect;
+      offsetX = (w - mapWidth) / 2;
+      offsetY = (h - mapHeight) / 2;
+      scene.style.inset = &#x27;auto&#x27;;
+      scene.style.width = `${mapWidth}px`;
+      scene.style.height = `${mapHeight}px`;
+      scene.style.left = `${offsetX}px`;
+      scene.style.top = `${offsetY}px`;
+      x = mapWidth * scale &lt;= w ? (mapWidth - mapWidth * scale) / 2
+        : Math.max(w - offsetX - mapWidth * scale, Math.min(-offsetX, x));
+      y = mapHeight * scale &lt;= h ? (mapHeight - mapHeight * scale) / 2
+        : Math.max(h - offsetY - mapHeight * scale, Math.min(-offsetY, y));
+    } else {
+      x=Math.max(w*(1-scale),Math.min(0,x));
+      y=Math.max(h*(1-scale),Math.min(0,y));
+    }
+    scene.style.transform=`translate(${x}px,${y}px) scale(${scale})`;
+    plus.disabled=scale&gt;=4;
+    minus.disabled=scale&lt;=1
+  }
+  function zoom(factor,cx=container.clientWidth/2,cy=container.clientHeight/2) {
+    const next=Math.max(1,Math.min(4,scale*factor));
+    const localX = cx - offsetX;
+    const localY = cy - offsetY;
+    x=localX-(localX-x)*next/scale;
+    y=localY-(localY-y)*next/scale;
+    scale=next;
+    render()
+  }
+  plus.onclick=()=&gt;zoom(1.35);
+  minus.onclick=()=&gt;zoom(1/1.35);
+  reset.onclick=()=&gt; {
+    scale=1;
+    x=y=0;
+    render()
+  }
+  ;
+  container.addEventListener(&#x27;wheel&#x27;,e=&gt; {
+    e.preventDefault();
+    const r=container.getBoundingClientRect();
+    zoom(Math.exp(-e.deltaY*.002),e.clientX-r.left,e.clientY-r.top)
+  }
+  , {
+    passive:false
+  }
+  );
+  container.addEventListener(&#x27;pointerdown&#x27;,e=&gt; {
+    if(e.target.closest(&#x27;.map-controls,.map-expand&#x27;)||e.button!==0)return;
+    drag= {
+      id:e.pointerId,x:e.clientX,y:e.clientY,startX:x,startY:y,moved:false
+    }
+    ;
+    suppressClick=false
+  }
+  );
+  container.addEventListener(&#x27;pointermove&#x27;,e=&gt; {
+    if(!drag||drag.id!==e.pointerId)return;
+    const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+    if(!drag.moved&amp;&amp;Math.hypot(dx,dy)&gt;5) {
+      drag.moved=true;
+      container.setPointerCapture(e.pointerId);
+      container.classList.add(&#x27;dragging&#x27;)
+    }
+    if(drag.moved) {
+      x=drag.startX+dx;
+      y=drag.startY+dy;
+      render()
+    }
+  }
+  );
+  function finish(e) {
+    if(!drag||drag.id!==e.pointerId)return;
+    suppressClick=drag.moved;
+    drag=null;
+    container.classList.remove(&#x27;dragging&#x27;);
+    if(container.hasPointerCapture(e.pointerId))container.releasePointerCapture(e.pointerId)
+  }
+  container.addEventListener(&#x27;pointerup&#x27;,finish);
+  container.addEventListener(&#x27;pointercancel&#x27;,finish);
+  container.addEventListener(&#x27;click&#x27;,e=&gt; {
+    if(suppressClick) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      suppressClick=false
+    }
+  }
+  ,true);
+  new ResizeObserver(()=&gt; {
+    if(container.clientWidth&amp;&amp;container.clientHeight)render()
+  }
+  ).observe(container);
+  render();
+}
+document.querySelectorAll(&#x27;#overview,.map.mini,.field-map&#x27;).forEach(enableMap);
+
+// Disposition: lokale, bearbeitbare Zeitplanung mit beispielhaften Dauern.
+const dispatchTasks = [
+  {id:1,field:2,operation:&#x27;Grubbern flach&#x27;,speed:14,depth:5,robot:5},
+  {id:2,field:7,operation:&#x27;Grubbern tief&#x27;,speed:12,depth:20,priority:&#x27;week&#x27;,robot:null},
+  {id:3,field:3,operation:&#x27;Säen&#x27;,robot:6},
+  {id:4,field:8,operation:&#x27;Säen&#x27;,priority:&#x27;month&#x27;,robot:null},
+  {id:5,field:1,operation:&#x27;Hacken&#x27;,robot:2},
+  {id:6,field:4,operation:&#x27;Hacken&#x27;,robot:2}
+];
+const dispatchRobots=[{id:1,type:&#x27;Geräteträger&#x27;},{id:2,type:&#x27;Hackroboter&#x27;,fixed:&#x27;Hacke&#x27;},{id:3,type:&#x27;Hackroboter&#x27;,fixed:&#x27;Hacke&#x27;},{id:4,type:&#x27;Striegelroboter&#x27;,fixed:&#x27;Striegel&#x27;},{id:5,type:&#x27;Geräteträger&#x27;},{id:6,type:&#x27;Geräteträger&#x27;}];
+const dispatchDate=new Intl.DateTimeFormat(&#x27;en-CA&#x27;,{timeZone:&#x27;Europe/Berlin&#x27;,year:&#x27;numeric&#x27;,month:&#x27;2-digit&#x27;,day:&#x27;2-digit&#x27;}).format(new Date());
+let planAccepted=false,selectedDispatchRobot=5,selectedDispatchTask=null,scheduleOffset=360,scheduleSpan=720;
+const dispatchEquipment=task=&gt;task.operation.startsWith(&#x27;Grubbern&#x27;)?&#x27;Grubber&#x27;:task.operation===&#x27;Säen&#x27;?&#x27;Drillmaschine&#x27;:task.operation===&#x27;Striegeln&#x27;?&#x27;Striegel&#x27;:&#x27;Hacke&#x27;;
+const dispatchType=task=&gt;task.operation.startsWith(&#x27;Grubbern&#x27;)?&#x27;tillage&#x27;:task.operation===&#x27;Säen&#x27;?&#x27;seed&#x27;:&#x27;hoe&#x27;;
+const compatibleRobots=task=&gt;dispatchRobots.filter(r=&gt;!r.fixed||r.fixed===dispatchEquipment(task));
+const dispatchDuration=task=&gt;{const type=dispatchType(task),referenceSpeed={tillage:12,seed:10,hoe:5}[type],speed=Number(task.speed)&gt;0?Number(task.speed):referenceSpeed;return Math.max(45,Math.round(parseFloat(fields.find(f=&gt;f.id===task.field).area.replace(&#x27;,&#x27;,&#x27;.&#x27;))*({tillage:17,seed:22,hoe:24}[type])*referenceSpeed/speed/5)*5);};
+const minuteClock=m=&gt;String(Math.floor((m%1440)/60)).padStart(2,&#x27;0&#x27;)+&#x27;:&#x27;+String(Math.floor(m%60)).padStart(2,&#x27;0&#x27;);
+const durationLabel=m=&gt;m&gt;=60?`${Math.floor(m/60)} h${m%60?&#x27; &#x27;+m%60+&#x27; min&#x27;:&#x27;&#x27;}`:m+&#x27; min&#x27;;
+function dispatchDay(day){const d=new Date(dispatchDate+&#x27;T12:00:00&#x27;);d.setDate(d.getDate()+day);return new Intl.DateTimeFormat(&#x27;de-DE&#x27;,{weekday:&#x27;short&#x27;,day:&#x27;2-digit&#x27;,month:&#x27;2-digit&#x27;}).format(d);}
+function datedTime(m){return dispatchDay(Math.floor(m/1440))+&#x27; · &#x27;+minuteClock(m);}
+function markPlanDraft(message=&#x27;Entwurf geändert · Bitte erneut übernehmen&#x27;){
+  planAccepted=false;document.getElementById(&#x27;plan-status&#x27;).textContent=message;
+  const button=document.getElementById(&#x27;accept-plan&#x27;);button.textContent=&#x27;Einsatzplan übernehmen&#x27;;button.disabled=false;
+}
+// Road network follows the roads and field entrances shown in the farm map.
+const roadNodes={hof:[230,795],a:[285,720],b:[320,660],c:[350,600],d:[385,495],e:[435,455],f:[510,370],g:[585,300],h:[680,225],i:[735,190],j:[865,157],west:[200,330],westGate:[175,322],south:[510,635],south2:[635,650],south3:[755,685],gate4:[342,477],gate5:[435,505],gate7:[390,657],gate8:[405,354]};
+const roadEdges=[[&#x27;hof&#x27;,&#x27;a&#x27;],[&#x27;a&#x27;,&#x27;b&#x27;],[&#x27;b&#x27;,&#x27;c&#x27;],[&#x27;c&#x27;,&#x27;d&#x27;],[&#x27;d&#x27;,&#x27;e&#x27;],[&#x27;e&#x27;,&#x27;f&#x27;],[&#x27;f&#x27;,&#x27;g&#x27;],[&#x27;g&#x27;,&#x27;h&#x27;],[&#x27;h&#x27;,&#x27;i&#x27;],[&#x27;i&#x27;,&#x27;j&#x27;],[&#x27;e&#x27;,&#x27;west&#x27;],[&#x27;west&#x27;,&#x27;westGate&#x27;],[&#x27;c&#x27;,&#x27;south&#x27;],[&#x27;south&#x27;,&#x27;south2&#x27;],[&#x27;south2&#x27;,&#x27;south3&#x27;],[&#x27;d&#x27;,&#x27;gate4&#x27;],[&#x27;e&#x27;,&#x27;gate5&#x27;],[&#x27;c&#x27;,&#x27;gate7&#x27;],[&#x27;e&#x27;,&#x27;gate8&#x27;]];
+const fieldRoadNodes={1:&#x27;westGate&#x27;,2:&#x27;i&#x27;,3:&#x27;h&#x27;,4:&#x27;gate4&#x27;,5:&#x27;gate5&#x27;,6:&#x27;south3&#x27;,7:&#x27;gate7&#x27;,8:&#x27;gate8&#x27;};
+function roadRoute(fromField,toField){
+  const start=fromField?fieldRoadNodes[fromField]:&#x27;hof&#x27;,target=fieldRoadNodes[toField],dist={},prev={},queue=new Set(Object.keys(roadNodes));
+  Object.keys(roadNodes).forEach(k=&gt;dist[k]=Infinity);dist[start]=0;
+  while(queue.size){const node=[...queue].reduce((a,b)=&gt;dist[a]&lt;dist[b]?a:b);queue.delete(node);if(node===target)break;
+    roadEdges.forEach(([a,b])=&gt;{const other=a===node?b:b===node?a:null;if(!other||!queue.has(other))return;const p=roadNodes[node],q=roadNodes[other],next=dist[node]+Math.hypot(p[0]-q[0],p[1]-q[1]);if(next&lt;dist[other]){dist[other]=next;prev[other]=node;}});
+  }
+  const ids=[target];while(ids[0]!==start&amp;&amp;prev[ids[0]])ids.unshift(prev[ids[0]]);
+  const points=ids.map(k=&gt;roadNodes[k]);
+  if(fromField)points.unshift(fields.find(f=&gt;f.id===fromField).entry);
+  points.push(fields.find(f=&gt;f.id===toField).entry);
+  const km=points.reduce((sum,p,i)=&gt;i?sum+Math.hypot(p[0]-points[i-1][0],p[1]-points[i-1][1])*.004:0,0);
+  return {points,km,minutes:Math.max(5,Math.ceil(km/18*60/5)*5)};
+}
+function buildRobotSchedule(robot){
+  const tasks=dispatchTasks.filter(t=&gt;t.robot===robot.id),segments=[];let cursor=480+(robot.id===2?45:0),previousField=null,equipment=robot.fixed||null;
+  tasks.forEach(task=&gt;{
+    const tool=dispatchEquipment(task);
+    if(equipment!==tool){
+      if(previousField){const route=roadRoute(null,previousField);segments.push({kind:&#x27;drive&#x27;,start:cursor,duration:route.minutes,task,label:&#x27;Zum Hof · Gerätewechsel&#x27;,route:{...route,points:[...route.points].reverse()}});cursor+=route.minutes;previousField=null;}
+      segments.push({kind:&#x27;setup&#x27;,start:cursor,duration:30,task,label:tool+&#x27; anbauen&#x27;});cursor+=30;equipment=tool;
+    }else if(task.operation.startsWith(&#x27;Grubbern&#x27;)&amp;&amp;segments.some(s=&gt;s.kind===&#x27;work&#x27;&amp;&amp;s.task.depth!==task.depth)){
+      segments.push({kind:&#x27;setup&#x27;,start:cursor,duration:10,task,label:&#x27;Arbeitstiefe einstellen&#x27;});cursor+=10;
+    }
+    const route=roadRoute(previousField,task.field);segments.push({kind:&#x27;drive&#x27;,start:cursor,duration:route.minutes,task,label:&#x27;Straßenfahrt&#x27;,route});cursor+=route.minutes;
+    const duration=dispatchDuration(task);segments.push({kind:&#x27;work&#x27;,start:cursor,duration,task,label:fields.find(f=&gt;f.id===task.field).name});cursor+=duration;previousField=task.field;
+  });
+  return {robot,tasks,segments,end:cursor};
+}
+function taskDeadline(task){
+  if(task.dueDate)return task.dueDate;
+  const days={immediate:0,week:7,month:28}[task.priority];
+  if(days===undefined)return null;
+  const d=new Date((task.createdOn||dispatchDate)+&#x27;T12:00:00&#x27;);d.setDate(d.getDate()+days);
+  return d.getFullYear()+&#x27;-&#x27;+String(d.getMonth()+1).padStart(2,&#x27;0&#x27;)+&#x27;-&#x27;+String(d.getDate()).padStart(2,&#x27;0&#x27;);
+}
+let storageTaskFilter=&#x27;Alle&#x27;;
+const storageTaskKinds=[&#x27;Alle&#x27;,&#x27;Grubbern&#x27;,&#x27;Säen&#x27;,&#x27;Hacken&#x27;,&#x27;Striegeln&#x27;];
+function matchesStorageFilter(task,filter){return filter===&#x27;Alle&#x27;||(filter===&#x27;Grubbern&#x27;?task.operation.startsWith(&#x27;Grubbern&#x27;):task.operation===filter);}
+function setStorageFilter(filter){if(!storageTaskKinds.includes(filter))return;storageTaskFilter=filter;renderStoredTasks();}
+function sortedStoredTasks(sort){
+  return dispatchTasks.filter(t=&gt;!t.robot).sort((a,b)=&gt;{
+    const fieldA=fields.find(f=&gt;f.id===a.field).name,fieldB=fields.find(f=&gt;f.id===b.field).name;
+    if(sort===&#x27;deadline&#x27;){const dateA=taskDeadline(a)||&#x27;9999-12-31&#x27;,dateB=taskDeadline(b)||&#x27;9999-12-31&#x27;;return dateA.localeCompare(dateB)||fieldA.localeCompare(fieldB,&#x27;de&#x27;);}
+    if(sort===&#x27;operation&#x27;)return a.operation.localeCompare(b.operation,&#x27;de&#x27;)||fieldA.localeCompare(fieldB,&#x27;de&#x27;);
+    return fieldA.localeCompare(fieldB,&#x27;de&#x27;)||a.operation.localeCompare(b.operation,&#x27;de&#x27;);
+  });
+}
+function renderStoredTasks(){
+  const all=dispatchTasks.filter(t=&gt;!t.robot);
+  document.getElementById(&#x27;storage-filters&#x27;).innerHTML=storageTaskKinds.map(kind=&gt;`&lt;button type=&quot;button&quot; class=&quot;storage-filter ${kind===storageTaskFilter?&#x27;active&#x27;:&#x27;&#x27;}&quot; aria-pressed=&quot;${kind===storageTaskFilter}&quot; onclick=&quot;setStorageFilter(&#x27;${kind}&#x27;)&quot;&gt;${kind}&lt;span&gt;${all.filter(t=&gt;matchesStorageFilter(t,kind)).length}&lt;/span&gt;&lt;/button&gt;`).join(&#x27;&#x27;);
+  const pending=sortedStoredTasks(document.getElementById(&#x27;storage-sort&#x27;).value||&#x27;field&#x27;).filter(t=&gt;matchesStorageFilter(t,storageTaskFilter));
+  document.getElementById(&#x27;dispatch-tasks&#x27;).innerHTML=pending.length?pending.map(t=&gt;{
+    const f=fields.find(f=&gt;f.id===t.field),due=taskDeadline(t);
+    const dueLabel=due?new Intl.DateTimeFormat(&#x27;de-DE&#x27;,{day:&#x27;2-digit&#x27;,month:&#x27;2-digit&#x27;,year:&#x27;numeric&#x27;}).format(new Date(due+&#x27;T12:00:00&#x27;)):&#x27;Ohne Ablaufdatum&#x27;;
+    return `&lt;tr class=&quot;task-overview-row&quot; onclick=&quot;if(!event.target.closest(&#x27;select,button,a,input&#x27;))openTaskOverview(${t.id})&quot;&gt;&lt;td&gt;&lt;button class=&quot;task-open-link&quot; onclick=&quot;openTaskOverview(${t.id})&quot;&gt;${f.name} ↗&lt;/button&gt;&lt;small&gt;${f.area}${t.crop?&#x27; · &#x27;+t.crop:&#x27;&#x27;}&lt;/small&gt;&lt;/td&gt;&lt;td&gt;&lt;button class=&quot;storage-operation task-open-link&quot; onclick=&quot;openTaskOverview(${t.id})&quot;&gt;&lt;i class=&quot;task-type-dot ${dispatchType(t)}&quot;&gt;&lt;/i&gt;${t.operation}&lt;/button&gt;&lt;small&gt;${t.depth?t.depth+&#x27; cm Tiefe&#x27;:t.seedRate?t.seedRate.toLocaleString(&#x27;de-DE&#x27;)+&#x27; Körner/ha&#x27;:&#x27;&#x27;}&lt;/small&gt;&lt;/td&gt;&lt;td class=&quot;storage-duration&quot;&gt;${durationLabel(dispatchDuration(t))}&lt;/td&gt;&lt;td&gt;${due?`&lt;time datetime=&quot;${due}&quot;&gt;${dueLabel}&lt;/time&gt;`:`&lt;span class=&quot;no-deadline&quot;&gt;${dueLabel}&lt;/span&gt;`}${priorityBadge(t)}&lt;/td&gt;&lt;td&gt;&lt;select aria-label=&quot;Roboter für ${f.name}&quot; onchange=&quot;assignDispatchTask(${t.id},Number(this.value))&quot;&gt;&lt;option value=&quot;&quot;&gt;Roboter wählen …&lt;/option&gt;${compatibleRobots(t).map(r=&gt;`&lt;option value=&quot;${r.id}&quot;&gt;Roboter ${r.id} · ${r.type}&lt;/option&gt;`).join(&#x27;&#x27;)}&lt;/select&gt;&lt;/td&gt;&lt;/tr&gt;`;
+  }).join(&#x27;&#x27;):(all.length?`&lt;tr&gt;&lt;td colspan=&quot;5&quot;&gt;&lt;div class=&quot;storage-empty&quot;&gt;&lt;strong&gt;Keine offenen Aufgaben für ${storageTaskFilter}&lt;/strong&gt;&lt;p&gt;Wähle eine andere Arbeitsart oder zeige alle Aufgaben an.&lt;/p&gt;&lt;button class=&quot;suggest-button&quot; onclick=&quot;setStorageFilter(&#x27;Alle&#x27;)&quot;&gt;Alle Aufgaben anzeigen&lt;/button&gt;&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;`:&#x27;&lt;tr&gt;&lt;td colspan=&quot;5&quot;&gt;&lt;div class=&quot;storage-empty&quot;&gt;&lt;strong&gt;Alles eingeplant ✓&lt;/strong&gt;&lt;p&gt;Keine offenen Aufgaben im Arbeitsspeicher.&lt;/p&gt;&lt;a href=&quot;#auftragsverwaltung&quot;&gt;Zurück zur Disposition →&lt;/a&gt;&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;&#x27;);
+}
+function renderDispatch(){
+  const pending=dispatchTasks.filter(t=&gt;!t.robot);
+  document.getElementById(&#x27;buffer-count&#x27;).textContent=pending.length;
+  document.getElementById(&#x27;open-task-count&#x27;).textContent=pending.length;
+  document.getElementById(&#x27;buffer-area&#x27;).textContent=pending.reduce((sum,t)=&gt;sum+parseFloat(fields.find(f=&gt;f.id===t.field).area.replace(&#x27;,&#x27;,&#x27;.&#x27;)),0).toFixed(1).replace(&#x27;.&#x27;,&#x27;,&#x27;)+&#x27; ha noch zuzuweisen&#x27;;
+  renderStoredTasks();
+  renderSchedule();renderDispatchRobot();
+  document.getElementById(&#x27;accept-plan&#x27;).disabled=planAccepted||!dispatchTasks.some(t=&gt;t.robot);
+}
+function renderSchedule(){
+  const end=scheduleOffset+scheduleSpan;
+  document.getElementById(&#x27;schedule-slider&#x27;).max=4320-scheduleSpan;
+  document.getElementById(&#x27;schedule-slider&#x27;).value=scheduleOffset;
+  document.getElementById(&#x27;schedule-window&#x27;).textContent=minuteClock(scheduleOffset)+&#x27;–&#x27;+minuteClock(end);
+  document.getElementById(&#x27;schedule-date-caption&#x27;).textContent=dispatchDay(Math.floor(scheduleOffset/1440))+(Math.floor((end-1)/1440)&gt;Math.floor(scheduleOffset/1440)?&#x27; → &#x27;+dispatchDay(Math.floor((end-1)/1440)):&#x27;&#x27;);
+  document.getElementById(&#x27;schedule-days&#x27;).innerHTML=[0,1,2].map(d=&gt;`&lt;button class=&quot;${Math.floor(scheduleOffset/1440)===d?&#x27;selected&#x27;:&#x27;&#x27;}&quot; onclick=&quot;seekSchedule(${d*1440+360})&quot;&gt;${d===0?&#x27;Heute · &#x27;:&#x27;&#x27;}${dispatchDay(d)}&lt;/button&gt;`).join(&#x27;&#x27;);
+  const tickStep=scheduleSpan&gt;720?240:120,ticks=[];
+  for(let t=Math.ceil(scheduleOffset/tickStep)*tickStep;t&lt;end;t+=tickStep)ticks.push(`&lt;span style=&quot;left:${(t-scheduleOffset)/scheduleSpan*100}%&quot;&gt;${minuteClock(t)}${t%1440===0?&#x27;&lt;small&gt;&#x27;+dispatchDay(t/1440)+&#x27;&lt;/small&gt;&#x27;:&#x27;&#x27;}&lt;/span&gt;`);
+  document.getElementById(&#x27;schedule-ticks&#x27;).innerHTML=ticks.join(&#x27;&#x27;);
+  document.getElementById(&#x27;robot-plans&#x27;).innerHTML=[...dispatchRobots].sort((a,b)=&gt;Number(dispatchTasks.some(t=&gt;t.robot===b.id))-Number(dispatchTasks.some(t=&gt;t.robot===a.id))||a.id-b.id).map(robot=&gt;{
+    const schedule=buildRobotSchedule(robot),jobs=schedule.tasks.length;
+    const blocks=schedule.segments.filter(s=&gt;s.start&lt;end&amp;&amp;s.start+s.duration&gt;scheduleOffset).map(s=&gt;{const work=s.kind===&#x27;work&#x27;,type=work?dispatchType(s.task):s.kind;return `&lt;button class=&quot;time-block block-${type} ${selectedDispatchTask===s.task.id?&#x27;selected-task&#x27;:&#x27;&#x27;}&quot; style=&quot;left:${(s.start-scheduleOffset)/scheduleSpan*100}%;width:${s.duration/scheduleSpan*100}%&quot; title=&quot;${s.label} · ${minuteClock(s.start)}–${minuteClock(s.start+s.duration)} · ${durationLabel(s.duration)}&quot; aria-label=&quot;Roboter ${robot.id}: ${s.label}, ${minuteClock(s.start)} bis ${minuteClock(s.start+s.duration)}, ${durationLabel(s.duration)}&quot; onclick=&quot;openTaskOverview(${s.task.id})&quot;&gt;&lt;strong&gt;${work?s.label:s.kind===&#x27;setup&#x27;?&#x27;Rüsten&#x27;:&#x27;↗ Fahrt&#x27;}&lt;/strong&gt;${work?&#x27;&lt;span&gt;&#x27;+s.task.operation+&#x27; · &#x27;+durationLabel(s.duration)+&#x27;&lt;/span&gt;&#x27;:&#x27;&#x27;}&lt;/button&gt;`;}).join(&#x27;&#x27;);
+    return `&lt;div class=&quot;timeline-row ${selectedDispatchRobot===robot.id?&#x27;selected&#x27;:&#x27;&#x27;}&quot;&gt;&lt;button class=&quot;timeline-robot-label&quot; onclick=&quot;selectDispatchRobot(${robot.id})&quot; aria-pressed=&quot;${selectedDispatchRobot===robot.id}&quot;&gt;&lt;strong&gt;&lt;i style=&quot;background:${data.find(r=&gt;r.id===robot.id).color}&quot;&gt;&lt;/i&gt;Roboter ${robot.id}&lt;/strong&gt;&lt;small&gt;${robot.type} · ${jobs} ${jobs===1?&#x27;Aufgabe&#x27;:&#x27;Aufgaben&#x27;}&lt;/small&gt;&lt;/button&gt;&lt;div class=&quot;timeline-lane&quot;&gt;${blocks||&#x27;&lt;span class=&quot;timeline-idle&quot;&gt;&#x27;+(jobs?&#x27;Keine Einsätze in diesem Zeitfenster&#x27;:&#x27;Bereit für Aufgaben&#x27;)+&#x27;&lt;/span&gt;&#x27;}&lt;/div&gt;&lt;/div&gt;`;
+  }).join(&#x27;&#x27;);
+}
+function selectDispatchRobot(id,task=null){selectedDispatchRobot=id;selectedDispatchTask=task;renderSchedule();renderDispatchRobot();}
+function selectDispatchField(id){const task=dispatchTasks.find(t=&gt;t.field===id&amp;&amp;t.robot===selectedDispatchRobot)||dispatchTasks.find(t=&gt;t.field===id&amp;&amp;t.robot);if(task)selectDispatchRobot(task.robot,task.id);}
+function seekSchedule(offset){scheduleOffset=Math.max(0,Math.min(4320-scheduleSpan,offset));renderSchedule();}
+function assignDispatchTask(id,robot){
+  const task=dispatchTasks.find(t=&gt;t.id===id);if(!task)return;
+  if(robot&amp;&amp;!compatibleRobots(task).some(r=&gt;r.id===robot))return;
+  task.robot=robot||null;selectedDispatchRobot=robot||selectedDispatchRobot;selectedDispatchTask=robot?id:null;
+  markPlanDraft(&#x27;Entwurf geändert · Zeiten wurden neu berechnet&#x27;);renderDispatch();
+}
+function moveDispatchTask(id,delta){
+  const task=dispatchTasks.find(t=&gt;t.id===id),jobs=dispatchTasks.filter(t=&gt;t.robot===task.robot),other=jobs[jobs.indexOf(task)+delta];if(!other)return;
+  const a=dispatchTasks.indexOf(task),b=dispatchTasks.indexOf(other);[dispatchTasks[a],dispatchTasks[b]]=[dispatchTasks[b],dispatchTasks[a]];markPlanDraft();renderDispatch();
+}
+function dispatchFieldTracks(task){
+  const f=fields.find(f=&gt;f.id===task.field),ns=&#x27;http://www.w3.org/2000/svg&#x27;,probe=document.createElementNS(ns,&#x27;svg&#x27;),shape=document.createElementNS(ns,&#x27;path&#x27;);
+  probe.style.cssText=&#x27;position:absolute;left:-10000px;top:0;width:1040px;height:900px&#x27;;shape.setAttribute(&#x27;d&#x27;,f.path);probe.append(shape);document.body.append(probe);
+  const b=shape.getBBox(),cx=b.x+b.width/2,cy=b.y+b.height/2;
+  const defaults={1:0,2:90,3:0,4:0,5:90,6:90,7:90,8:0};const angle=(task.bearingDegrees??defaults[f.id])*Math.PI/180,c=Math.cos(angle),s=Math.sin(angle),extent=Math.hypot(b.width,b.height),points=[];
+  const world=(x,y)=&gt;({x:cx+x*c-y*s,y:cy+x*s+y*c});let paths=&#x27;&#x27;;
+  for(let i=0;i&lt;11;i++){const x=(i/10-.5)*extent*.7,inside=[];
+    for(let j=0;j&lt;=180;j++){const p=world(x,(j/180-.5)*extent),test=probe.createSVGPoint();test.x=cx+(p.x-cx)/.78;test.y=cy+(p.y-cy)/.78;if(shape.isPointInFill(test))inside.push(p);}
+    if(inside.length&gt;2){const a=i%2?inside[inside.length-1]:inside[0],z=i%2?inside[0]:inside[inside.length-1];points.push([a,z]);paths+=`&lt;path d=&quot;M${a.x} ${a.y}L${z.x} ${z.y}&quot; stroke=&quot;${selectedDispatchTask===task.id?&#x27;#1d6652&#x27;:&#x27;#39816a&#x27;}&quot; stroke-width=&quot;4&quot; fill=&quot;none&quot;/&gt;`;}
+  }
+  probe.remove();
+  const headlands=task.headlandPasses??2;
+  const perimeter=Array.from({length:headlands},(_,i)=&gt;`&lt;path d=&quot;${f.path}&quot; transform=&quot;translate(${cx} ${cy}) scale(${.94-i*.07}) translate(${-cx} ${-cy})&quot; fill=&quot;none&quot; stroke=&quot;#39816a&quot; stroke-width=&quot;3&quot;/&gt;`).join(&#x27;&#x27;);
+  const first=points[0]?.[0],last=points[points.length-1]?.[1];
+  return `&lt;g pointer-events=&quot;none&quot;&gt;&lt;path d=&quot;${f.path}&quot; fill=&quot;#29765e&quot; fill-opacity=&quot;.12&quot; stroke=&quot;#29765e&quot; stroke-width=&quot;5&quot;/&gt;${perimeter}${paths}${first?`&lt;circle cx=&quot;${first.x}&quot; cy=&quot;${first.y}&quot; r=&quot;8&quot; fill=&quot;#258857&quot; stroke=&quot;white&quot; stroke-width=&quot;2&quot;/&gt;`:&#x27;&#x27;}${last?`&lt;circle cx=&quot;${last.x}&quot; cy=&quot;${last.y}&quot; r=&quot;8&quot; fill=&quot;#c35449&quot; stroke=&quot;white&quot; stroke-width=&quot;2&quot;/&gt;`:&#x27;&#x27;}&lt;circle cx=&quot;${f.entry[0]}&quot; cy=&quot;${f.entry[1]}&quot; r=&quot;14&quot; fill=&quot;#29765e&quot; stroke=&quot;white&quot; stroke-width=&quot;3&quot;/&gt;&lt;text x=&quot;${f.entry[0]}&quot; y=&quot;${f.entry[1]+5}&quot; text-anchor=&quot;middle&quot; font-size=&quot;14&quot; fill=&quot;white&quot;&gt;${task.id}&lt;/text&gt;&lt;/g&gt;`;
+}
+function renderDispatchRobot(){
+  const robot=dispatchRobots.find(r=&gt;r.id===selectedDispatchRobot),schedule=buildRobotSchedule(robot),drives=schedule.segments.filter(s=&gt;s.kind===&#x27;drive&#x27;);
+  document.getElementById(&#x27;route-robot-title&#x27;).textContent=&#x27;Roboter &#x27;+robot.id+&#x27; · &#x27;+robot.type;
+  const km=drives.reduce((sum,s)=&gt;sum+s.route.km,0),setup=schedule.segments.filter(s=&gt;s.kind===&#x27;setup&#x27;).reduce((sum,s)=&gt;sum+s.duration,0);
+  document.getElementById(&#x27;route-robot-summary&#x27;).textContent=schedule.tasks.length+&#x27; Aufgaben · &#x27;+km.toFixed(1).replace(&#x27;.&#x27;,&#x27;,&#x27;)+&#x27; km Straßenfahrt · &#x27;+durationLabel(setup)+&#x27; Rüsten&#x27;;
+  document.getElementById(&#x27;route-jobs&#x27;).innerHTML=schedule.tasks.map((task,index)=&gt;{const f=fields.find(f=&gt;f.id===task.field),work=schedule.segments.find(s=&gt;s.kind===&#x27;work&#x27;&amp;&amp;s.task===task);return `&lt;article class=&quot;route-job ${selectedDispatchTask===task.id?&#x27;active&#x27;:&#x27;&#x27;}&quot;&gt;&lt;button class=&quot;route-job-title&quot; onclick=&quot;openTaskOverview(${task.id})&quot;&gt;&lt;span&gt;${index+1}&lt;/span&gt;&lt;div&gt;&lt;strong&gt;${f.name}&lt;/strong&gt;&lt;small&gt;${task.operation} · ${dispatchEquipment(task)} · ${f.area}&lt;/small&gt;&lt;/div&gt;&lt;/button&gt;&lt;p&gt;${datedTime(work.start)}–${minuteClock(work.start+work.duration)} · ${durationLabel(work.duration)}&lt;/p&gt;&lt;div class=&quot;route-job-actions&quot;&gt;&lt;button onclick=&quot;moveDispatchTask(${task.id},-1)&quot; ${index===0?&#x27;disabled&#x27;:&#x27;&#x27;} aria-label=&quot;${f.name} früher einplanen&quot;&gt;←&lt;/button&gt;&lt;button onclick=&quot;moveDispatchTask(${task.id},1)&quot; ${index===schedule.tasks.length-1?&#x27;disabled&#x27;:&#x27;&#x27;} aria-label=&quot;${f.name} später einplanen&quot;&gt;→&lt;/button&gt;&lt;select aria-label=&quot;${f.name} einem anderen Roboter zuweisen&quot; onchange=&quot;assignDispatchTask(${task.id},Number(this.value))&quot;&gt;${compatibleRobots(task).map(r=&gt;`&lt;option value=&quot;${r.id}&quot; ${r.id===robot.id?&#x27;selected&#x27;:&#x27;&#x27;}&gt;Roboter ${r.id}&lt;/option&gt;`).join(&#x27;&#x27;)}&lt;/select&gt;&lt;button class=&quot;return-task&quot; onclick=&quot;assignDispatchTask(${task.id},0)&quot; title=&quot;In den Arbeitsspeicher zurücklegen&quot;&gt;↶ Speicher&lt;/button&gt;&lt;/div&gt;&lt;/article&gt;`;}).join(&#x27;&#x27;)||&#x27;&lt;div class=&quot;storage-empty&quot;&gt;Noch keine Aufgaben zugewiesen. Links eine Aufgabe auswählen und diesem Roboter zuweisen.&lt;/div&gt;&#x27;;
+  const roadSvg=drives.map(s=&gt;`&lt;polyline pointer-events=&quot;none&quot; points=&quot;${s.route.points.map(p=&gt;p.join(&#x27;,&#x27;)).join(&#x27; &#x27;)}&quot; fill=&quot;none&quot; stroke=&quot;white&quot; stroke-width=&quot;13&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;polyline pointer-events=&quot;none&quot; points=&quot;${s.route.points.map(p=&gt;p.join(&#x27;,&#x27;)).join(&#x27; &#x27;)}&quot; fill=&quot;none&quot; stroke=&quot;#427fad&quot; stroke-width=&quot;7&quot; stroke-dasharray=&quot;13 9&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;`).join(&#x27;&#x27;);
+  const tracks=schedule.tasks.map(dispatchFieldTracks).join(&#x27;&#x27;);
+  const selected=dispatchTasks.find(t=&gt;t.id===selectedDispatchTask);
+  document.getElementById(&#x27;map-selection-title&#x27;).textContent=selected?fields.find(f=&gt;f.id===selected.field).name:&#x27;Roboter &#x27;+robot.id;
+  document.getElementById(&#x27;map-selection-caption&#x27;).textContent=selected?selected.operation+&#x27; · Roboter &#x27;+robot.id:schedule.tasks.length+&#x27; zugewiesene Flächen · Straßenfahrten blau&#x27;;
+  const highlight=selected?`&lt;path d=&quot;${fields.find(f=&gt;f.id===selected.field).path}&quot; fill=&quot;#e7b65b&quot; fill-opacity=&quot;.2&quot; stroke=&quot;#c48a30&quot; stroke-width=&quot;9&quot; pointer-events=&quot;none&quot;/&gt;`:&#x27;&#x27;;
+  const map=document.getElementById(&#x27;dispatch-map&#x27;),target=map.querySelector(&#x27;.map-scene&#x27;)||map;
+  let base=landscape(&#x27;dispatch&#x27;);
+  fields.forEach(f=&gt;{base=base.replace(`d=&quot;${f.path}&quot; fill=`,`tabindex=&quot;0&quot; role=&quot;button&quot; aria-label=&quot;${f.name} auf dem Zeitplan anzeigen&quot; onclick=&quot;selectDispatchField(${f.id})&quot; onkeydown=&quot;if(event.key===&#x27;Enter&#x27;||event.key===&#x27; &#x27;){event.preventDefault();selectDispatchField(${f.id})}&quot; style=&quot;cursor:pointer&quot; d=&quot;${f.path}&quot; fill=`);});
+  target.innerHTML=base.replace(&#x27;&lt;/svg&gt;&#x27;,roadSvg+tracks+highlight+&#x27;&lt;/svg&gt;&#x27;);
+  if(!map.classList.contains(&#x27;map-viewport&#x27;))enableMap(map);
+}
+document.getElementById(&#x27;storage-sort&#x27;).onchange=renderStoredTasks;
+document.getElementById(&#x27;schedule-slider&#x27;).oninput=e=&gt;seekSchedule(Number(e.target.value));
+document.getElementById(&#x27;schedule-scale&#x27;).onchange=e=&gt;{scheduleSpan=Number(e.target.value);seekSchedule(scheduleOffset);};
+document.getElementById(&#x27;schedule-back&#x27;).onclick=()=&gt;seekSchedule(scheduleOffset-120);
+document.getElementById(&#x27;schedule-forward&#x27;).onclick=()=&gt;seekSchedule(scheduleOffset+120);
+document.getElementById(&#x27;suggest-plan&#x27;).onclick=()=&gt;{
+  dispatchTasks.filter(t=&gt;!t.robot).forEach(t=&gt;t.robot=t.operation.startsWith(&#x27;Grubbern&#x27;)?5:t.operation===&#x27;Säen&#x27;?6:t.operation===&#x27;Striegeln&#x27;?4:2);
+  markPlanDraft(&#x27;Beispielvorschlag ergänzt · Zuweisung und Reihenfolge sind anpassbar&#x27;);renderDispatch();
+};
+document.getElementById(&#x27;accept-plan&#x27;).onclick=()=&gt;{planAccepted=true;document.getElementById(&#x27;plan-status&#x27;).textContent=&#x27;Einsatzplan übernommen · Demo, keine Roboter gestartet&#x27;;const button=document.getElementById(&#x27;accept-plan&#x27;);button.textContent=&#x27;Plan übernommen ✓&#x27;;button.disabled=true;};
+document.getElementById(&#x27;task-field&#x27;).innerHTML=fields.map(f=&gt;`&lt;option value=&quot;${f.id}&quot;&gt;${f.name} · ${f.area}&lt;/option&gt;`).join(&#x27;&#x27;);
+document.getElementById(&#x27;task-form&#x27;).onsubmit=e=&gt;{
+  e.preventDefault();const operation=document.getElementById(&#x27;task-operation&#x27;).value;
+  dispatchTasks.push({id:Math.max(0,...dispatchTasks.map(t=&gt;t.id))+1,field:Number(document.getElementById(&#x27;task-field&#x27;).value),operation,priority:document.getElementById(&#x27;task-priority&#x27;).value,createdOn:dispatchDate,speed:({&#x27;Grubbern tief&#x27;:12,&#x27;Grubbern flach&#x27;:14,&#x27;Säen&#x27;:10,&#x27;Hacken&#x27;:5,&#x27;Striegeln&#x27;:5})[operation],depth:operation===&#x27;Grubbern tief&#x27;?20:operation===&#x27;Grubbern flach&#x27;?5:null,robot:null});
+  markPlanDraft(&#x27;Neue Aufgabe im Arbeitsspeicher · Noch keinem Roboter zugewiesen&#x27;);renderDispatch();document.getElementById(&#x27;new-task&#x27;).close();
+};
+renderDispatch();
+
+function updateHeaderClock(){
+  const now=new Date();
+  document.getElementById(&#x27;header-time&#x27;).textContent=new Intl.DateTimeFormat(&#x27;de-DE&#x27;,{timeZone:&#x27;Europe/Berlin&#x27;,hour:&#x27;2-digit&#x27;,minute:&#x27;2-digit&#x27;}).format(now);
+  document.getElementById(&#x27;header-time&#x27;).dateTime=now.toISOString();
+  document.getElementById(&#x27;header-date&#x27;).textContent=new Intl.DateTimeFormat(&#x27;de-DE&#x27;,{timeZone:&#x27;Europe/Berlin&#x27;,weekday:&#x27;short&#x27;,day:&#x27;2-digit&#x27;,month:&#x27;2-digit&#x27;,year:&#x27;numeric&#x27;}).format(now);
+}
+updateHeaderClock();setInterval(updateHeaderClock,10000);
+let plannedFieldId=null;
+function openFieldPlanner(id){
+  plannedFieldId=id;
+  document.getElementById(&#x27;planner-priority&#x27;).value=&#x27;flexible&#x27;;
+  const f=fields.find(f=&gt;f.id===id);
+  document.querySelector(&#x27;#fields &gt; .field-layout&#x27;).hidden=true;
+  document.getElementById(&#x27;field-planner&#x27;).hidden=false;
+  document.getElementById(&#x27;planner-name&#x27;).textContent=f.name;
+  document.getElementById(&#x27;planner-meta&#x27;).textContent=f.area+&#x27; · &#x27;+f.crop;
+  const cropSelect=document.getElementById(&#x27;seed-crop&#x27;);
+  cropSelect.replaceChildren(...[...new Set([f.crop,&#x27;Winterweizen&#x27;,&#x27;Wintergerste&#x27;,&#x27;Winterroggen&#x27;,&#x27;Triticale&#x27;,&#x27;Sommergerste&#x27;,&#x27;Hafer&#x27;,&#x27;Mais&#x27;,&#x27;Raps&#x27;])].map(crop=&gt;new Option(crop,crop)));
+  cropSelect.value=f.crop;
+  const op=fieldPlanning[id].next;
+  document.getElementById(&#x27;planner-operation&#x27;).value=op.startsWith(&#x27;Säen&#x27;)?&#x27;Säen&#x27;:op.startsWith(&#x27;Hacken&#x27;)?&#x27;Hacken&#x27;:op.startsWith(&#x27;Striegeln&#x27;)?&#x27;Striegeln&#x27;:op.includes(&#x27;tief&#x27;)?&#x27;Grubbern tief&#x27;:&#x27;Grubbern flach&#x27;;
+  document.getElementById(&#x27;planner-save-button&#x27;).disabled=false;
+  document.getElementById(&#x27;planner-save-button&#x27;).textContent=&#x27;In Aufgabenspeicher übertragen&#x27;;
+  document.getElementById(&#x27;planner-save-status&#x27;).textContent=&#x27;&#x27;;
+  const standardAngle=fieldDirections[id]===&#x27;horizontal&#x27;?90:0;
+  document.getElementById(&#x27;standard-direction&#x27;).textContent=standardAngle+&#x27;° · &#x27;+(standardAngle===0?&#x27;vertikal&#x27;:&#x27;horizontal&#x27;);
+  document.getElementById(&#x27;planner-angle&#x27;).value=standardAngle;
+  document.getElementById(&#x27;headland-count&#x27;).value=&#x27;2&#x27;;
+  updatePlannerOperation();
+  drawFieldRoutes(f);
+}
+function closeFieldPlanner(){
+  document.getElementById(&#x27;field-planner&#x27;).hidden=true;
+  document.querySelector(&#x27;#fields &gt; .field-layout&#x27;).hidden=false;
+}
+const fieldDirections={1:&#x27;vertical&#x27;,2:&#x27;horizontal&#x27;,3:&#x27;vertical&#x27;,4:&#x27;vertical&#x27;,5:&#x27;horizontal&#x27;,6:&#x27;horizontal&#x27;,7:&#x27;horizontal&#x27;,8:&#x27;vertical&#x27;};
+function updatePlannerOperation(){
+  const op=document.getElementById(&#x27;planner-operation&#x27;).value;
+  document.getElementById(&#x27;planner-speed&#x27;).value=({&#x27;Grubbern tief&#x27;:12,&#x27;Grubbern flach&#x27;:14,&#x27;Säen&#x27;:10,&#x27;Hacken&#x27;:5,&#x27;Striegeln&#x27;:5})[op]||12;
+  document.getElementById(&#x27;planner-depth&#x27;).value=op===&#x27;Grubbern tief&#x27;?20:5;
+  document.getElementById(&#x27;depth-label&#x27;).hidden=!op.startsWith(&#x27;Grubbern&#x27;);
+  document.getElementById(&#x27;seed-settings&#x27;).hidden=op!==&#x27;Säen&#x27;;
+}
+document.getElementById(&#x27;planner-operation&#x27;).onchange=()=&gt;{updatePlannerOperation();if(plannedFieldId)drawFieldRoutes(fields.find(f=&gt;f.id===plannedFieldId));};
+[&#x27;seed-rate&#x27;,&#x27;seed-application-map&#x27;,&#x27;tramline-spacing&#x27;,&#x27;headland-count&#x27;].forEach(id=&gt;document.getElementById(id).onchange=()=&gt;{if(plannedFieldId)drawFieldRoutes(fields.find(f=&gt;f.id===plannedFieldId));});
+document.getElementById(&#x27;planner-angle&#x27;).oninput=()=&gt;{if(plannedFieldId&amp;&amp;document.getElementById(&#x27;planner-angle&#x27;).validity.valid)drawFieldRoutes(fields.find(f=&gt;f.id===plannedFieldId));};
+function drawFieldRoutes(f){
+  const ns=&#x27;http://www.w3.org/2000/svg&#x27;,isSeed=document.getElementById(&#x27;planner-operation&#x27;).value===&#x27;Säen&#x27;;
+  const angle=Number(document.getElementById(&#x27;planner-angle&#x27;).value),radians=angle*Math.PI/180;
+  const useApplicationMap=isSeed&amp;&amp;document.getElementById(&#x27;seed-application-map&#x27;).checked;
+  const headlands=Number(document.getElementById(&#x27;headland-count&#x27;).value);
+  const workingScale=Math.min(.77,.93-headlands*.08);
+  const seedRate=Number(document.getElementById(&#x27;seed-rate&#x27;).value),tramSpacing=Number(document.getElementById(&#x27;tramline-spacing&#x27;).value);
+  const fmt=n=&gt;Math.round(n).toLocaleString(&#x27;de-DE&#x27;);
+  const probe=document.createElementNS(ns,&#x27;svg&#x27;);
+  probe.style.cssText=&#x27;position:absolute;left:-10000px;top:0;width:1040px;height:900px&#x27;;
+  const shape=document.createElementNS(ns,&#x27;path&#x27;);shape.setAttribute(&#x27;d&#x27;,f.path);probe.append(shape);document.body.append(probe);
+  const b=shape.getBBox(),cx=b.x+b.width/2,cy=b.y+b.height/2;
+  const pad=Math.max(b.width,b.height)*.12,view=[b.x-pad,b.y-pad,b.width+2*pad,b.height+2*pad];
+  const cos=Math.cos(radians),sin=Math.sin(radians);
+  const point=(x,y)=&gt;({x:cx+(x-cx)*cos+(y-cy)*sin,y:cy-(x-cx)*sin+(y-cy)*cos});
+  const corners=[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(([x,y])=&gt;({x:cx+(x-cx)*cos-(y-cy)*sin,y:cy+(x-cx)*sin+(y-cy)*cos}));
+  const xs=corners.map(p=&gt;p.x),ys=corners.map(p=&gt;p.y);
+  const local={x:Math.min(...xs),y:Math.min(...ys),width:Math.max(...xs)-Math.min(...xs),height:Math.max(...ys)-Math.min(...ys)};
+  const pair=p=&gt;`${p.x} ${p.y}`;
+  const lines=[],count=isSeed?14:10,sw=Math.max(b.width,b.height)*.009;
+  const inside=(x,y)=&gt;{const world=point(x,y),p=probe.createSVGPoint();p.x=cx+(world.x-cx)/workingScale;p.y=cy+(world.y-cy)/workingScale;return shape.isPointInFill(p);};
+  for(let i=0;i&lt;count;i++){
+    const x=local.x+local.width*(.17+i*.66/(count-1)),ys=[];
+    for(let j=0;j&lt;=400;j++){const y=local.y+j*local.height/400;if(inside(x,y))ys.push(y);}
+    if(ys.length&gt;4){const top=ys[0]+sw,bottom=ys[ys.length-1]-sw;lines.push({x,start:i%2?bottom:top,end:i%2?top:bottom});}
+  }
+  const color=t=&gt;`hsl(${140*(1-t)} 58% 42%)`;
+  const arrow=(x,y,dx,dy)=&gt;{const norm=Math.hypot(dx,dy)||1,ux=dx/norm,uy=dy/norm,r=sw*1.8;return `&lt;path d=&quot;M${x-ux*r-uy*r} ${y-uy*r+ux*r}L${x+ux*r} ${y+uy*r}L${x-ux*r+uy*r} ${y-uy*r-ux*r}&quot; fill=&quot;none&quot; stroke=&quot;white&quot; stroke-width=&quot;${sw*.6}&quot; stroke-linejoin=&quot;round&quot;/&gt;`;};
+  const tracks=lines.map((l,i)=&gt;{
+    const start=point(l.x,l.start),end=point(l.x,l.end),mid=point(l.x,(l.start+l.end)/2);let join=&#x27;&#x27;;
+    if(i&lt;lines.length-1){const next=lines[i+1],dir=l.end&gt;l.start?1:-1,out=(l.end+next.start)/2+dir*local.height*.045;join=`&lt;path d=&quot;M${pair(end)}C${pair(point(l.x,out))} ${pair(point(next.x,out))} ${pair(point(next.x,next.start))}&quot; fill=&quot;none&quot; stroke=&quot;${color(i/lines.length*.64)}&quot; stroke-width=&quot;${sw}&quot;/&gt;`;}
+    return `&lt;path d=&quot;M${pair(start)}L${pair(end)}&quot; fill=&quot;none&quot; stroke=&quot;${color(i/lines.length*.64)}&quot; stroke-width=&quot;${sw}&quot; stroke-linecap=&quot;round&quot;/&gt;${join}${arrow(mid.x,mid.y,end.x-start.x,end.y-start.y)}`;
+  }).join(&#x27;&#x27;);
+  let previous=lines.length?point(lines[lines.length-1].x,lines[lines.length-1].end):{x:cx,y:cy};
+  const first=lines.length?point(lines[0].x,lines[0].start):previous;
+  const length=shape.getTotalLength();let circuits=&#x27;&#x27;;
+  Array.from({length:headlands},(_,i)=&gt;.94-(headlands-1-i)*.08).forEach((scale,lap)=&gt;{
+    const points=Array.from({length:160},(_,i)=&gt;{const p=shape.getPointAtLength(i/160*length);return {x:cx+(p.x-cx)*scale,y:cy+(p.y-cy)*scale};});
+    let nearest=0;points.forEach((p,i)=&gt;{if(Math.hypot(p.x-previous.x,p.y-previous.y)&lt;Math.hypot(points[nearest].x-previous.x,points[nearest].y-previous.y))nearest=i;});
+    const start=points[nearest];
+    circuits+=`&lt;path d=&quot;M${pair(previous)}L${pair(start)}&quot; fill=&quot;none&quot; stroke=&quot;${color(.65+lap*.35/Math.max(1,headlands))}&quot; stroke-width=&quot;${sw}&quot;/&gt;`;
+    for(let i=0;i&lt;160;i++){
+      const a=points[(nearest+i)%160],z=points[(nearest+i+1)%160];
+      circuits+=`&lt;path d=&quot;M${pair(a)}L${pair(z)}&quot; fill=&quot;none&quot; stroke=&quot;${color(.65+(lap+i/159)*.35/Math.max(1,headlands))}&quot; stroke-width=&quot;${sw}&quot; stroke-linecap=&quot;round&quot;/&gt;`;
+      if(i%40===20)circuits+=arrow(a.x,a.y,z.x-a.x,z.y-a.y);
+    }
+    previous=start;
+  });
+  probe.remove();
+  function endpoint(p,isStart){
+    const {x,y}=p,col=isStart?&#x27;#238454&#x27;:&#x27;#bd4840&#x27;,size=sw*3.2;
+    return `&lt;circle cx=&quot;${x}&quot; cy=&quot;${y}&quot; r=&quot;${sw*1.6}&quot; fill=&quot;${col}&quot; stroke=&quot;white&quot; stroke-width=&quot;${sw*.6}&quot;/&gt;&lt;rect x=&quot;${x-size*2}&quot; y=&quot;${y-size*3.3}&quot; width=&quot;${size*4}&quot; height=&quot;${size*1.65}&quot; rx=&quot;${sw}&quot; fill=&quot;white&quot; stroke=&quot;${col}&quot; stroke-width=&quot;${sw*.25}&quot;/&gt;&lt;text x=&quot;${x}&quot; y=&quot;${y-size*2.13}&quot; text-anchor=&quot;middle&quot; font-family=&quot;sans-serif&quot; font-weight=&quot;600&quot; font-size=&quot;${size}&quot;&gt;${isStart?&#x27;Start&#x27;:&#x27;Stopp&#x27;}&lt;/text&gt;`;
+  }
+  let seedZones=&#x27;&#x27;,tramlines=&#x27;&#x27;,seedKey=&#x27;&#x27;;
+  if(isSeed){
+    if(useApplicationMap)seedZones=`&lt;defs&gt;&lt;clipPath id=&quot;seed-field-clip&quot;&gt;&lt;path d=&quot;${f.path}&quot;/&gt;&lt;/clipPath&gt;&lt;/defs&gt;&lt;g clip-path=&quot;url(#seed-field-clip)&quot;&gt;&lt;rect x=&quot;${b.x}&quot; y=&quot;${b.y}&quot; width=&quot;${b.width}&quot; height=&quot;${b.height}&quot; fill=&quot;#d9d4a4&quot;/&gt;&lt;path d=&quot;M${b.x} ${b.y+b.height*.28}Q${cx} ${b.y+b.height*.12} ${b.x+b.width} ${b.y+b.height*.4}V${b.y+b.height}H${b.x}Z&quot; fill=&quot;#a9cbbf&quot;/&gt;&lt;path d=&quot;M${b.x} ${b.y+b.height*.74}Q${cx} ${b.y+b.height*.43} ${b.x+b.width} ${b.y+b.height*.69}V${b.y+b.height}H${b.x}Z&quot; fill=&quot;#91b3cb&quot;/&gt;&lt;/g&gt;`;
+    lines.forEach((l,i)=&gt;{if(!tramSpacing||i%Math.round(tramSpacing/3)!==2)return;[-sw*1.4,sw*1.4].forEach(offset=&gt;{const a=point(l.x+offset,l.start),z=point(l.x+offset,l.end);tramlines+=`&lt;path d=&quot;M${pair(a)}L${pair(z)}&quot; stroke=&quot;white&quot; stroke-width=&quot;${sw*1.2}&quot;/&gt;&lt;path d=&quot;M${pair(a)}L${pair(z)}&quot; stroke=&quot;#283e51&quot; stroke-width=&quot;${sw*.65}&quot; stroke-dasharray=&quot;${sw*3} ${sw*1.5}&quot;/&gt;`;});});
+    if(useApplicationMap)seedKey=`&lt;div class=&quot;seed-map-key&quot;&gt;&lt;strong&gt;Aussaat-Applikationskarte&lt;/strong&gt;&lt;span class=&quot;seed-key-sub&quot;&gt;Saatstärke · Körner/ha&lt;/span&gt;&lt;div class=&quot;seed-zone-row&quot;&gt;&lt;i style=&quot;background:#d9d4a4&quot;&gt;&lt;/i&gt;&lt;span&gt;${fmt(seedRate*.9)}&lt;/span&gt;&lt;b style=&quot;width:82%&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;seed-zone-row&quot;&gt;&lt;i style=&quot;background:#a9cbbf&quot;&gt;&lt;/i&gt;&lt;span&gt;${fmt(seedRate)}&lt;/span&gt;&lt;b style=&quot;width:91%&quot;&gt;&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;seed-zone-row&quot;&gt;&lt;i style=&quot;background:#91b3cb&quot;&gt;&lt;/i&gt;&lt;span&gt;${fmt(seedRate*1.1)}&lt;/span&gt;&lt;b style=&quot;width:100%&quot;&gt;&lt;/b&gt;&lt;/div&gt;${tramSpacing?`&lt;span class=&quot;seed-tram-key&quot;&gt;┆┆ Fahrgassen · ${tramSpacing} m Abstand&lt;/span&gt;`:&quot;&quot;}&lt;/div&gt;`;
+  }
+  document.getElementById(&#x27;task-map-slot&#x27;).innerHTML=`&lt;div id=&quot;task-route-map&quot; data-aspect=&quot;${view[2]/view[3]}&quot;&gt;&lt;svg viewBox=&quot;${view.join(&#x27; &#x27;)}&quot; xmlns=&quot;${ns}&quot; role=&quot;img&quot; aria-label=&quot;Spurvorschlag für ${f.name}, ${angle} Grad${useApplicationMap?&#x27;, mit Saatzonen&#x27;:&#x27;&#x27;}${isSeed&amp;&amp;tramSpacing?&#x27;, mit Fahrgassen&#x27;:&#x27;&#x27;}&quot;&gt;&lt;path d=&quot;${f.path}&quot; fill=&quot;#dce7ce&quot; stroke=&quot;#7c9670&quot; stroke-width=&quot;${sw*.7}&quot;/&gt;${seedZones}${tracks}${circuits}${tramlines}${endpoint(first,true)}${endpoint(previous,false)}&lt;/svg&gt;&lt;/div&gt;${seedKey}&lt;div class=&quot;route-legend&quot;&gt;&lt;span&gt;&lt;i class=&quot;route-gradient&quot;&gt;&lt;/i&gt; Start → Stopp&lt;/span&gt;&lt;/div&gt;`;
+  document.getElementById(&#x27;planner-track-count&#x27;).textContent=lines.length+&#x27; Bahnen · &#x27;+angle+&#x27;°&#x27;;
+  enableMap(document.getElementById(&#x27;task-route-map&#x27;));
+}
+function saveFieldTask(){
+  const operation=document.getElementById(&#x27;planner-operation&#x27;).value;
+  if(!document.getElementById(&#x27;planner-angle&#x27;).reportValidity()||!document.getElementById(&#x27;planner-speed&#x27;).reportValidity())return;
+  if(operation.startsWith(&#x27;Grubbern&#x27;)&amp;&amp;!document.getElementById(&#x27;planner-depth&#x27;).reportValidity())return;
+  if(operation===&#x27;Säen&#x27;&amp;&amp;!document.getElementById(&#x27;seed-rate&#x27;).reportValidity())return;
+  dispatchTasks.push({id:Math.max(0,...dispatchTasks.map(t=&gt;t.id))+1,field:plannedFieldId,operation,priority:document.getElementById(&#x27;planner-priority&#x27;).value,createdOn:dispatchDate,speed:Number(document.getElementById(&#x27;planner-speed&#x27;).value),crop:operation===&#x27;Säen&#x27;?document.getElementById(&#x27;seed-crop&#x27;).value:null,applicationMap:operation===&#x27;Säen&#x27;&amp;&amp;document.getElementById(&#x27;seed-application-map&#x27;).checked,seedRate:operation===&#x27;Säen&#x27;?Number(document.getElementById(&#x27;seed-rate&#x27;).value):null,tramlineSpacing:operation===&#x27;Säen&#x27;?Number(document.getElementById(&#x27;tramline-spacing&#x27;).value):null,direction:Number(document.getElementById(&#x27;planner-angle&#x27;).value),bearingDegrees:Number(document.getElementById(&#x27;planner-angle&#x27;).value),headlandPasses:Number(document.getElementById(&#x27;headland-count&#x27;).value),depth:operation.startsWith(&#x27;Grubbern&#x27;)?Number(document.getElementById(&#x27;planner-depth&#x27;).value):null,workingWidth:3,robot:null});
+  markPlanDraft(&#x27;Neue Aufgabe aus der Schlagplanung · Zuweisung im Einsatzplan prüfen&#x27;);renderDispatch();
+  document.getElementById(&#x27;planner-save-status&#x27;).textContent=&#x27;Im Aufgabenspeicher.&#x27;;
+  document.getElementById(&#x27;planner-save-button&#x27;).disabled=true;
+  document.getElementById(&#x27;planner-save-button&#x27;).textContent=&#x27;Übertragen ✓&#x27;;
+}
+
+// Schlagkartei: Beispieldaten für den interaktiven Entwurf.
+let recordFieldId=1;
+function closeFieldRecord(){document.getElementById(&#x27;field-record&#x27;).hidden=true;document.querySelector(&#x27;#fields &gt; .field-layout&#x27;).hidden=false;}
+function openFieldRecord(id){
+ recordFieldId=id;const f=fields.find(f=&gt;f.id===id);
+ document.querySelector(&#x27;#fields &gt; .field-layout&#x27;).hidden=true;document.getElementById(&#x27;field-planner&#x27;).hidden=true;
+ const record=document.getElementById(&#x27;field-record&#x27;);record.hidden=false;
+ record.innerHTML=`&lt;div class=&quot;planner-heading&quot;&gt;&lt;button class=&quot;planner-back&quot; onclick=&quot;closeFieldRecord()&quot;&gt;← Zurück zu den Ackerschlägen&lt;/button&gt;&lt;div class=&quot;planner-breadcrumb&quot;&gt;&lt;span&gt;Schlagkartei&lt;/span&gt;&lt;span&gt;/&lt;/span&gt;&lt;h1&gt;${f.name}&lt;/h1&gt;&lt;span class=&quot;sub&quot;&gt;${f.area} · ${f.crop}&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;
+ &lt;div class=&quot;record-layout&quot;&gt;&lt;div class=&quot;record-left&quot;&gt;&lt;div class=&quot;panel record-map-panel&quot;&gt;&lt;div class=&quot;record-map-toolbar&quot;&gt;&lt;label&gt;Erntejahr &lt;select id=&quot;record-year&quot; onchange=&quot;updateFieldRecord()&quot;&gt;&lt;option&gt;2026&lt;/option&gt;&lt;option&gt;2025&lt;/option&gt;&lt;option&gt;2024&lt;/option&gt;&lt;option&gt;2023&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;label&gt;Karten-Layer &lt;select id=&quot;record-layer&quot; onchange=&quot;updateFieldRecord()&quot;&gt;&lt;option value=&quot;soil&quot;&gt;Bodentyp&lt;/option&gt;&lt;option value=&quot;application&quot;&gt;Applikationskarte&lt;/option&gt;&lt;option value=&quot;yield&quot;&gt;Letzte Ertragskarte&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;&lt;/div&gt;&lt;div id=&quot;record-map-slot&quot;&gt;&lt;/div&gt;&lt;div id=&quot;record-map-key&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;panel record-weather&quot;&gt;&lt;span class=&quot;tiny&quot;&gt;WETTER AM FELD · DEMO&lt;/span&gt;&lt;h2&gt;☀ 14 °C &lt;small&gt;Leicht bewölkt&lt;/small&gt;&lt;/h2&gt;&lt;div class=&quot;weather-values&quot;&gt;&lt;span&gt;Wind &lt;b&gt;8 km/h · W&lt;/b&gt;&lt;/span&gt;&lt;span&gt;Niederschlag &lt;b&gt;0,2 mm&lt;/b&gt;&lt;/span&gt;&lt;span&gt;Bodenfeuchte &lt;b&gt;24 %&lt;/b&gt;&lt;/span&gt;&lt;/div&gt;&lt;p&gt;Heute trocken · Morgen 2 mm Regen&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;
+ &lt;aside class=&quot;record-right&quot;&gt;&lt;div class=&quot;panel record-section&quot;&gt;&lt;h2&gt;Schlaginformationen&lt;/h2&gt;&lt;dl class=&quot;record-facts&quot;&gt;&lt;div&gt;&lt;dt&gt;Feldgröße&lt;/dt&gt;&lt;dd&gt;${f.area}&lt;/dd&gt;&lt;/div&gt;&lt;div&gt;&lt;dt&gt;Aktuelle Frucht&lt;/dt&gt;&lt;dd&gt;${f.crop}&lt;/dd&gt;&lt;/div&gt;&lt;div&gt;&lt;dt&gt;Erntejahr · Frucht&lt;/dt&gt;&lt;dd id=&quot;record-crop&quot;&gt;&lt;/dd&gt;&lt;/div&gt;&lt;div&gt;&lt;dt&gt;Mittlerer Ertrag&lt;/dt&gt;&lt;dd id=&quot;record-yield&quot;&gt;&lt;/dd&gt;&lt;/div&gt;&lt;/dl&gt;&lt;/div&gt;&lt;div class=&quot;panel record-section&quot;&gt;&lt;h2&gt;Letzte Arbeiten &lt;span class=&quot;tiny&quot; id=&quot;record-history-year&quot;&gt;&lt;/span&gt;&lt;/h2&gt;&lt;div id=&quot;record-history&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;panel record-section record-suggestions&quot;&gt;&lt;span class=&quot;tiny&quot;&gt;✦ KI-VORSCHLÄGE · DEMO&lt;/span&gt;&lt;h2&gt;Nächste Arbeiten&lt;/h2&gt;&lt;p id=&quot;record-next&quot;&gt;&lt;/p&gt;&lt;p class=&quot;record-explanation&quot;&gt;Beispielhafte Ableitung aus Fruchtfolge und bisherigen Arbeitsfolgen. Noch keine KI-Auswertung echter Schlagdaten.&lt;/p&gt;&lt;button class=&quot;primary&quot; onclick=&quot;document.getElementById(&#x27;field-record&#x27;).hidden=true;openFieldPlanner(${f.id})&quot;&gt;Aufgabe planen ↗&lt;/button&gt;&lt;/div&gt;&lt;p class=&quot;record-demo&quot;&gt;Schlaghistorie, Wetter und Karten sind illustrative Demodaten.&lt;/p&gt;&lt;/aside&gt;&lt;/div&gt;`;
+ updateFieldRecord();
+}
+function updateFieldRecord(){
+ const f=fields.find(f=&gt;f.id===recordFieldId),year=Number(document.getElementById(&#x27;record-year&#x27;).value),layer=document.getElementById(&#x27;record-layer&#x27;).value;
+ const crops=[f.crop,&#x27;Winterweizen&#x27;,&#x27;Raps&#x27;,&#x27;Wintergerste&#x27;],crop=crops[2026-year],yieldValue=[68,82,39,75][2026-year];
+ document.getElementById(&#x27;record-crop&#x27;).textContent=year+&#x27; · &#x27;+crop;
+ document.getElementById(&#x27;record-yield&#x27;).textContent=yieldValue+&#x27; dt/ha · Demo&#x27;;
+ document.getElementById(&#x27;record-history-year&#x27;).textContent=year;
+ document.getElementById(&#x27;record-history&#x27;).innerHTML=[[&#x27;18.10.&#x27;,&#x27;Grubbern flach&#x27;,&#x27;5 cm · 14 km/h&#x27;],[&#x27;24.09.&#x27;,fieldPlanning[f.id].last,&#x27;Abgeschlossen&#x27;],[&#x27;12.08.&#x27;,&#x27;Ernte · &#x27;+crop,yieldValue+&#x27; dt/ha&#x27;]].map(([date,work,detail])=&gt;`&lt;div class=&quot;record-work&quot;&gt;&lt;time&gt;${date}${year}&lt;/time&gt;&lt;div&gt;&lt;strong&gt;${work}&lt;/strong&gt;&lt;span&gt;${detail}&lt;/span&gt;&lt;/div&gt;&lt;b&gt;✓&lt;/b&gt;&lt;/div&gt;`).join(&#x27;&#x27;);
+ document.getElementById(&#x27;record-next&#x27;).textContent=fieldPlanning[f.id].next+&#x27; · Vorschlag für die aktuelle Saison 2026. Vergleichbare Arbeitsfolge in den Beispieljahren 2024 und 2025.&#x27;;
+ const palettes={soil:[&#x27;#d9c08e&#x27;,&#x27;#b9a174&#x27;,&#x27;#8c7352&#x27;],application:[&#x27;#d9d4a4&#x27;,&#x27;#a9cbbf&#x27;,&#x27;#91b3cb&#x27;],yield:[&#x27;#e2be75&#x27;,&#x27;#b6cb7c&#x27;,&#x27;#6a9c70&#x27;]},colors=palettes[layer];
+ const labels=layer===&#x27;soil&#x27;?[&#x27;Sandiger Lehm&#x27;,&#x27;Lehm&#x27;,&#x27;Toniger Lehm&#x27;]:layer===&#x27;application&#x27;?[&#x27;90 % · Basis&#x27;,&#x27;100 % · Basis&#x27;,&#x27;110 % · Basis&#x27;]:[(yieldValue-12)+&#x27; dt/ha&#x27;,yieldValue+&#x27; dt/ha&#x27;,(yieldValue+12)+&#x27; dt/ha&#x27;];
+ document.getElementById(&#x27;record-map-slot&#x27;).innerHTML=`&lt;div id=&quot;record-map&quot;&gt;&lt;svg viewBox=&quot;0 0 1040 900&quot; role=&quot;img&quot; aria-label=&quot;${document.getElementById(&#x27;record-layer&#x27;).selectedOptions[0].text} ${year} für ${f.name}&quot;&gt;&lt;defs&gt;&lt;clipPath id=&quot;record-clip&quot;&gt;&lt;path d=&quot;${f.path}&quot;/&gt;&lt;/clipPath&gt;&lt;/defs&gt;&lt;rect width=&quot;1040&quot; height=&quot;900&quot; fill=&quot;#edf1e6&quot;/&gt;&lt;g clip-path=&quot;url(#record-clip)&quot;&gt;&lt;rect width=&quot;1040&quot; height=&quot;900&quot; fill=&quot;${colors[0]}&quot;/&gt;&lt;path d=&quot;M0 ${80+(2026-year)*25} Q520 100 1040 500 V900 H0Z&quot; fill=&quot;${colors[1]}&quot;/&gt;&lt;path d=&quot;M0 400 Q520 300 1040 750 V900 H0Z&quot; fill=&quot;${colors[2]}&quot;/&gt;&lt;/g&gt;&lt;path d=&quot;${f.path}&quot; fill=&quot;none&quot; stroke=&quot;#526e51&quot; stroke-width=&quot;5&quot;/&gt;&lt;/svg&gt;&lt;/div&gt;`;
+ const svg=document.querySelector(&#x27;#record-map svg&#x27;),path=svg.querySelector(&#x27;clipPath path&#x27;),b=path.getBBox(),pad=30;svg.setAttribute(&#x27;viewBox&#x27;,`${b.x-pad} ${b.y-pad} ${b.width+2*pad} ${b.height+2*pad}`);
+ document.getElementById(&#x27;record-map&#x27;).dataset.aspect=(b.width+2*pad)/(b.height+2*pad);
+ document.getElementById(&#x27;record-map-key&#x27;).innerHTML=labels.map((label,i)=&gt;`&lt;span&gt;&lt;i style=&quot;background:${colors[i]}&quot;&gt;&lt;/i&gt;${label}&lt;/span&gt;`).join(&#x27;&#x27;);
+ enableMap(document.getElementById(&#x27;record-map&#x27;));
+}
+document.addEventListener(&#x27;keydown&#x27;,e=&gt;{if(e.key===&#x27;Escape&#x27;)document.querySelectorAll(&#x27;.map-expanded .map-expand&#x27;).forEach(button=&gt;button.click());});
+
+// Gemeinsame Detailansicht für gespeicherte und bereits disponierte Aufgaben.
+let taskOverviewId=null,taskOverviewMode=&#x27;field&#x27;,taskOverviewReturn={hash:&#x27;#auftragsverwaltung&#x27;,inspector:false};
+function openTaskOverview(id){
+  if(!dispatchTasks.some(t=&gt;t.id===id))return;
+  if(!/^#aufgabe-/.test(location.hash))taskOverviewReturn={hash:location.hash||&#x27;#auftragsverwaltung&#x27;,inspector:document.getElementById(&#x27;dispatch-inspector&#x27;).open};
+  const dialog=document.getElementById(&#x27;dispatch-inspector&#x27;);if(dialog.open)dialog.close();
+  const task=dispatchTasks.find(t=&gt;t.id===id);if(task.robot){selectedDispatchRobot=task.robot;selectedDispatchTask=id;renderSchedule();renderDispatchRobot();}
+  taskOverviewMode=&#x27;field&#x27;;location.hash=&#x27;aufgabe-&#x27;+id;
+  renderTaskOverview(id);
+}
+function closeTaskOverview(){
+  location.hash=taskOverviewReturn.hash;
+  if(taskOverviewReturn.inspector)requestAnimationFrame(()=&gt;{const dialog=document.getElementById(&#x27;dispatch-inspector&#x27;);if(!dialog.open)dialog.showModal();});
+}
+function taskInfoGroup(title,rows){return `&lt;section class=&quot;panel task-info-group&quot;&gt;&lt;h2&gt;${title}&lt;/h2&gt;&lt;dl&gt;${rows.filter(r=&gt;r[1]!==null&amp;&amp;r[1]!==undefined).map(([label,value])=&gt;`&lt;div&gt;&lt;dt&gt;${label}&lt;/dt&gt;&lt;dd&gt;${value}&lt;/dd&gt;&lt;/div&gt;`).join(&#x27;&#x27;)}&lt;/dl&gt;&lt;/section&gt;`;}
+function renderTaskOverview(id){
+  const task=dispatchTasks.find(t=&gt;t.id===id);
+  if(!task){document.getElementById(&#x27;task-overview-title&#x27;).textContent=&#x27;Aufgabe nicht verfügbar&#x27;;document.getElementById(&#x27;task-overview-subtitle&#x27;).textContent=&#x27;Diese Demo-Aufgabe ist in dieser Sitzung nicht vorhanden.&#x27;;document.getElementById(&#x27;task-overview-information&#x27;).innerHTML=&#x27;&#x27;;document.getElementById(&#x27;task-overview-map&#x27;).hidden=true;document.getElementById(&#x27;task-overview-id&#x27;).textContent=&#x27;&#x27;;document.getElementById(&#x27;task-overview-status&#x27;).textContent=&#x27;&#x27;;document.getElementById(&#x27;task-overview-assign&#x27;).hidden=true;document.getElementById(&#x27;task-overview-map-caption&#x27;).textContent=&#x27;&#x27;;taskOverviewId=null;return;}
+  taskOverviewId=id;
+  document.getElementById(&#x27;task-overview-map&#x27;).hidden=false;
+  const f=fields.find(f=&gt;f.id===task.field),robot=dispatchRobots.find(r=&gt;r.id===task.robot),schedule=robot?buildRobotSchedule(robot):null;
+  const work=schedule?.segments.find(s=&gt;s.kind===&#x27;work&#x27;&amp;&amp;s.task.id===id),drives=schedule?schedule.segments.filter(s=&gt;s.kind===&#x27;drive&#x27;&amp;&amp;s.task.id===id):[],setups=schedule?schedule.segments.filter(s=&gt;s.kind===&#x27;setup&#x27;&amp;&amp;s.task.id===id):[];
+  const priority=taskPriorities[task.priority]||taskPriorities.flexible,due=taskDeadline(task),dateLabel=date=&gt;new Intl.DateTimeFormat(&#x27;de-DE&#x27;,{day:&#x27;2-digit&#x27;,month:&#x27;2-digit&#x27;,year:&#x27;numeric&#x27;}).format(new Date(date+&#x27;T12:00:00&#x27;));
+  const defaultAngles={1:0,2:90,3:0,4:0,5:90,6:90,7:90,8:0};
+  document.getElementById(&#x27;task-overview-id&#x27;).textContent=&#x27;AUFGABE &#x27;+String(id).padStart(3,&#x27;0&#x27;);
+  document.getElementById(&#x27;task-overview-title&#x27;).textContent=f.name+&#x27; · &#x27;+task.operation;
+  document.getElementById(&#x27;task-overview-subtitle&#x27;).textContent=f.area+&#x27; · &#x27;+(task.crop||f.crop);
+  document.getElementById(&#x27;task-overview-status&#x27;).textContent=robot?&#x27;Eingeplant · Roboter &#x27;+robot.id:&#x27;Offen · Im Arbeitsspeicher&#x27;;
+  document.getElementById(&#x27;task-overview-assign&#x27;).hidden=!!robot;
+  let details=taskInfoGroup(&#x27;Aufgabe &amp; Fläche&#x27;, [[&#x27;Fläche&#x27;,f.name],[&#x27;Flächengröße&#x27;,f.area],[&#x27;Arbeit&#x27;,task.operation],[&#x27;Frucht&#x27;,task.crop||f.crop],[&#x27;Angelegt am&#x27;,dateLabel(task.createdOn||dispatchDate)],[&#x27;Priorität&#x27;,priority.label],[&#x27;Zeitrahmen&#x27;,priority.time],[&#x27;Ablaufdatum&#x27;,due?dateLabel(due):&#x27;Ohne Ablaufdatum&#x27;]]);
+  details+=taskInfoGroup(&#x27;Arbeitsparameter&#x27;, [[&#x27;Arbeitstiefe&#x27;,task.depth?task.depth+&#x27; cm&#x27;:null],[&#x27;Geschwindigkeit&#x27;,task.speed?task.speed+&#x27; km/h&#x27;:&#x27;Nicht festgelegt&#x27;],[&#x27;Arbeitsbreite&#x27;,task.workingWidth?task.workingWidth.toLocaleString(&#x27;de-DE&#x27;)+&#x27; m&#x27;:&#x27;Noch nicht festgelegt&#x27;],[&#x27;Bearbeitungsrichtung&#x27;,(task.bearingDegrees??defaultAngles[f.id])+&#x27;°&#x27;],[&#x27;Vorgewendebahnen&#x27;,task.headlandPasses??2],[&#x27;Saatkultur&#x27;,task.operation===&#x27;Säen&#x27;?(task.crop||f.crop):null],[&#x27;Saatstärke&#x27;,task.operation===&#x27;Säen&#x27;?(task.seedRate?task.seedRate.toLocaleString(&#x27;de-DE&#x27;)+&#x27; Körner/ha&#x27;:&#x27;Nicht festgelegt&#x27;):null],[&#x27;Applikationskarte&#x27;,task.operation===&#x27;Säen&#x27;?(task.applicationMap?&#x27;Teilflächenspezifisch&#x27;:&#x27;Keine hinterlegt&#x27;):null],[&#x27;Fahrgassenabstand&#x27;,task.operation===&#x27;Säen&#x27;?(task.tramlineSpacing?task.tramlineSpacing+&#x27; m&#x27;:&#x27;Keine Fahrgassen&#x27;):null]]);
+  details+=taskInfoGroup(&#x27;Einsatz &amp; Anfahrt&#x27;, [[&#x27;Roboter&#x27;,robot?&#x27;Roboter &#x27;+robot.id+&#x27; · &#x27;+robot.type:&#x27;Noch nicht zugewiesen&#x27;],[&#x27;Anbaugerät&#x27;,robot?dispatchEquipment(task):&#x27;Auswahl in der Disposition&#x27;],[&#x27;Geschätzte Arbeitsdauer&#x27;,durationLabel(dispatchDuration(task))],[&#x27;Geplanter Beginn&#x27;,work?datedTime(work.start):&#x27;Noch nicht eingeplant&#x27;],[&#x27;Geplantes Ende&#x27;,work?datedTime(work.start+work.duration):&#x27;Noch nicht eingeplant&#x27;],[&#x27;Rüstzeit&#x27;,schedule?durationLabel(setups.reduce((sum,s)=&gt;sum+s.duration,0)):null],[&#x27;Straßenfahrt&#x27;,schedule?durationLabel(drives.reduce((sum,s)=&gt;sum+s.duration,0)):null],[&#x27;Fahrtstrecke&#x27;,schedule?drives.reduce((sum,s)=&gt;sum+s.route.km,0).toFixed(1).replace(&#x27;.&#x27;,&#x27;,&#x27;)+&#x27; km&#x27;:null],[&#x27;Anfahrt&#x27;,robot?&#x27;Autonom über das Straßennetz&#x27;:&#x27;Noch nicht disponiert&#x27;]]);
+  document.getElementById(&#x27;task-overview-information&#x27;).innerHTML=details;
+  setTaskOverviewMap(taskOverviewMode);
+}
+function setTaskOverviewMap(mode){
+  const task=dispatchTasks.find(t=&gt;t.id===taskOverviewId);if(!task)return;
+  taskOverviewMode=mode;
+  [&#x27;field&#x27;,&#x27;road&#x27;].forEach(key=&gt;{const button=document.getElementById(&#x27;task-map-&#x27;+key);button.classList.toggle(&#x27;active&#x27;,key===mode);button.setAttribute(&#x27;aria-pressed&#x27;,String(key===mode));});
+  const f=fields.find(f=&gt;f.id===task.field),map=document.getElementById(&#x27;task-overview-map&#x27;);let svg;
+  if(mode===&#x27;field&#x27;){
+    const probe=document.createElementNS(&#x27;http://www.w3.org/2000/svg&#x27;,&#x27;svg&#x27;),path=document.createElementNS(&#x27;http://www.w3.org/2000/svg&#x27;,&#x27;path&#x27;);probe.style.cssText=&#x27;position:absolute;left:-10000px;width:1040px;height:900px&#x27;;path.setAttribute(&#x27;d&#x27;,f.path);probe.append(path);document.body.append(probe);const b=path.getBBox();probe.remove();
+    const pad=Math.max(b.width,b.height)*.12,view=[b.x-pad,b.y-pad,b.width+pad*2,b.height+pad*2];map.dataset.aspect=view[2]/view[3];
+    let zones=&#x27;&#x27;;
+    if(task.operation===&#x27;Säen&#x27;&amp;&amp;task.applicationMap)zones=`&lt;defs&gt;&lt;clipPath id=&quot;overview-seed-clip&quot;&gt;&lt;path d=&quot;${f.path}&quot;/&gt;&lt;/clipPath&gt;&lt;/defs&gt;&lt;g clip-path=&quot;url(#overview-seed-clip)&quot;&gt;&lt;rect x=&quot;${b.x}&quot; y=&quot;${b.y}&quot; width=&quot;${b.width}&quot; height=&quot;${b.height}&quot; fill=&quot;#d9d4a4&quot;/&gt;&lt;rect x=&quot;${b.x}&quot; y=&quot;${b.y+b.height*.33}&quot; width=&quot;${b.width}&quot; height=&quot;${b.height*.67}&quot; fill=&quot;#a9cbbf&quot;/&gt;&lt;rect x=&quot;${b.x}&quot; y=&quot;${b.y+b.height*.7}&quot; width=&quot;${b.width}&quot; height=&quot;${b.height*.3}&quot; fill=&quot;#91b3cb&quot;/&gt;&lt;/g&gt;`;
+    svg=`&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;${view.join(&#x27; &#x27;)}&quot; role=&quot;img&quot; aria-label=&quot;${f.name}: Feldgrenze und geplante Spurlinien&quot;&gt;&lt;path d=&quot;${f.path}&quot; fill=&quot;#dce7ce&quot; stroke=&quot;#78956e&quot; stroke-width=&quot;3&quot;/&gt;${zones}${dispatchFieldTracks(task)}&lt;/svg&gt;`;
+    document.getElementById(&#x27;task-overview-map-caption&#x27;).textContent=&#x27;Feldgrenze · Spurlinien · Vorgewende · Schematische Vorschau&#x27;;
+  }else{
+    map.dataset.aspect=1040/900;
+    const robot=dispatchRobots.find(r=&gt;r.id===task.robot),schedule=robot?buildRobotSchedule(robot):null;
+    const drives=schedule?schedule.segments.filter(s=&gt;s.kind===&#x27;drive&#x27;&amp;&amp;s.task.id===task.id):[{route:roadRoute(null,task.field)}];
+    const road=drives.map(s=&gt;`&lt;polyline points=&quot;${s.route.points.map(p=&gt;p.join(&#x27;,&#x27;)).join(&#x27; &#x27;)}&quot; fill=&quot;none&quot; stroke=&quot;white&quot; stroke-width=&quot;14&quot; stroke-linejoin=&quot;round&quot;/&gt;&lt;polyline points=&quot;${s.route.points.map(p=&gt;p.join(&#x27;,&#x27;)).join(&#x27; &#x27;)}&quot; fill=&quot;none&quot; stroke=&quot;#427fad&quot; stroke-width=&quot;7&quot; stroke-dasharray=&quot;14 9&quot; stroke-linejoin=&quot;round&quot;/&gt;`).join(&#x27;&#x27;);
+    svg=landscape(&#x27;task-overview&#x27;).replace(&#x27;&lt;/svg&gt;&#x27;,road+dispatchFieldTracks(task)+&#x27;&lt;/svg&gt;&#x27;);
+    document.getElementById(&#x27;task-overview-map-caption&#x27;).textContent=robot?&#x27;Geplante autonome Anfahrt · Schematisches Straßennetz&#x27;:&#x27;Beispielanfahrt vom Hof · Roboter noch nicht zugewiesen&#x27;;
+  }
+  const target=map.querySelector(&#x27;.map-scene&#x27;)||map;target.innerHTML=svg;
+  if(!map.classList.contains(&#x27;map-viewport&#x27;))enableMap(map);else map.querySelector(&#x27;.map-controls&#x27;).children[2].click();
+}
+window.dispatchReady=true;
+const initialTaskMatch=location.hash.match(/^#aufgabe-(\d+)$/);if(initialTaskMatch)renderTaskOverview(Number(initialTaskMatch[1]));
+
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"
+              title="iPad Website Vorschau">
+      </iframe>
+    </div>
+
+    <div class="home"></div>
+
+  </div>
+</div>
+
+</body>
+</html>

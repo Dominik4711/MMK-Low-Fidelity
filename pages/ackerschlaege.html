@@ -1,0 +1,32 @@
+<!-- Inhalt der Unterseite; eingebunden durch app.html. -->
+<section hidden id="fields" aria-label="Ackerschlagskarte">
+  <div class="field-layout">
+    <div class="field-map">
+      <div id="field-map-content" style="width:100%;height:100%">
+      </div>
+      <span class="field-legend">
+        ● Roboter · ▣ Feldeinfahrten · Schematische Karte
+      </span>
+    </div>
+    <aside class="panel" style="display:flex;flex-direction:column;min-height:0">
+      <div class="panelhead">
+        <h2>
+          Feldliste
+        </h2>
+        <span class="tiny">
+          8 Schläge
+        </span>
+      </div>
+      <div class="field-list" id="field-list" style="margin:0 10px 10px">
+      </div>
+    </aside>
+  </div>
+  <section id="field-record" hidden></section>
+  <section id="field-planner" hidden>
+    <div class="planner-heading"><button type="button" class="planner-back" onclick="closeFieldPlanner()">← Zurück zu den Ackerschlägen</button><div class="planner-breadcrumb"><span>Ackerschläge</span><span aria-hidden="true">/</span><h1 id="planner-name"></h1><span id="planner-meta" class="sub"></span></div></div>
+    <div class="planner-layout">
+      <div class="planner-map-panel"><div id="task-map-slot"></div></div>
+      <aside class="panel planner-settings"><h2>Aufgabenvorschlag</h2><label class="task-label">Arbeit<select id="planner-operation"><option>Grubbern tief</option><option>Grubbern flach</option><option value="Säen">Säen / Drillen</option><option>Hacken</option><option>Striegeln</option></select></label><label class="task-label" id="depth-label">Arbeitstiefe <span class="input-unit"><input id="planner-depth" type="number" value="15" min="3" max="35" step="1"> cm</span></label><label class="task-label">Arbeitsgeschwindigkeit<span class="input-unit"><input id="planner-speed" type="number" min="1" max="30" step="0.5" value="12" required> km/h</span></label><div id="seed-settings" hidden><label class="task-label">Frucht<select id="seed-crop"></select></label><label class="task-label">Saatstärke · Basis<select id="seed-rate"><option value="2800000">2.800.000 Körner/ha · 280 Körner/m²</option><option value="3200000" selected>3.200.000 Körner/ha · 320 Körner/m²</option><option value="3600000">3.600.000 Körner/ha · 360 Körner/m²</option><option value="4000000">4.000.000 Körner/ha · 400 Körner/m²</option></select></label><label class="seed-mode"><input type="checkbox" id="seed-application-map" checked>Teilflächenspezifisch nach Applikationskarte</label><label class="task-label">Fahrgassenabstand<select id="tramline-spacing"><option value="0">Keine Fahrgassen</option><option value="12">12 m</option><option value="18">18 m</option><option value="24" selected>24 m</option><option value="30">30 m</option></select></label></div><div class="direction-settings"><div class="standard-direction"><span>Standard-Bearbeitungsrichtung</span><strong id="standard-direction"></strong></div><label class="task-label">Bearbeitungsrichtung<span class="input-unit"><input id="planner-angle" type="number" min="0" max="359" step="1" value="0" required> °</span></label></div><label class="task-label">Anzahl Vorgewendebahnen<select id="headland-count"><option value="0">0 · ohne Vorgewende</option><option value="1">1 Bahn</option><option value="2" selected>2 Bahnen</option><option value="3">3 Bahnen</option><option value="4">4 Bahnen</option></select></label><div class="planner-specs"><div><span>Spurlinien</span><strong id="planner-track-count"></strong></div></div><label class="task-label priority-select">Priorität & Zeitrahmen<select id="planner-priority" name="planner-priority"><option value="immediate">Sofort · So bald wie möglich</option><option value="week">Zeitnah · Innerhalb einer Woche</option><option value="month">Geplant · Innerhalb von vier Wochen</option><option value="flexible" selected>Flexibel · Ohne Zeitvorgabe</option></select></label><div class="planner-save"><span id="planner-save-status" role="status"></span><button class="primary" id="planner-save-button" type="button" onclick="saveFieldTask()">In Aufgabenspeicher übertragen</button></div></aside>
+    </div>
+  </section>
+</section>
