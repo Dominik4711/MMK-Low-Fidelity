@@ -1,0 +1,14 @@
+<section id="wetter" class="weather-page" hidden aria-label="Wetter">
+  <button class="robot-back" onclick="location.hash='home'">← Zurück zur Übersicht</button>
+  <div class="weather-page-heading"><div><h1 id="weather-page-title">Wetter am aktuellen Standort</h1><p id="weather-page-location">Grünpark</p></div><a href="https://www.wetter.de/" target="_blank" rel="noopener noreferrer">wetter.de öffnen ↗</a></div>
+  <section class="panel weather-provider-panel">
+    <div class="weather-provider-heading"><strong>wetter<span>.de</span></strong><span>Schematische Vorschau</span></div>
+    <div class="weather-provider-current"><span class="weather-provider-sun" aria-hidden="true">☀</span><div><strong>18 °C</strong><span>Sonnig</span></div><dl><div><dt>Wind</dt><dd>12 km/h · NW</dd></div><div><dt>Regenrisiko</dt><dd>15 %</dd></div><div><dt>Niederschlag</dt><dd>2,4 mm</dd></div></dl></div>
+    <div class="weather-view-buttons" role="group" aria-label="Wetteransicht"><button data-weather-view="hours" aria-pressed="true" onclick="setWeatherView('hours')">Stundenwetter</button><button data-weather-view="days" aria-pressed="false" onclick="setWeatherView('days')">7 Tage</button><button data-weather-view="radar" aria-pressed="false" onclick="setWeatherView('radar')">Regenradar</button></div>
+    <div class="weather-provider-content">
+      <div id="weather-view-hours" class="weather-hour-grid"><div><span>Jetzt</span><b>☀</b><strong>18°</strong><small>15 % · 12 km/h</small></div><div><span>14 Uhr</span><b>☀</b><strong>19°</strong><small>10 % · 11 km/h</small></div><div><span>15 Uhr</span><b>☀</b><strong>20°</strong><small>10 % · 10 km/h</small></div><div><span>16 Uhr</span><b>⛅</b><strong>19°</strong><small>20 % · 13 km/h</small></div><div><span>17 Uhr</span><b>⛅</b><strong>18°</strong><small>25 % · 12 km/h</small></div><div><span>18 Uhr</span><b>☁</b><strong>16°</strong><small>30 % · 9 km/h</small></div></div>
+      <div id="weather-view-days" class="weather-day-list" hidden></div>
+      <div id="weather-view-radar" class="weather-radar" hidden><div id="weather-radar-map" class="weather-radar-map"></div><div class="weather-radar-key">Niederschlag <i></i> leicht → stark</div></div>
+    </div>
+  </section>
+</section>

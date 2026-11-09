@@ -9,3 +9,13 @@
 - `preview.html`: Weiterleitung auf die neue Startseite.
 
 Über einen Webserver öffnen, z. B. `/mmk/`. Ohne Geräte-Rahmen ist die Anwendung unter `/mmk/app.html` erreichbar. Die Unterseiten sind HTML-Fragmente und werden in die Grunddatei eingebunden. Beim Reiterwechsel bleiben Kartenansichten und Zustand erhalten.
+
+## Versand als einzelne HTML-Datei
+
+`ROBOplan-Export.html` enthält die gesamte Anwendung inklusive aller Unterseiten, Gestaltung, JavaScript und Kamerabild. Die Datei kann einzeln verschickt und im Browser geöffnet werden; ein Webserver ist nicht erforderlich. Der externe Link zu wetter.de benötigt Internet.
+
+Nach Änderungen neu exportieren:
+
+```bash
+python3 build_demo.py --output ROBOplan-Export.html
+```

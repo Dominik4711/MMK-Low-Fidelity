@@ -9,11 +9,12 @@
       </span>
     </div>
     <aside class="panel" style="display:flex;flex-direction:column;min-height:0">
+      <div class="field-customer-picker"><span>Betrieb / Kunde</span><button id="field-customer" type="button" aria-haspopup="dialog" onclick="openCustomerPicker()"><span id="field-customer-name">Hof Grünpark</span><span aria-hidden="true">⌄</span></button></div>
       <div class="panelhead">
         <h2>
           Feldliste
         </h2>
-        <span class="tiny">
+        <span class="tiny" id="field-customer-count">
           8 Schläge
         </span>
       </div>
@@ -30,3 +31,9 @@
     </div>
   </section>
 </section>
+
+<dialog id="customer-picker" class="customer-picker-dialog" aria-labelledby="customer-picker-title">
+  <div class="customer-picker-heading"><h2 id="customer-picker-title">Betrieb auswählen</h2><label class="customer-picker-search"><span class="sr-only">Betrieb suchen</span><input id="customer-search" type="search" placeholder="Betrieb suchen …" oninput="renderCustomerPicker()" autocomplete="off"></label><button class="customer-picker-close" type="button" aria-label="Schließen" onclick="document.getElementById('customer-picker').close()">×</button></div>
+  <div id="customer-picker-list" class="customer-picker-list"></div>
+  <p id="customer-picker-empty" class="customer-picker-empty" hidden>Keine Betriebe gefunden.</p>
+</dialog>

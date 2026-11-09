@@ -76,3 +76,21 @@
 - Zurück führt zur vorherigen Seite; zuvor geöffnete Roboterdetails werden wieder geöffnet.
 - Feldkarte mit Spuren und Vorgewende; alternative Anfahrtskarte. Bei nicht disponierten Aufgaben ist die Hofanfahrt ausdrücklich ein Beispiel.
 - Alle gespeicherten Parameter, Priorität, Anlage-/Ablaufdatum sowie Roboter-, Geräte- und Zeitangaben sichtbar; nicht festgelegte Angaben werden so benannt.
+
+## Modelle und Tiefen im Flottenmanagement
+
+- Inventar-IDs und Mengen unverändert: zwei Terrano 3 FX, TAIFUN 500, Smaragd 9/300; Saphir 9/300, Cataya 3000 Super, Cirrus 6003-2; TS 620 M3; CHOPSTAR-ONE und CHOPSTAR-TWIN.
+- HORSCH Terrano FX: 5–30 cm, abhängig vom Scharsystem. https://cdn.horsch.com/celum/7687_original.pdf
+- Einböck TAIFUN: bis 15 cm, abhängig von Ausstattung/Boden. https://www.einboeck.at/wp-content/uploads/2024/11/einboeck-bodenbearbeitung-de.pdf
+- Cataya in TwinTeC-special-Konfiguration: Ablagetiefe 0–6 cm. https://downloadcenter.amazone.de/file/view/infoid/55051
+- Cirrus 6003-2: 6 m. https://amazone.de/de-de/produkte-digitale-loesungen/cirrus-6003-2-die-6-m-anhaengesaekombination-fuer-hoechste-schlagkraft-83504
+- TS 620 M3: 6,20 m; Eingriffstiefe hängt von Einstellung/Boden ab, kein fester Zahlenbereich angenommen. https://www.treffler.net/fileadmin/user_data/dokumente/prospekte/treffler-praezisions-zinkenstriegel-prospekt-2021.pdf
+- CHOPSTAR: Kurbeleinstellung der Arbeitstiefe; Reihen-/Rahmenkonfiguration und damit Arbeitsbreite noch offen. https://www.einboeck.at/wp-content/uploads/2025/03/einboeck-kurzanleitung-chopstar-de.pdf
+- Smaragd, Saphir und Cirrus: ohne eindeutig belegten numerischen Tiefenbereich nur Tiefeneinstellung beschrieben. Saphir: https://topicpilot.lemken.com/default/public/media?key=17512840_BA_Saphir-9_de_03_0_de_DE.pdf&lang=de_DE&name=17512840_BA_Saphir-9_de_03_0_de_DE.pdf
+
+## Roboterspezifischer Leitstand
+
+- Aufbau nach Referenz: Statusleiste mit Fahrzeugname/ID, Energie, Fortschritt, Restzeit und Arbeitsgerät; darunter Kameravorschau und Feld-/Hofkarte; unten Wetter, Maschinendaten und Bedienung.
+- Bestehendes ROBOplan-Design, responsive Tabletansicht. Kamera als SVG-Illustration, Wetter und Messwerte als Demo markiert.
+- FarmDroid zeigt Batterie-/Solarwerte, übrige Fahrzeuge beispielhafte Motor-/Tankdaten. Keine Echtzeit-Anbindung.
+- Pause, Weiter, Stopp, Manuell/Automatik, Richtungstasten und Geschwindigkeit simulieren nur den UI-Zustand. Wartung/Rüstzeit lassen keinen aktiven Auftrag pausieren.

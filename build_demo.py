@@ -3,20 +3,27 @@
 Aufruf: python3 mmk/build_demo.py
 """
 from html import escape
+import argparse
+import base64
 from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parent
 
 
-def build_demo():
+def build_demo(output="ROBOplan-Demo.html"):
     app = (ROOT / 'app.html').read_text()
     css = (ROOT / 'styles.css').read_text()
     javascript = (ROOT / 'app.js').read_text()
+    camera_image = base64.b64encode((ROOT / 'assets/robot-camera-views.png').read_bytes()).decode()
+    css = css.replace('assets/robot-camera-views.png', 'data:image/png;base64,' + camera_image)
     pages = [
         'uebersicht.html',
+        'wetter.html',
         'ackerschlaege.html',
         'roboterverwaltung.html',
+        'robotereinsatz.html',
+        'fehler.html',
         'auftragsverwaltung.html',
     ]
     content = '\n'.join((ROOT / 'pages' / page).read_text() for page in pages)
@@ -41,10 +48,12 @@ def build_demo():
         raise ValueError('iPad-Rahmen mit app.html nicht gefunden.')
     frame = frame.replace('<title>ROBOplan – iPad</title>',
                           '<title>ROBOplan – Offline-Demo</title>')
-    target = ROOT / 'ROBOplan-Demo.html'
+    target = ROOT / output
     target.write_text(frame)
     print(f'Erstellt: {target.name} ({target.stat().st_size:,} Bytes)')
 
 
 if __name__ == '__main__':
-    build_demo()
+    parser = argparse.ArgumentParser(description="ROBOplan als einzelne Offline-HTML-Datei exportieren.")
+    parser.add_argument("--output", default="ROBOplan-Demo.html", help="Name der Exportdatei")
+    build_demo(parser.parse_args().output)

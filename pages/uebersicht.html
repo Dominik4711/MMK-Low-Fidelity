@@ -8,7 +8,7 @@
             Einsatzgebiet
           </h2>
           <span class="tiny">
-            4 Roboter im Einsatz · 2 auf dem Hof
+            3 Roboter im Einsatz · 1 Störung · 2 auf dem Hof
           </span>
         </div>
         <div class="map overview" id="overview">
@@ -25,12 +25,12 @@
           </div>
         </div>
       </section>
-      <section class="panel weather">
+      <section class="panel weather weather-link" role="link" tabindex="0" aria-label="Wetterseite öffnen" onclick="openOverviewWeather()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openOverviewWeather()}">
         <div class="weather-top">
-          <h2>
+          <h2 id="overview-weather-title">
             Wetter am aktuellen Standort
           </h2>
-          <span class="tiny">
+          <span class="tiny" id="overview-weather-location">
             Grünpark
           </span>
         </div>
@@ -100,13 +100,9 @@
             06
           </span>
         </h2>
-        <span class="live">
-          <i class="dot">
-          </i>
-          4 im Einsatz · 2 auf dem Hof
-        </span>
+        <div id="overview-alerts" class="fleet-alert-summary" role="group" aria-label="Roboter nach Meldungen filtern"></div>
       </div>
-      <div class="robots" id="robots">
+      <div class="robots" id="robots" tabindex="0" role="region" aria-label="Roboterliste">
       </div>
     </section>
   </div>

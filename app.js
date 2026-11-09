@@ -2,6 +2,18 @@
 const taskPriorities={immediate:{label:'Sofort',time:'So bald wie möglich'},week:{label:'Zeitnah',time:'Innerhalb einer Woche'},month:{label:'Geplant',time:'Innerhalb von vier Wochen'},flexible:{label:'Flexibel',time:'Ohne Zeitvorgabe'}};
 function priorityBadge(task){const key=Object.hasOwn(taskPriorities,task.priority)?task.priority:'flexible';const p=taskPriorities[key];return `<span class="priority-badge priority-${key}" title="${p.time}"><i aria-hidden="true"></i>${p.label} · ${p.time}</span>`;}
 
+// Gemeinsame Fahrzeugidentitäten für Übersicht, Flotte und Disposition.
+const fleetVehicles=[
+  {id:1,name:'AgXeed AgBot T2 5 SERIES · 1',shortName:'AgBot · 1',type:'Geräteträger',mount:'Wechselbare Anbaugeräte'},
+  {id:2,name:'FarmDroid FD20 · 1',shortName:'FarmDroid · 1',type:'Hackroboter',fixed:'Hacke',mount:'Integrierte Hackeinheit'},
+  {id:3,name:'FarmDroid FD20 · 2',shortName:'FarmDroid · 2',type:'Hackroboter',fixed:'Hacke',mount:'Integrierte Hackeinheit'},
+  {id:4,name:'AgXeed AgBot T2 5 SERIES · 2',shortName:'AgBot · 2',type:'Geräteträger',mount:'Wechselbare Anbaugeräte'},
+  {id:5,name:'John Deere 6R 215',shortName:'JD 6R 215',type:'Autonomer Traktor',mount:'Wechselbare Anbaugeräte'},
+  {id:6,name:'CLAAS ARION 640',shortName:'ARION 640',type:'Autonomer Traktor',mount:'Wechselbare Anbaugeräte'}
+];
+function robotDisplayName(id){return fleetVehicles.find(r=>r.id===id)?.name||'Roboter '+id;}
+function robotShortName(id){return fleetVehicles.find(r=>r.id===id)?.shortName||'Roboter '+id;}
+
 const fields=[
   {
     "id": 1,
@@ -77,7 +89,7 @@ const fields=[
     "name": "An den Pappeln",
     "crop": "Gerste",
     "area": "7,1 ha",
-    "task": "Striegeln",
+    "task": "Säen",
     "note": "Bearbeitung läuft",
     "robots": [
       4
@@ -167,6 +179,12 @@ data.forEach(r=> {
   }
 }
 );
+// Beispielmeldungen: Saatgutwarnung und ein festgefahrener Roboter.
+const robotAlerts={1:{severity:'error',message:'Festgefahren'},4:{severity:'warning',message:'Saatgut fast leer'}};
+data.forEach(robot=>{
+  robot.alert=robotAlerts[robot.id]||null;
+  if(robot.alert?.severity==='error'){robot.status='Festgefahren';robot.time='Eingriff nötig';}
+});
 function landscape(n=0) {
   const interactive=n==='fields';
   return `<svg class="land" viewBox="0 0 1040 900" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hofkarte mit acht benannten Feldern, Straßen, Teich und Hof">
@@ -197,35 +215,58 @@ function landscape(n=0) {
     <path d="M215 797h65v53h-65Z" fill="#faf8ed"/>
     <path d="M208 798l40-32 40 32Z" fill="#71887a"/>
     </g>
-    <text x="175" y="880" text-anchor="middle" fill="#536c5a" font-family="sans-serif" font-size="21" font-weight="600">Hof Grünpark</text>${interactive?`<g>${data.map(r=>`<g role="button" tabindex="0" aria-label="Roboter ${r.id} anzeigen" onclick="openRobot(${r.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openRobot(${r.id})}" style="cursor:pointer">
+    <text x="175" y="880" text-anchor="middle" fill="#536c5a" font-family="sans-serif" font-size="21" font-weight="600">Hof Grünpark</text>${interactive?`<g>${data.map(r=>`<g role="button" tabindex="0" aria-label="${robotDisplayName(r.id)} anzeigen" onclick="openRobot(${r.id})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openRobot(${r.id})}" style="cursor:pointer">
     <circle cx="${r.x*10.4}" cy="${r.y*9}" r="27" fill="${r.color}" opacity=".18"/>
     <circle cx="${r.x*10.4}" cy="${r.y*9}" r="17" fill="${r.color}" stroke="white" stroke-width="3"/>
     <text x="${r.x*10.4}" y="${r.y*9+5}" fill="white" text-anchor="middle" font-size="14" font-family="sans-serif">${r.id}</text>
     </g>`).join('')}</g>`:''}</svg>`
 }
+// Feste Feldansicht für die Übersichtskarten, ohne Karteninteraktionen.
+function robotOverviewMap(robot){
+  const field=fields.find(f=>f.robots.includes(robot.id));
+  let box=[15,665,300,235];
+  if(field){
+    const probe=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    const shape=document.createElementNS('http://www.w3.org/2000/svg','path');
+    shape.setAttribute('d',field.path);probe.append(shape);
+    probe.style.cssText='position:absolute;left:-10000px;top:0;width:1040px;height:900px;visibility:hidden';
+    document.body.append(probe);
+    const bounds=shape.getBBox(),pad=Math.max(bounds.width,bounds.height)*.12;
+    box=[bounds.x-pad,bounds.y-pad,bounds.width+pad*2,bounds.height+pad*2];
+    probe.remove();
+  }
+  return landscape('overview-robot-'+robot.id)
+    .replace('viewBox="0 0 1040 900"',`viewBox="${box.join(' ')}"`)
+    .replace('preserveAspectRatio="none"','preserveAspectRatio="xMidYMid meet"')
+    .replace('Hofkarte mit acht benannten Feldern, Straßen, Teich und Hof',field?'Aktuelles Feld: '+field.name:'Standort: Hof Grünpark')
+    .replace('</svg>',`<circle cx="${robot.x*10.4}" cy="${robot.y*9}" r="15" fill="${robot.color}" stroke="white" stroke-width="3"/><text x="${robot.x*10.4}" y="${robot.y*9+5}" fill="white" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="600">${robot.id}</text></svg>`);
+}
 const overview=document.getElementById('overview');
 overview.insertAdjacentHTML('afterbegin',landscape(0));
-data.forEach(r=> {
-  overview.insertAdjacentHTML('beforeend',`<button class="pin" aria-label="Roboter ${r.id} anzeigen" style="left:${r.x}%;top:${r.y}%;--pin:${r.color}" onclick="openRobot(${r.id})">${r.id}</button>`);
-  document.getElementById('robots').insertAdjacentHTML('beforeend',`<article class="robot">
+[...data].sort((a,b)=>Number(b.alert?.severity==='error')-Number(a.alert?.severity==='error')||Number(b.alert?.severity==='warning')-Number(a.alert?.severity==='warning')||a.id-b.id).forEach(r=> {
+  overview.insertAdjacentHTML('beforeend',`<button class="pin" data-map-robot="${r.id}" aria-label="${robotDisplayName(r.id)} anzeigen" style="left:${r.x}%;top:${r.y}%;--pin:${r.color}" onclick="openRobot(${r.id})">${r.id}</button>`);
+  document.getElementById('robots').insertAdjacentHTML('beforeend',`<article class="robot ${r.alert?'robot-alert-'+r.alert.severity:''}" data-overview-robot="${r.id}" tabindex="0" aria-label="${robotDisplayName(r.id)} auf der Karte anzeigen">
     <div class="robothead">
     <div class="robotname">
     <span class="roboticon">▰</span>
     <div>
-    <h3>Roboter ${r.id}</h3>
+    <h3>${robotDisplayName(r.id)}</h3>
     <span class="robotid">MW–00${r.id}</span>
     </div>
     </div>
+    <button class="robot-more-info" onclick="openRobot(${r.id})" aria-label="Mehr Infos zu ${robotDisplayName(r.id)}">Mehr Infos ↗</button>
+    </div>
+    <div class="statusline">
     <span class="battery">
     <i>
     <b style="--b:${r.b}%;${r.b<60?'background:#d4b462':''}">
     </b>
     </i>${r.b}%</span>
-    </div>
-    <div class="statusline">
-    <span class="badge">● &nbsp; ${r.status}</span>
+    <span class="badge">${r.alert?.severity==='error'?'⛔':r.alert?'⚠':'●'} &nbsp; ${r.alert?r.alert.message:r.status}</span>
     <span class="area">${r.area}</span>
+
     </div>
+    <div class="robot-mounted-tool" data-robot-tool="${r.id}"></div>
     <div class="metrics">
     <div class="ring" style="--p:${r.p}" role="img" aria-label="${r.p} Prozent erledigt">
     <strong>${r.p}<small>%</small>
@@ -237,28 +278,47 @@ data.forEach(r=> {
     <small>${r.atFarm?'Bereit für den nächsten Einsatz':'Auftrag zu '+r.p+' % erledigt'}</small>
     </div>
     </div>
-    <div class="map mini" aria-label="Karte für Roboter ${r.id}">${landscape(r.id)}<span class="pin" style="--pin:${r.color};left:${r.x}%;top:${r.y}%">${r.id}</span>
-    <span class="maplabel">${r.area}</span>
-    </div>
-    <div class="robotfoot">
-    <span>
-    <i class="dot" style="width:5px;height:5px">
-    </i>Signal stabil</span>
-    <button class="detail" onclick="openRobot(${r.id})">Details ansehen &nbsp; ↗</button>
-    </div>
+    <div class="map mini robot-static-map" aria-label="Standort ${robotDisplayName(r.id)} · ${r.area}">${robotOverviewMap(r)}</div>
     </article>`)
 }
 );
-function openRobot(id) {
-  const r=data.find(x=>x.id===id);
-  document.getElementById('detailTitle').textContent='Roboter '+id;
-  document.getElementById('detailArea').textContent=r.area+' · MW–00'+id;
-  document.getElementById('detailRows').innerHTML=[['Status',r.status],['Fortschritt',r.p+' %'],['Akku',r.b+' %'],['Verbleibende Zeit',r.time]].map(([k,v])=>`<div class="dialogrow">
-    <span>${k}</span>
-    <strong>${v}</strong>
-    </div>`).join('');
-  document.getElementById('details').showModal()
+const alertCounts={error:data.filter(robot=>robot.alert?.severity==='error').length,warning:data.filter(robot=>robot.alert?.severity==='warning').length,ok:data.filter(robot=>!robot.alert).length};
+document.getElementById('overview-alerts').innerHTML=`<button type="button" class="fleet-alert-error" data-robot-filter="error" aria-pressed="false" onclick="filterOverviewRobots('error')"><i aria-hidden="true"></i>${alertCounts.error} Fehler</button><button type="button" class="fleet-alert-warning" data-robot-filter="warning" aria-pressed="false" onclick="filterOverviewRobots('warning')"><i aria-hidden="true"></i>${alertCounts.warning} Warnung${alertCounts.warning===1?'':'en'}</button><button type="button" class="fleet-alert-ok" data-robot-filter="ok" aria-pressed="false" onclick="filterOverviewRobots('ok')"><i aria-hidden="true"></i>${alertCounts.ok} OK</button>`;
+function filterOverviewRobots(severity){
+  if(!['error','warning','ok'].includes(severity))return;
+  const list=document.getElementById('robots');
+  const active=list.dataset.filter===severity?'all':severity;
+  list.dataset.filter=active;
+  document.querySelectorAll('[data-overview-robot]').forEach(card=>{
+    const robot=data.find(item=>item.id===Number(card.dataset.overviewRobot));
+    card.hidden=active!=='all'&&(robot.alert?.severity||'ok')!==active;
+  });
+  document.querySelectorAll('[data-robot-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.robotFilter===active)));
+  list.scrollTop=0;
 }
+function focusOverviewRobot(id){
+  const robot=data.find(item=>item.id===id);
+  if(!robot||typeof overview.focusMapPoint!=='function')return;
+  overview.focusMapPoint(robot.x/100,robot.y/100,3);
+  document.getElementById('overview-weather-title').textContent='Wetter bei '+robotDisplayName(id);
+  document.getElementById('overview-weather-location').textContent=robot.area;
+  document.querySelectorAll('[data-overview-robot]').forEach(card=>card.classList.toggle('is-selected',Number(card.dataset.overviewRobot)===id));
+  overview.querySelectorAll('[data-map-robot]').forEach(pin=>pin.classList.toggle('is-selected',Number(pin.dataset.mapRobot)===id));
+}
+document.getElementById('robots').addEventListener('click',event=>{
+  if(event.target.closest('button,a,input,select'))return;
+  const card=event.target.closest('[data-overview-robot]');
+  if(card)focusOverviewRobot(Number(card.dataset.overviewRobot));
+});
+document.getElementById('robots').addEventListener('keydown',event=>{
+  if(event.target.matches('[data-overview-robot]')&&['Enter',' '].includes(event.key)){
+    event.preventDefault();focusOverviewRobot(Number(event.target.dataset.overviewRobot));
+  }
+});
+function openRobot(id) {
+  location.hash='roboter-'+id;
+}
+
 document.getElementById('details').addEventListener('click',e=> {
   if(e.target===e.currentTarget)e.currentTarget.close()
 }
@@ -333,17 +393,23 @@ document.querySelectorAll('.field-shape').forEach(el=> {
 function route()  {
   const requested = location.hash.slice(1) || 'home';
   const detailMatch=requested.match(/^aufgabe-(\d+)$/);
-  const page = detailMatch?'aufgabendetail':['home', 'ackerschlagskarte', 'roboterverwaltung', 'auftragsverwaltung', 'arbeitsspeicher'].includes(requested) ? requested : 'home';
+  const robotMatch=requested.match(/^roboter-(\d+)$/);
+  const robotPlanMatch=requested.match(/^roboter-plan-(\d+)$/);
+  const page = robotPlanMatch?'robotereinsatz':robotMatch?'roboterdetail':detailMatch?'aufgabendetail':['home', 'wetter', 'fehler', 'ackerschlagskarte', 'roboterverwaltung', 'auftragsverwaltung', 'arbeitsspeicher'].includes(requested) ? requested : 'home';
   const sections =  {
-    home: 'home', ackerschlagskarte: 'fields', roboterverwaltung: 'roboterverwaltung', auftragsverwaltung: 'auftragsverwaltung', arbeitsspeicher: 'arbeitsspeicher', aufgabendetail: 'aufgabendetail'
+    robotereinsatz:'robotereinsatz', home: 'home', wetter: 'wetter', fehler: 'fehler', ackerschlagskarte: 'fields', roboterverwaltung: 'roboterverwaltung', auftragsverwaltung: 'auftragsverwaltung', arbeitsspeicher: 'arbeitsspeicher', aufgabendetail: 'aufgabendetail', roboterdetail: 'roboterdetail'
   }
   ;
+  if(robotPlanMatch&&window.robotProfileReady)renderRobotPlan(Number(robotPlanMatch[1]));
+  if(robotMatch&&window.robotProfileReady)renderRobotProfile(Number(robotMatch[1]));
+  if(page==='wetter')renderOverviewWeather();
+  if(page==='fehler')renderFaultOverview();
   Object.entries(sections).forEach(([name, id]) =>  {
     document.getElementById(id).hidden = name !== page;
   }
   );
   document.querySelectorAll('nav a').forEach(link =>  {
-    const active = link.dataset.page === (['arbeitsspeicher','aufgabendetail'].includes(page)?'auftragsverwaltung':page);
+    const active = link.dataset.page === (page==='wetter'?'home':['roboterdetail','robotereinsatz','fehler'].includes(page)?'roboterverwaltung':['arbeitsspeicher','aufgabendetail'].includes(page)?'auftragsverwaltung':page);
     link.classList.toggle('active', active);
     if (active) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
@@ -377,7 +443,7 @@ function enableMap(container) {
   container.append(expand);
   const [plus,minus,reset]=controls.children;
   let scale=1,x=0,y=0,drag=null,suppressClick=false;
-  const proportional = container.id === 'overview' || container.id === 'dispatch-map' || container.id === 'task-route-map' || container.id === 'record-map' || container.id === 'task-overview-map';
+  const proportional = container.id === 'overview' || container.id === 'dispatch-map' || container.id === 'task-route-map' || container.id === 'record-map' || container.id === 'task-overview-map' || container.id === 'robot-profile-map' || container.id === 'robot-plan-map';
   let aspect=Number(container.dataset.aspect) || 1040/900;
   let mapWidth=0,mapHeight=0,offsetX=0,offsetY=0;
   function render() {
@@ -415,6 +481,15 @@ function enableMap(container) {
     scale=next;
     render()
   }
+  container.focusMapPoint=(pointX,pointY,zoomLevel=3)=>{
+    render();
+    scale=Math.max(1,Math.min(4,zoomLevel));
+    const width=proportional?mapWidth:container.clientWidth;
+    const height=proportional?mapHeight:container.clientHeight;
+    x=container.clientWidth/2-offsetX-pointX*width*scale;
+    y=container.clientHeight/2-offsetY-pointY*height*scale;
+    render();
+  };
   plus.onclick=()=>zoom(1.35);
   minus.onclick=()=>zoom(1/1.35);
   reset.onclick=()=> {
@@ -479,7 +554,7 @@ function enableMap(container) {
   ).observe(container);
   render();
 }
-document.querySelectorAll('#overview,.map.mini,.field-map').forEach(enableMap);
+document.querySelectorAll('#overview,.field-map').forEach(enableMap);
 
 // Disposition: lokale, bearbeitbare Zeitplanung mit beispielhaften Dauern.
 const dispatchTasks = [
@@ -490,7 +565,7 @@ const dispatchTasks = [
   {id:5,field:1,operation:'Hacken',robot:2},
   {id:6,field:4,operation:'Hacken',robot:2}
 ];
-const dispatchRobots=[{id:1,type:'Geräteträger'},{id:2,type:'Hackroboter',fixed:'Hacke'},{id:3,type:'Hackroboter',fixed:'Hacke'},{id:4,type:'Striegelroboter',fixed:'Striegel'},{id:5,type:'Geräteträger'},{id:6,type:'Geräteträger'}];
+const dispatchRobots=fleetVehicles;
 const dispatchDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 let planAccepted=false,selectedDispatchRobot=5,selectedDispatchTask=null,scheduleOffset=360,scheduleSpan=720;
 const dispatchEquipment=task=>task.operation.startsWith('Grubbern')?'Grubber':task.operation==='Säen'?'Drillmaschine':task.operation==='Striegeln'?'Striegel':'Hacke';
@@ -563,7 +638,7 @@ function renderStoredTasks(){
   document.getElementById('dispatch-tasks').innerHTML=pending.length?pending.map(t=>{
     const f=fields.find(f=>f.id===t.field),due=taskDeadline(t);
     const dueLabel=due?new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(due+'T12:00:00')):'Ohne Ablaufdatum';
-    return `<tr class="task-overview-row" onclick="if(!event.target.closest('select,button,a,input'))openTaskOverview(${t.id})"><td><button class="task-open-link" onclick="openTaskOverview(${t.id})">${f.name} ↗</button><small>${f.area}${t.crop?' · '+t.crop:''}</small></td><td><button class="storage-operation task-open-link" onclick="openTaskOverview(${t.id})"><i class="task-type-dot ${dispatchType(t)}"></i>${t.operation}</button><small>${t.depth?t.depth+' cm Tiefe':t.seedRate?t.seedRate.toLocaleString('de-DE')+' Körner/ha':''}</small></td><td class="storage-duration">${durationLabel(dispatchDuration(t))}</td><td>${due?`<time datetime="${due}">${dueLabel}</time>`:`<span class="no-deadline">${dueLabel}</span>`}${priorityBadge(t)}</td><td><select aria-label="Roboter für ${f.name}" onchange="assignDispatchTask(${t.id},Number(this.value))"><option value="">Roboter wählen …</option>${compatibleRobots(t).map(r=>`<option value="${r.id}">Roboter ${r.id} · ${r.type}</option>`).join('')}</select></td></tr>`;
+    return `<tr class="task-overview-row" onclick="if(!event.target.closest('select,button,a,input'))openTaskOverview(${t.id})"><td><button class="task-open-link" onclick="openTaskOverview(${t.id})">${f.name} ↗</button><small>${f.area}${t.crop?' · '+t.crop:''}</small></td><td><button class="storage-operation task-open-link" onclick="openTaskOverview(${t.id})"><i class="task-type-dot ${dispatchType(t)}"></i>${t.operation}</button><small>${t.depth?t.depth+' cm Tiefe':t.seedRate?t.seedRate.toLocaleString('de-DE')+' Körner/ha':''}</small></td><td class="storage-duration">${durationLabel(dispatchDuration(t))}</td><td>${due?`<time datetime="${due}">${dueLabel}</time>`:`<span class="no-deadline">${dueLabel}</span>`}${priorityBadge(t)}</td><td><select aria-label="Roboter für ${f.name}" onchange="assignDispatchTask(${t.id},Number(this.value))"><option value="">Roboter wählen …</option>${compatibleRobots(t).map(r=>`<option value="${r.id}">${robotDisplayName(r.id)} · ${r.type}</option>`).join('')}</select></td></tr>`;
   }).join(''):(all.length?`<tr><td colspan="5"><div class="storage-empty"><strong>Keine offenen Aufgaben für ${storageTaskFilter}</strong><p>Wähle eine andere Arbeitsart oder zeige alle Aufgaben an.</p><button class="suggest-button" onclick="setStorageFilter('Alle')">Alle Aufgaben anzeigen</button></div></td></tr>`:'<tr><td colspan="5"><div class="storage-empty"><strong>Alles eingeplant ✓</strong><p>Keine offenen Aufgaben im Arbeitsspeicher.</p><a href="#auftragsverwaltung">Zurück zur Disposition →</a></div></td></tr>');
 }
 function renderDispatch(){
@@ -587,8 +662,8 @@ function renderSchedule(){
   document.getElementById('schedule-ticks').innerHTML=ticks.join('');
   document.getElementById('robot-plans').innerHTML=[...dispatchRobots].sort((a,b)=>Number(dispatchTasks.some(t=>t.robot===b.id))-Number(dispatchTasks.some(t=>t.robot===a.id))||a.id-b.id).map(robot=>{
     const schedule=buildRobotSchedule(robot),jobs=schedule.tasks.length;
-    const blocks=schedule.segments.filter(s=>s.start<end&&s.start+s.duration>scheduleOffset).map(s=>{const work=s.kind==='work',type=work?dispatchType(s.task):s.kind;return `<button class="time-block block-${type} ${selectedDispatchTask===s.task.id?'selected-task':''}" style="left:${(s.start-scheduleOffset)/scheduleSpan*100}%;width:${s.duration/scheduleSpan*100}%" title="${s.label} · ${minuteClock(s.start)}–${minuteClock(s.start+s.duration)} · ${durationLabel(s.duration)}" aria-label="Roboter ${robot.id}: ${s.label}, ${minuteClock(s.start)} bis ${minuteClock(s.start+s.duration)}, ${durationLabel(s.duration)}" onclick="openTaskOverview(${s.task.id})"><strong>${work?s.label:s.kind==='setup'?'Rüsten':'↗ Fahrt'}</strong>${work?'<span>'+s.task.operation+' · '+durationLabel(s.duration)+'</span>':''}</button>`;}).join('');
-    return `<div class="timeline-row ${selectedDispatchRobot===robot.id?'selected':''}"><button class="timeline-robot-label" onclick="selectDispatchRobot(${robot.id})" aria-pressed="${selectedDispatchRobot===robot.id}"><strong><i style="background:${data.find(r=>r.id===robot.id).color}"></i>Roboter ${robot.id}</strong><small>${robot.type} · ${jobs} ${jobs===1?'Aufgabe':'Aufgaben'}</small></button><div class="timeline-lane">${blocks||'<span class="timeline-idle">'+(jobs?'Keine Einsätze in diesem Zeitfenster':'Bereit für Aufgaben')+'</span>'}</div></div>`;
+    const blocks=schedule.segments.filter(s=>s.start<end&&s.start+s.duration>scheduleOffset).map(s=>{const work=s.kind==='work',type=work?dispatchType(s.task):s.kind;return `<button class="time-block block-${type} ${selectedDispatchTask===s.task.id?'selected-task':''}" style="left:${(s.start-scheduleOffset)/scheduleSpan*100}%;width:${s.duration/scheduleSpan*100}%" title="${s.label} · ${minuteClock(s.start)}–${minuteClock(s.start+s.duration)} · ${durationLabel(s.duration)}" aria-label="${robotDisplayName(robot.id)}: ${s.label}, ${minuteClock(s.start)} bis ${minuteClock(s.start+s.duration)}, ${durationLabel(s.duration)}" onclick="openTaskOverview(${s.task.id})"><strong>${work?s.label:s.kind==='setup'?'Rüsten':'↗ Fahrt'}</strong>${work?'<span>'+s.task.operation+' · '+durationLabel(s.duration)+'</span>':''}</button>`;}).join('');
+    return `<div class="timeline-row ${selectedDispatchRobot===robot.id?'selected':''}"><button class="timeline-robot-label" onclick="selectDispatchRobot(${robot.id})" aria-pressed="${selectedDispatchRobot===robot.id}"><strong><i style="background:${data.find(r=>r.id===robot.id).color}"></i>${robotShortName(robot.id)}</strong><small>${robot.type} · ${jobs} ${jobs===1?'Aufgabe':'Aufgaben'}</small></button><div class="timeline-lane">${blocks||'<span class="timeline-idle">'+(jobs?'Keine Einsätze in diesem Zeitfenster':'Bereit für Aufgaben')+'</span>'}</div></div>`;
   }).join('');
 }
 function selectDispatchRobot(id,task=null){selectedDispatchRobot=id;selectedDispatchTask=task;renderSchedule();renderDispatchRobot();}
@@ -622,15 +697,15 @@ function dispatchFieldTracks(task){
 }
 function renderDispatchRobot(){
   const robot=dispatchRobots.find(r=>r.id===selectedDispatchRobot),schedule=buildRobotSchedule(robot),drives=schedule.segments.filter(s=>s.kind==='drive');
-  document.getElementById('route-robot-title').textContent='Roboter '+robot.id+' · '+robot.type;
+  document.getElementById('route-robot-title').textContent=robot.name+' · '+robot.type;
   const km=drives.reduce((sum,s)=>sum+s.route.km,0),setup=schedule.segments.filter(s=>s.kind==='setup').reduce((sum,s)=>sum+s.duration,0);
   document.getElementById('route-robot-summary').textContent=schedule.tasks.length+' Aufgaben · '+km.toFixed(1).replace('.',',')+' km Straßenfahrt · '+durationLabel(setup)+' Rüsten';
-  document.getElementById('route-jobs').innerHTML=schedule.tasks.map((task,index)=>{const f=fields.find(f=>f.id===task.field),work=schedule.segments.find(s=>s.kind==='work'&&s.task===task);return `<article class="route-job ${selectedDispatchTask===task.id?'active':''}"><button class="route-job-title" onclick="openTaskOverview(${task.id})"><span>${index+1}</span><div><strong>${f.name}</strong><small>${task.operation} · ${dispatchEquipment(task)} · ${f.area}</small></div></button><p>${datedTime(work.start)}–${minuteClock(work.start+work.duration)} · ${durationLabel(work.duration)}</p><div class="route-job-actions"><button onclick="moveDispatchTask(${task.id},-1)" ${index===0?'disabled':''} aria-label="${f.name} früher einplanen">←</button><button onclick="moveDispatchTask(${task.id},1)" ${index===schedule.tasks.length-1?'disabled':''} aria-label="${f.name} später einplanen">→</button><select aria-label="${f.name} einem anderen Roboter zuweisen" onchange="assignDispatchTask(${task.id},Number(this.value))">${compatibleRobots(task).map(r=>`<option value="${r.id}" ${r.id===robot.id?'selected':''}>Roboter ${r.id}</option>`).join('')}</select><button class="return-task" onclick="assignDispatchTask(${task.id},0)" title="In den Arbeitsspeicher zurücklegen">↶ Speicher</button></div></article>`;}).join('')||'<div class="storage-empty">Noch keine Aufgaben zugewiesen. Links eine Aufgabe auswählen und diesem Roboter zuweisen.</div>';
+  document.getElementById('route-jobs').innerHTML=schedule.tasks.map((task,index)=>{const f=fields.find(f=>f.id===task.field),work=schedule.segments.find(s=>s.kind==='work'&&s.task===task);return `<article class="route-job ${selectedDispatchTask===task.id?'active':''}"><button class="route-job-title" onclick="openTaskOverview(${task.id})"><span>${index+1}</span><div><strong>${f.name}</strong><small>${task.operation} · ${dispatchEquipment(task)} · ${f.area}</small></div></button><p>${datedTime(work.start)}–${minuteClock(work.start+work.duration)} · ${durationLabel(work.duration)}</p><div class="route-job-actions"><button onclick="moveDispatchTask(${task.id},-1)" ${index===0?'disabled':''} aria-label="${f.name} früher einplanen">←</button><button onclick="moveDispatchTask(${task.id},1)" ${index===schedule.tasks.length-1?'disabled':''} aria-label="${f.name} später einplanen">→</button><select aria-label="${f.name} einem anderen Roboter zuweisen" onchange="assignDispatchTask(${task.id},Number(this.value))">${compatibleRobots(task).map(r=>`<option value="${r.id}" ${r.id===robot.id?'selected':''}>${robotDisplayName(r.id)}</option>`).join('')}</select><button class="return-task" onclick="assignDispatchTask(${task.id},0)" title="In den Arbeitsspeicher zurücklegen">↶ Speicher</button></div></article>`;}).join('')||'<div class="storage-empty">Noch keine Aufgaben zugewiesen. Links eine Aufgabe auswählen und diesem Roboter zuweisen.</div>';
   const roadSvg=drives.map(s=>`<polyline pointer-events="none" points="${s.route.points.map(p=>p.join(',')).join(' ')}" fill="none" stroke="white" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><polyline pointer-events="none" points="${s.route.points.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#427fad" stroke-width="7" stroke-dasharray="13 9" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
   const tracks=schedule.tasks.map(dispatchFieldTracks).join('');
   const selected=dispatchTasks.find(t=>t.id===selectedDispatchTask);
-  document.getElementById('map-selection-title').textContent=selected?fields.find(f=>f.id===selected.field).name:'Roboter '+robot.id;
-  document.getElementById('map-selection-caption').textContent=selected?selected.operation+' · Roboter '+robot.id:schedule.tasks.length+' zugewiesene Flächen · Straßenfahrten blau';
+  document.getElementById('map-selection-title').textContent=selected?fields.find(f=>f.id===selected.field).name:robot.name;
+  document.getElementById('map-selection-caption').textContent=selected?selected.operation+' · '+robotShortName(robot.id):schedule.tasks.length+' zugewiesene Flächen · Straßenfahrten blau';
   const highlight=selected?`<path d="${fields.find(f=>f.id===selected.field).path}" fill="#e7b65b" fill-opacity=".2" stroke="#c48a30" stroke-width="9" pointer-events="none"/>`:'';
   const map=document.getElementById('dispatch-map'),target=map.querySelector('.map-scene')||map;
   let base=landscape('dispatch');
@@ -785,8 +860,8 @@ function openFieldRecord(id){
  document.querySelector('#fields > .field-layout').hidden=true;document.getElementById('field-planner').hidden=true;
  const record=document.getElementById('field-record');record.hidden=false;
  record.innerHTML=`<div class="planner-heading"><button class="planner-back" onclick="closeFieldRecord()">← Zurück zu den Ackerschlägen</button><div class="planner-breadcrumb"><span>Schlagkartei</span><span>/</span><h1>${f.name}</h1><span class="sub">${f.area} · ${f.crop}</span></div></div>
- <div class="record-layout"><div class="record-left"><div class="panel record-map-panel"><div class="record-map-toolbar"><label>Erntejahr <select id="record-year" onchange="updateFieldRecord()"><option>2026</option><option>2025</option><option>2024</option><option>2023</option></select></label><label>Karten-Layer <select id="record-layer" onchange="updateFieldRecord()"><option value="soil">Bodentyp</option><option value="application">Applikationskarte</option><option value="yield">Letzte Ertragskarte</option></select></label></div><div id="record-map-slot"></div><div id="record-map-key"></div></div><div class="panel record-weather"><span class="tiny">WETTER AM FELD · DEMO</span><h2>☀ 14 °C <small>Leicht bewölkt</small></h2><div class="weather-values"><span>Wind <b>8 km/h · W</b></span><span>Niederschlag <b>0,2 mm</b></span><span>Bodenfeuchte <b>24 %</b></span></div><p>Heute trocken · Morgen 2 mm Regen</p></div></div>
- <aside class="record-right"><div class="panel record-section"><h2>Schlaginformationen</h2><dl class="record-facts"><div><dt>Feldgröße</dt><dd>${f.area}</dd></div><div><dt>Aktuelle Frucht</dt><dd>${f.crop}</dd></div><div><dt>Erntejahr · Frucht</dt><dd id="record-crop"></dd></div><div><dt>Mittlerer Ertrag</dt><dd id="record-yield"></dd></div></dl></div><div class="panel record-section"><h2>Letzte Arbeiten <span class="tiny" id="record-history-year"></span></h2><div id="record-history"></div></div><div class="panel record-section record-suggestions"><span class="tiny">✦ KI-VORSCHLÄGE · DEMO</span><h2>Nächste Arbeiten</h2><p id="record-next"></p><p class="record-explanation">Beispielhafte Ableitung aus Fruchtfolge und bisherigen Arbeitsfolgen. Noch keine KI-Auswertung echter Schlagdaten.</p><button class="primary" onclick="document.getElementById('field-record').hidden=true;openFieldPlanner(${f.id})">Aufgabe planen ↗</button></div><p class="record-demo">Schlaghistorie, Wetter und Karten sind illustrative Demodaten.</p></aside></div>`;
+ <div class="record-layout"><div class="record-left"><div class="panel record-map-panel"><div class="record-map-toolbar"><label>Erntejahr <select id="record-year" onchange="updateFieldRecord()"><option>2026</option><option>2025</option><option>2024</option><option>2023</option></select></label><label>Karten-Layer <select id="record-layer" onchange="updateFieldRecord()"><option value="soil">Bodentyp</option><option value="application">Applikationskarte</option><option value="yield">Letzte Ertragskarte</option></select></label></div><div id="record-map-slot"></div><div id="record-map-key"></div></div><div class="panel record-weather"><span class="tiny">WETTER AM FELD</span><h2>☀ 14 °C <small>Leicht bewölkt</small></h2><div class="weather-values"><span>Wind <b>8 km/h · W</b></span><span>Niederschlag <b>0,2 mm</b></span><span>Bodenfeuchte <b>24 %</b></span></div><p>Heute trocken · Morgen 2 mm Regen</p></div></div>
+ <aside class="record-right"><div class="panel record-section"><h2>Schlaginformationen</h2><dl class="record-facts"><div><dt>Feldgröße</dt><dd>${f.area}</dd></div><div><dt>Aktuelle Frucht</dt><dd>${f.crop}</dd></div><div><dt>Erntejahr · Frucht</dt><dd id="record-crop"></dd></div><div><dt>Mittlerer Ertrag</dt><dd id="record-yield"></dd></div></dl></div><div class="panel record-section"><h2>Letzte Arbeiten <span class="tiny" id="record-history-year"></span></h2><div id="record-history"></div></div><div class="panel record-section record-suggestions"><span class="tiny">NÄCHSTE ARBEITEN</span><h2>Nächste Arbeiten</h2><p id="record-next"></p><button class="primary" onclick="document.getElementById('field-record').hidden=true;openFieldPlanner(${f.id})">Aufgabe planen ↗</button></div></aside></div>`;
  updateFieldRecord();
 }
 function updateFieldRecord(){
@@ -834,11 +909,11 @@ function renderTaskOverview(id){
   document.getElementById('task-overview-id').textContent='AUFGABE '+String(id).padStart(3,'0');
   document.getElementById('task-overview-title').textContent=f.name+' · '+task.operation;
   document.getElementById('task-overview-subtitle').textContent=f.area+' · '+(task.crop||f.crop);
-  document.getElementById('task-overview-status').textContent=robot?'Eingeplant · Roboter '+robot.id:'Offen · Im Arbeitsspeicher';
+  document.getElementById('task-overview-status').textContent=robot?'Eingeplant · '+robotShortName(robot.id):'Offen · Im Arbeitsspeicher';
   document.getElementById('task-overview-assign').hidden=!!robot;
   let details=taskInfoGroup('Aufgabe & Fläche', [['Fläche',f.name],['Flächengröße',f.area],['Arbeit',task.operation],['Frucht',task.crop||f.crop],['Angelegt am',dateLabel(task.createdOn||dispatchDate)],['Priorität',priority.label],['Zeitrahmen',priority.time],['Ablaufdatum',due?dateLabel(due):'Ohne Ablaufdatum']]);
   details+=taskInfoGroup('Arbeitsparameter', [['Arbeitstiefe',task.depth?task.depth+' cm':null],['Geschwindigkeit',task.speed?task.speed+' km/h':'Nicht festgelegt'],['Arbeitsbreite',task.workingWidth?task.workingWidth.toLocaleString('de-DE')+' m':'Noch nicht festgelegt'],['Bearbeitungsrichtung',(task.bearingDegrees??defaultAngles[f.id])+'°'],['Vorgewendebahnen',task.headlandPasses??2],['Saatkultur',task.operation==='Säen'?(task.crop||f.crop):null],['Saatstärke',task.operation==='Säen'?(task.seedRate?task.seedRate.toLocaleString('de-DE')+' Körner/ha':'Nicht festgelegt'):null],['Applikationskarte',task.operation==='Säen'?(task.applicationMap?'Teilflächenspezifisch':'Keine hinterlegt'):null],['Fahrgassenabstand',task.operation==='Säen'?(task.tramlineSpacing?task.tramlineSpacing+' m':'Keine Fahrgassen'):null]]);
-  details+=taskInfoGroup('Einsatz & Anfahrt', [['Roboter',robot?'Roboter '+robot.id+' · '+robot.type:'Noch nicht zugewiesen'],['Anbaugerät',robot?dispatchEquipment(task):'Auswahl in der Disposition'],['Geschätzte Arbeitsdauer',durationLabel(dispatchDuration(task))],['Geplanter Beginn',work?datedTime(work.start):'Noch nicht eingeplant'],['Geplantes Ende',work?datedTime(work.start+work.duration):'Noch nicht eingeplant'],['Rüstzeit',schedule?durationLabel(setups.reduce((sum,s)=>sum+s.duration,0)):null],['Straßenfahrt',schedule?durationLabel(drives.reduce((sum,s)=>sum+s.duration,0)):null],['Fahrtstrecke',schedule?drives.reduce((sum,s)=>sum+s.route.km,0).toFixed(1).replace('.',',')+' km':null],['Anfahrt',robot?'Autonom über das Straßennetz':'Noch nicht disponiert']]);
+  details+=taskInfoGroup('Einsatz & Anfahrt', [['Roboter',robot?robot.name+' · '+robot.type:'Noch nicht zugewiesen'],['Anbaugerät',robot?dispatchEquipment(task):'Auswahl in der Disposition'],['Geschätzte Arbeitsdauer',durationLabel(dispatchDuration(task))],['Geplanter Beginn',work?datedTime(work.start):'Noch nicht eingeplant'],['Geplantes Ende',work?datedTime(work.start+work.duration):'Noch nicht eingeplant'],['Rüstzeit',schedule?durationLabel(setups.reduce((sum,s)=>sum+s.duration,0)):null],['Straßenfahrt',schedule?durationLabel(drives.reduce((sum,s)=>sum+s.duration,0)):null],['Fahrtstrecke',schedule?drives.reduce((sum,s)=>sum+s.route.km,0).toFixed(1).replace('.',',')+' km':null],['Anfahrt',robot?'Autonom über das Straßennetz':'Noch nicht disponiert']]);
   document.getElementById('task-overview-information').innerHTML=details;
   setTaskOverviewMap(taskOverviewMode);
 }
@@ -867,3 +942,428 @@ function setTaskOverviewMap(mode){
 }
 window.dispatchReady=true;
 const initialTaskMatch=location.hash.match(/^#aufgabe-(\d+)$/);if(initialTaskMatch)renderTaskOverview(Number(initialTaskMatch[1]));
+
+// Flottenmanagement: gemeinsame Roboterdaten, ergänzte Demo-Betriebszustände.
+const fleetOperatingStates={1:{kind:'error',label:'Fehler',detail:'Festgefahren · Eingriff nötig'},5:{kind:'maintenance',label:'Wartung',detail:'Inspektion auf dem Hof'},6:{kind:'setup',label:'Rüstzeit',detail:'Sämaschine anbauen'}};
+const fleetImplements=[
+  {id:'AG–001',name:'HORSCH Terrano 3 FX · 1',type:'Universalgrubber',width:'3,0 m',depth:'5–30 cm',work:'Flach grubbern · Tief grubbern'},
+  {id:'AG–004',name:'HORSCH Terrano 3 FX · 2',type:'Universalgrubber',width:'3,0 m',depth:'5–30 cm',work:'Flach grubbern · Tief grubbern'},
+  {id:'AG–005',name:'Einböck TAIFUN 500',type:'Federzinken-Leichtgrubber',width:'5,0 m',depth:'Bis 15 cm · abhängig von Scharen und Boden',work:'Flach grubbern · Saatbettbereitung'},
+  {id:'AG–006',name:'LEMKEN Smaragd 9/300',type:'Grubber',width:'3,0 m',depth:'Mechanisch einstellbar · flacher Einsatz vorgesehen',work:'Flach grubbern'},
+  {id:'AG–002',name:'LEMKEN Saphir 9/300',type:'Drillmaschine',width:'3,0 m',depthLabel:'Saatgut-Ablagetiefe',depth:'Über Schardruck und Tiefenführung einstellbar',work:'Säen / Drillen'},
+  {id:'AG–007',name:'AMAZONE Cataya 3000 Super',type:'Drillmaschine',width:'3,0 m',depthLabel:'Saatgut-Ablagetiefe',depth:'0–6 cm · mit TwinTeC special',configuration:'TwinTeC special-Doppelscheibenschare',work:'Säen / Drillen'},
+  {id:'AG–008',name:'AMAZONE Cirrus 6003-2',type:'Drillmaschine',width:'6,0 m',depthLabel:'Saatgut-Ablagetiefe',depth:'Zentral einstellbar · abhängig von der Scharausstattung',work:'Säen / Drillen'},
+  {id:'AG–009',name:'TREFFLER TS 620 M3',type:'Striegel',width:'6,20 m',depth:'Einstellungs- und bodenabhängig',configuration:'Präzisions-Zinkenstriegel · Eingriff über Zinkendruck und Stützräder',work:'Striegeln'},
+  {id:'AG–010',name:'Einböck CHOPSTAR-TWIN',type:'Hackgerät',width:null,depth:'Stufenlos über Tastrad und Kurbel einstellbar',work:'Hacken'},
+  {id:'AG–003',name:'Einböck CHOPSTAR-ONE',type:'Hackgerät',width:null,depth:'Stufenlos über Tastrad und Kurbel einstellbar',work:'Hacken'}
+];
+// Aktuell angebaute Geräte; geplante Aufgaben ändern den Ist-Zustand nicht.
+const fleetMountedImplements={1:'AG–003',4:'AG–002',5:null,6:null};
+document.querySelectorAll('[data-robot-tool]').forEach(element=>{
+  const id=Number(element.dataset.robotTool),vehicle=fleetVehicles.find(robot=>robot.id===id);
+  const tool=fleetImplements.find(item=>item.id===fleetMountedImplements[id]);
+  const name=vehicle.fixed?'Integrierte Hackeinheit':tool?tool.name:'Kein Anbaugerät';
+  element.textContent=name;element.title='Anbaugerät: '+name;
+});
+document.getElementById('fleet-robots').innerHTML=data.map(robot=>{
+  const state=fleetOperatingStates[robot.id]||(robot.atFarm?{kind:'ready',label:'Bereit',detail:'Auf dem Hof'}:{kind:'working',label:'Aufgabe wird ausgeführt',detail:robot.status+' · '+robot.area});
+  const vehicle=fleetVehicles.find(v=>v.id===robot.id);
+  const mounted=fleetImplements.find(tool=>tool.id===fleetMountedImplements[robot.id]);
+  const toolName=vehicle.fixed?'Integrierte Hackeinheit':mounted?mounted.name:'Nichts angebaut';
+  return `<tr><td class="fleet-id">MW–00${robot.id}</td><td><div class="fleet-robot-name"><i style="background:${robot.color}" aria-hidden="true"></i><strong>${vehicle.name}</strong></div><small>${vehicle.type} · ${vehicle.fixed?'Festes Arbeitsgerät':'Wechselbare Anbaugeräte'}</small></td><td><span class="fleet-mounted-tool ${!vehicle.fixed&&!mounted?'empty':''}">${toolName}</span>${mounted?`<small>${mounted.id} · ${mounted.width||'Arbeitsbreite noch offen'}</small>`:''}</td><td><span class="fleet-state fleet-state-${state.kind}"><i aria-hidden="true"></i>${state.label}</span><small>${state.detail}</small></td><td><a class="fleet-open-robot" href="#roboter-${robot.id}" aria-label="${vehicle.name} öffnen">Roboter öffnen ↗</a></td></tr>`;
+}).join('');
+const renderFleetImplement=tool=>`<details class="fleet-implement"><summary><span class="fleet-id">${tool.id}</span><span class="implement-name"><strong>${tool.name}</strong><small>${tool.type}${tool.width?' · '+tool.width:''}</small></span><span class="fleet-section-chevron" aria-hidden="true">⌄</span></summary><dl class="implement-facts"><div><dt>Geräte-ID</dt><dd>${tool.id}</dd></div><div><dt>Typ</dt><dd>${tool.type}</dd></div><div><dt>Arbeitsbreite</dt><dd>${tool.width||'Noch nicht festgelegt'}</dd></div><div><dt>${tool.depthLabel||'Arbeitstiefe'}</dt><dd>${tool.depth||'Noch nicht festgelegt'}</dd></div>${tool.configuration?`<div><dt>Ausstattung</dt><dd>${tool.configuration}</dd></div>`:''}<div><dt>Mögliche Arbeiten</dt><dd>${tool.work}</dd></div></dl></details>`;
+
+const fleetEquipmentGroups=[
+  {label:'Grubber',matches:tool=>tool.type.toLowerCase().includes('grubber')},
+  {label:'Drillmaschinen',matches:tool=>tool.type==='Drillmaschine'},
+  {label:'Hacke & Striegel',matches:tool=>tool.type==='Striegel'||tool.type==='Hackgerät'}
+];
+document.getElementById('fleet-implements').innerHTML=fleetEquipmentGroups.map(group=>{
+  const tools=fleetImplements.filter(group.matches);
+  return `<details class="panel fleet-section"><summary><span class="fleet-section-icon" aria-hidden="true">⚒</span><span><strong>${group.label}</strong><small>${tools.length} ${tools.length===1?'Gerät':'Geräte'}</small></span><span class="fleet-section-chevron" aria-hidden="true">⌄</span></summary><div class="fleet-implement-list">${tools.map(renderFleetImplement).join('')}</div></details>`;
+}).join('');
+
+// Roboterspezifische Leitstandsansicht. Sämtliche Bedienelemente simulieren nur den UI-Zustand.
+const robotProfileStates=new Map();let robotProfileId=null;
+function robotProfileState(id){if(!robotProfileStates.has(id))robotProfileStates.set(id,{action:'running',mode:'auto',speed:5,camera:'front'});return robotProfileStates.get(id);}
+function robotCameraPreview(vehicle,atFarm,direction='front'){
+  const labels={front:'Vorne',left:'Links',rear:'Hinten',right:'Rechts'};
+  return `<div class="robot-camera-photo camera-${direction}" role="img" aria-label="${labels[direction]} · Kamerabild ${vehicle.name}"></div><span class="robot-camera-badge">${labels[direction]}</span>`;
+}
+function renderRobotProfile(id){
+  const vehicle=fleetVehicles.find(r=>r.id===id),r=data.find(r=>r.id===id);robotProfileId=vehicle?id:null;
+  if(!vehicle){document.getElementById('robot-profile-name').textContent='Roboter nicht gefunden';return;}
+  const state=robotProfileState(id),field=fields.find(f=>f.robots.includes(id)),operating=fleetOperatingStates[id];
+  document.getElementById('robot-profile-name').textContent=vehicle.name;
+  document.getElementById('robot-profile-id').textContent='MW–00'+id+' · '+vehicle.type;
+  document.getElementById('robot-profile-location').textContent=field?'Aufgabe: '+field.task+' · '+field.name:'Standort: Hof Grünpark';
+  document.getElementById('robot-energy-label').textContent=vehicle.fixed?'Batterie':'Tankfüllstand';
+  document.getElementById('robot-energy-fill').style.setProperty('--b',r.b+'%');
+  document.getElementById('robot-energy-value').textContent=r.b+' %';
+  const progress=field?r.p:0;
+  document.getElementById('robot-profile-ring').style.setProperty('--p',progress);
+  document.getElementById('robot-profile-ring').setAttribute('aria-label',progress+' Prozent erledigt');
+  document.getElementById('robot-profile-progress').innerHTML=progress+'<small>%</small>';
+  document.getElementById('robot-profile-time').textContent=field?r.time:operating?.kind==='setup'?'20 min':'—';
+  const tool=fleetImplements.find(t=>t.id===fleetMountedImplements[id]);
+  document.getElementById('robot-profile-tool').textContent=vehicle.fixed?'Integrierte Hackeinheit':tool?.name||'Kein Arbeitsgerät angebaut';
+  setRobotCamera(state.camera||'front');
+  document.getElementById('robot-camera-360').innerHTML=robotSurroundPreview(vehicle,!field);
+  closeRobotTile();
+  document.getElementById('robot-map-location').textContent=field?field.name:'Hof Grünpark';
+  const map=document.getElementById('robot-profile-map');let svg=landscape('robot-profile'),aspect=1040/900;
+  if(field){
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path'),probe=document.createElementNS('http://www.w3.org/2000/svg','svg');path.setAttribute('d',field.path);probe.style.cssText='position:absolute;left:-10000px;width:1040px;height:900px';probe.append(path);document.body.append(probe);const b=path.getBBox();probe.remove();const pad=45,box=[b.x-pad,b.y-pad,b.width+2*pad,b.height+2*pad];aspect=box[2]/box[3];
+    const task=dispatchTasks.find(t=>t.field===field.id&&t.operation===field.task)||{id,field:field.id,operation:field.task};
+    svg=svg.replace('viewBox="0 0 1040 900"',`viewBox="${box.join(' ')}"`).replace('</svg>',dispatchFieldTracks(task)+`<g><circle cx="${field.x}" cy="${field.y+25}" r="19" fill="${r.color}" stroke="white" stroke-width="4"/><path d="M${field.x-5} ${field.y+29}L${field.x} ${field.y+17}L${field.x+5} ${field.y+29}Z" fill="white"/></g></svg>`);
+  }else{svg=svg.replace('viewBox="0 0 1040 900"','viewBox="15 610 360 290"').replace('</svg>',`<circle cx="${id===5?120:180}" cy="790" r="15" fill="${r.color}" stroke="white" stroke-width="4"/></svg>`);aspect=360/290;}
+  map.dataset.aspect=aspect;(map.querySelector('.map-scene')||map).innerHTML=svg;
+  if(!map.classList.contains('map-viewport'))enableMap(map);else map.querySelector('.map-controls').children[2].click();
+  const electric=!!vehicle.fixed;
+  const metrics=electric?[['Batterietemperatur','32 °C',42],['Motorlast','38 %',38],['Fahrantrieb','165 U/min',35],['Solarleistung','320 W',62],['Werkzeugsensoren','Bereit',100]]:[['Motortemperatur',id===5?'42 °C':'78 °C',id===5?35:69],['Schlupf',field?'6 %':'0 %',field?18:0],['Motordrehzahl',field?'1.850 U/min':'0 U/min',field?61:0],['Hydraulikdruck',field?'185 bar':'0 bar',field?68:0],['Zapfwellendrehzahl',field?'540 U/min':'0 U/min',field?54:0]];
+  renderRobotMachineData(vehicle,tool,metrics,!!field);
+  updateRobotProfileControls();
+}
+function robotImplementMetrics(tool,working){
+  if(tool.type==='Drillmaschine')return [
+    ['Saatgutfüllstand',tool.id==='AG–002'?'8 %':'68 %',tool.id==='AG–002'?8:68],['Saatgutvorrat',tool.id==='AG–002'?'48 kg':'410 kg',tool.id==='AG–002'?8:68],
+    ['Aussaatmenge',working?'180 kg/ha':'0 kg/ha',working?60:0],
+    ['Ablagetiefe','3,0 cm',50],['Säüberwachung',working?'Alle Reihen aktiv':'Bereit',100],
+    ['Dosierantrieb',working?'42 U/min':'0 U/min',working?42:0]
+  ];
+  if(tool.type==='Hackgerät')return [
+    ['Arbeitstiefe','3,5 cm',35],['Reihenführung',working?'Aktiv':'Bereit',100],
+    ['Kamera-Pflanzenerkennung',working?'98 %':'Bereit',98],
+    ['Verschieberahmen',working?'+ 2 cm':'0 cm',working?55:50],['Werkzeugstatus','Alle Einheiten bereit',100]
+  ];
+  if(tool.type==='Striegel')return [
+    ['Zinkendruck','1,8 kg',45],['Eingriffstiefe','2,0 cm',40],
+    ['Rahmenposition',working?'Arbeitsstellung':'Angehoben',working?25:90],['Werkzeugstatus','Alle Zinken bereit',100]
+  ];
+  return [['Arbeitstiefe','18 cm',60],['Zugkraft',working?'24 kN':'0 kN',working?48:0],
+    ['Rahmenposition',working?'Arbeitsstellung':'Angehoben',working?25:90],['Werkzeugstatus','Bereit',100]];
+}
+function renderRobotMachineData(vehicle,tool,metrics,working){
+  const metricRows=items=>items.map(([label,value,amount])=>`<div class="robot-machine-metric"><div><span>${label}</span><strong>${value}</strong></div><div class="robot-metric-track"><span style="width:${amount}%"></span></div></div>`).join('');
+  const mounted=vehicle.fixed?{name:'Integrierte Hackeinheit',type:'Hackgerät'}:tool;
+  const group=(title,name,items)=>`<section class="machine-data-group"><div class="machine-data-group-heading"><h3>${title}</h3><span>${name}</span></div>${metricRows(items)}</section>`;
+  document.getElementById('robot-machine-data').innerHTML=
+    group('Roboter',vehicle.name,metrics)+
+    (mounted?group('Anbaugerät',mounted.name,robotImplementMetrics(mounted,working)):
+      '<section class="machine-data-group"><div class="machine-data-group-heading"><h3>Anbaugerät</h3><span>Kein Arbeitsgerät angebaut</span></div></section>');
+  document.getElementById('robot-machine-data').scrollTop=0;
+}
+function updateRobotProfileControls(){
+  if(!robotProfileId)return;const state=robotProfileState(robotProfileId),r=data.find(r=>r.id===robotProfileId),operating=fleetOperatingStates[robotProfileId];
+  const status=document.getElementById('robot-profile-status');
+  status.textContent=state.action==='stopped'?'Not-Aus':state.action==='paused'?'Pause · Manuell':operating?operating.label:'Automatik aktiv';
+  status.className=state.action==='stopped'?'robot-status-emergency':state.action==='paused'?'robot-status-paused':operating?'robot-status-'+operating.kind:'robot-status-active';
+  document.getElementById('robot-action-pause').disabled=r.atFarm||state.action!=='running';
+  document.getElementById('robot-action-resume').disabled=r.atFarm||state.action==='running';
+  document.getElementById('robot-action-stop').disabled=state.action==='stopped';
+  document.getElementById('robot-control-mode-label').textContent=state.action==='paused'?'Manuell · Joystick':state.action==='stopped'?'Not-Aus aktiv':'Automatik';
+  updateRobotImplementControls();
+  renderRobotFaultMemory();
+}
+function robotManualEnabled(){
+  return !!robotProfileId&&robotProfileState(robotProfileId).action==='paused'&&!data.find(r=>r.id===robotProfileId).atFarm;
+}
+function setRobotDemoAction(action){
+  if(!robotProfileId||!['pause','resume','stop'].includes(action))return;
+  if(action!=='stop'&&data.find(r=>r.id===robotProfileId).atFarm)return;
+  const state=robotProfileState(robotProfileId),values=robotImplementState();
+  cancelAnimationFrame(values.liftFrame||0);values.liftFrame=null;
+  state.joystick='neutral';
+  ['hyd1','hyd2','hyd3','hyd4'].forEach(control=>{values[control]=0;values[control+'Float']=false;});
+  if(action==='stop')values.pto='off';
+  state.action={pause:'paused',resume:'running',stop:'stopped'}[action];
+  state.mode=action==='pause'?'manual':'auto';
+  updateRobotProfileControls();
+}
+function robotImplementState(){
+  const state=robotProfileState(robotProfileId);
+  if(!state.implements)state.implements={height:65,pto:'off',ptoSpeed:540,hyd1:0,hyd2:0,hyd3:0,hyd4:0,hyd1Float:false,hyd2Float:false,hyd3Float:false,hyd4Float:false};
+  return state.implements;
+}
+function setRobotImplement(control,value){
+  if(!robotManualEnabled())return;
+  const values=robotImplementState();
+  if(control==='pto'&&!['on','off'].includes(value))return;
+  if(control==='ptoSpeed'&&![540,1000].includes(value))return;
+  if(['hyd1','hyd2','hyd3','hyd4'].includes(control)){
+    value=Math.max(-100,Math.min(100,Number(value)||0));
+    values[control+'Float']=false;
+  }
+  values[control]=value;
+  updateRobotImplementControls();
+}
+function moveRobotLift(target){
+  if(!robotManualEnabled()||![5,90].includes(target))return;
+  const id=robotProfileId,values=robotImplementState();
+  cancelAnimationFrame(values.liftFrame||0);
+  const from=values.height,started=performance.now(),duration=Math.max(300,Math.abs(target-from)*30);
+  function step(now){
+    const progress=Math.min(1,(now-started)/duration);
+    values.height=Math.round(from+(target-from)*progress);
+    if(robotProfileId===id)updateRobotImplementControls();
+    if(progress<1)values.liftFrame=requestAnimationFrame(step);
+    else values.liftFrame=null;
+  }
+  values.liftFrame=requestAnimationFrame(step);
+}
+function toggleRobotPto(){
+  if(!robotManualEnabled())return;
+  setRobotImplement('pto',robotImplementState().pto==='on'?'off':'on');
+}
+function releaseRobotHydraulic(control){
+  if(!robotProfileId)return;
+  const values=robotImplementState();
+  if(values[control]===0)return;
+  values[control]=0;
+  updateRobotImplementControls();
+}
+function releaseRobotHydraulics(){
+  if(!robotProfileId)return;
+  ['hyd1','hyd2','hyd3','hyd4'].forEach(releaseRobotHydraulic);
+}
+window.addEventListener('pointerup',releaseRobotHydraulics);
+window.addEventListener('pointercancel',releaseRobotHydraulics);
+window.addEventListener('blur',releaseRobotHydraulics);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)releaseRobotHydraulics();});
+function toggleRobotFloat(control){
+  if(!robotManualEnabled()||!['hyd1','hyd2','hyd3','hyd4'].includes(control))return;
+  const values=robotImplementState();
+  values[control+'Float']=!values[control+'Float'];values[control]=0;
+  updateRobotImplementControls();
+}
+function updateRobotImplementControls(){
+  if(!robotProfileId)return;
+  const values=robotImplementState();
+  document.getElementById('robot-lift-height').textContent=values.height+' %';
+  document.getElementById('robot-lift-fill').style.width=values.height+'%';
+  document.querySelector('.lift-height-track').setAttribute('aria-valuenow',values.height);
+  const manual=robotManualEnabled();
+  document.querySelectorAll('.robot-implement-controls button,.robot-implement-controls input,.robot-implement-controls select').forEach(input=>input.disabled=!manual);
+  document.querySelector('[aria-label="Hubwerk heben"]').disabled=!manual||values.height>=90;
+  document.querySelector('[aria-label="Hubwerk senken"]').disabled=!manual||values.height<=5;
+  document.getElementById('robot-pto-speed').value=values.ptoSpeed;
+  document.getElementById('robot-pto-actual').textContent=(values.pto==='on'?values.ptoSpeed.toLocaleString('de-DE'):0)+' U/min';
+  const ptoButton=document.getElementById('robot-pto-toggle');
+  ptoButton.textContent=values.pto==='on'?'An':'Aus';
+  ptoButton.setAttribute('aria-pressed',String(values.pto==='on'));
+  ptoButton.title=values.pto==='on'?'Zapfwelle ausschalten':'Zapfwelle einschalten';
+  ['hyd1','hyd2','hyd3','hyd4'].forEach(control=>{
+    const value=values[control],floating=values[control+'Float'];
+    const slider=document.getElementById('robot-'+control+'-slider');
+    slider.value=value;slider.setAttribute('aria-valuetext',floating?'Schwimmstellung':value===0?'Neutral':(value<0?'Links ':'Rechts ')+Math.abs(value)+' Prozent');
+    document.getElementById('robot-'+control+'-value').textContent=floating?'Schwimmstellung':value===0?'Neutral':(value<0?'← ':'→ ')+Math.abs(value)+' %';
+    document.querySelector('[data-float="'+control+'"]').setAttribute('aria-pressed',String(floating));
+  });
+}
+window.addEventListener('message',event=>{
+  if(event.origin!==location.origin||event.source!==window.parent||event.data?.type!=='roboplan-joystick'||!robotProfileId)return;
+  const state=robotProfileState(robotProfileId);
+  if(document.getElementById('roboterdetail').hidden||!robotManualEnabled()){state.joystick='neutral';return;}
+  if(!['neutral','Vorwärts','Rückwärts','Links','Rechts'].includes(event.data.direction))return;
+  state.joystick=event.data.direction;
+  document.getElementById('robot-control-mode-label').textContent=event.data.direction==='neutral'?'Manuell · Joystick':'Manuell · '+event.data.direction;
+});
+window.robotProfileReady=true;
+const initialRobotMatch=location.hash.match(/^#roboter-(\d+)$/);if(initialRobotMatch)renderRobotProfile(Number(initialRobotMatch[1]));
+
+function updateRobotProfileBack(){
+  const expanded=!!document.querySelector('.robot-tile.is-expanded');
+  const button=document.querySelector('.robot-back');
+  button.textContent=expanded?'← Zurück zur Roboterübersicht · '+document.getElementById('robot-profile-name').textContent:'← Flottenmanagement';
+}
+function robotProfileBack(){
+  if(document.querySelector('.robot-tile.is-expanded')){
+    const toggle=document.querySelector('.robot-tile.is-expanded .robot-tile-toggle');
+    closeRobotTile();toggle.focus();
+  }else location.hash='roboterverwaltung';
+}
+// Die vorhandenen Kacheln werden vergrößert; Karten und Bedienelemente bleiben erhalten.
+function closeRobotTile(){
+  document.querySelectorAll('.robot-tile').forEach(tile=>{
+    tile.classList.remove('is-expanded');
+    const button=tile.querySelector('.robot-tile-toggle');
+    button.setAttribute('aria-expanded','false');
+    button.setAttribute('aria-label',tile.querySelector('h2').textContent+' vergrößern');
+    button.textContent='⛶';
+  });
+  document.querySelector('.robot-dashboard-grid').classList.remove('has-expanded-tile','manual-control-view');
+  updateRobotProfileBack();
+  window.dispatchEvent(new Event('resize'));
+}
+function toggleRobotTile(key){
+  const tile=document.querySelector('[data-tile="'+key+'"]'),expanded=tile.classList.contains('is-expanded');
+  closeRobotTile();
+  if(!expanded){
+    tile.classList.add('is-expanded');
+    document.querySelector('.robot-dashboard-grid').classList.add('has-expanded-tile');
+    if(key==='control')document.querySelector('.robot-dashboard-grid').classList.add('manual-control-view');
+    updateRobotProfileBack();
+    const button=tile.querySelector('.robot-tile-toggle');
+    button.setAttribute('aria-expanded','true');button.setAttribute('aria-label','Verkleinern');button.textContent='↙';button.focus();
+    window.dispatchEvent(new Event('resize'));
+  }
+}
+document.querySelectorAll('.robot-tile').forEach(tile=>tile.addEventListener('click',event=>{
+  if(event.target.closest('button,input,select,a,.map-viewport'))return;
+  if(!tile.classList.contains('is-expanded'))toggleRobotTile(tile.dataset.tile);
+}));
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){
+    const active=document.querySelector('.robot-tile.is-expanded .robot-tile-toggle');
+    if(active){closeRobotTile();active.focus();}
+  }
+});
+function robotSurroundPreview(vehicle,atFarm){
+  const spokes=Array.from({length:20},(_,i)=>`<path d="M180 180L${180+Math.cos(i*Math.PI/10)*240} ${180+Math.sin(i*Math.PI/10)*240}" stroke="#94a37a" stroke-width="9"/>`).join('');
+  return `<svg viewBox="0 0 360 360" role="img" aria-label="Illustrative 360 Grad Rundumsicht von ${vehicle.name}"><rect width="360" height="360" fill="${atFarm?'#c3c9ba':'#b9c49e'}"/>${atFarm?'<path d="M0 110H360V250H0Z" fill="#d4d8cb"/><rect x="20" y="20" width="100" height="65" rx="4" fill="#869981"/><rect x="240" y="285" width="100" height="65" rx="4" fill="#869981"/>':spokes}<circle cx="180" cy="180" r="128" fill="none" stroke="#fff" stroke-dasharray="4 7" opacity=".65"/><path d="M180 180L120 55Q180 25 240 55Z" fill="#f7faf1" opacity=".4"/><rect x="156" y="142" width="48" height="76" rx="13" fill="#627d68" stroke="white" stroke-width="3"/><path d="M169 160L180 150L191 160" fill="none" stroke="white" stroke-width="3"/><g fill="#345442" font-size="13" font-family="sans-serif" text-anchor="middle"><text x="180" y="30">VORNE</text><text x="180" y="341">HINTEN</text><text x="35" y="184">L</text><text x="325" y="184">R</text></g></svg><span class="robot-camera-badge">360°</span>`;
+}
+
+function setRobotCamera(direction){
+  if(!robotProfileId||!['front','left','rear','right'].includes(direction))return;
+  const vehicle=fleetVehicles.find(r=>r.id===robotProfileId);
+  robotProfileState(robotProfileId).camera=direction;
+  const atFarm=!fields.some(field=>field.robots.includes(robotProfileId));
+  document.getElementById('robot-camera-view').innerHTML=robotCameraPreview(vehicle,atFarm,direction);
+  document.querySelectorAll('[data-camera]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.camera===direction)));
+}
+
+window.addEventListener('message',event=>{
+  if(event.origin!==location.origin||event.source!==window.parent||event.data?.type!=='roboplan-case-action')return;
+  if(['resume','pause'].includes(event.data.action))setRobotDemoAction(event.data.action);
+});
+
+function openOverviewWeather(){location.hash='wetter';}
+function renderOverviewWeather(){
+  document.getElementById('weather-page-title').textContent=document.getElementById('overview-weather-title').textContent.trim();
+  document.getElementById('weather-page-location').textContent=document.getElementById('overview-weather-location').textContent.trim();
+  renderWeatherRadar();
+  const days=[['Heute','☀','18°','10°','15 %'],['Morgen','⛅','17°','9°','25 %'],['Fr','☁','15°','8°','40 %'],['Sa','☂','14°','8°','70 %'],['So','⛅','16°','7°','30 %'],['Mo','☀','18°','8°','10 %'],['Di','☀','19°','9°','10 %']];
+  document.getElementById('weather-view-days').innerHTML=days.map(([day,icon,high,low,rain])=>`<div><strong>${day}</strong><span>${icon}</span><b>${high}</b><span>${low}</span><small>${rain} Regenrisiko</small></div>`).join('');
+}
+function setWeatherView(view){
+  if(!['hours','days','radar'].includes(view))return;
+  ['hours','days','radar'].forEach(key=>document.getElementById('weather-view-'+key).hidden=key!==view);
+  document.querySelectorAll('[data-weather-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.weatherView===view)));
+}
+
+function renderWeatherRadar(){
+  const selected=document.querySelector('[data-overview-robot].is-selected');
+  const robot=selected?data.find(item=>item.id===Number(selected.dataset.overviewRobot)):null;
+  const x=robot?robot.x*10.4:175,y=robot?robot.y*9:810;
+  const label=robot?robotShortName(robot.id):'Hof Grünpark';
+  const rain=`<g aria-hidden="true" pointer-events="none"><path d="M620 55Q800-30 1035 100L1080 470Q925 590 790 430T620 55Z" fill="#77b5de" opacity=".4"/><path d="M770 65Q960 15 1035 150L1040 370Q915 470 815 325T770 65Z" fill="#438ed1" opacity=".45"/><ellipse cx="950" cy="215" rx="66" ry="110" fill="#5266b9" opacity=".45"/><path d="M45 490Q175 420 290 530T350 780Q220 860 90 735T45 490Z" fill="#8ccbdc" opacity=".32"/></g>`;
+  const marker=`<g><circle cx="${x}" cy="${y}" r="28" fill="#fff" opacity=".65"/><circle cx="${x}" cy="${y}" r="17" fill="${robot?robot.color:'#27785b'}" stroke="white" stroke-width="4"/><text x="${x}" y="${y+5}" text-anchor="middle" fill="white" font-size="14" font-family="sans-serif" font-weight="700">${robot?robot.id:'H'}</text><text x="${x}" y="${y+46}" text-anchor="middle" fill="#244a38" stroke="white" stroke-width="4" paint-order="stroke" font-family="sans-serif" font-size="19" font-weight="600">${label}</text></g>`;
+  document.getElementById('weather-radar-map').innerHTML=landscape('weather-radar')
+    .replace('preserveAspectRatio="none"','preserveAspectRatio="xMidYMid meet"')
+    .replace('Hofkarte mit acht benannten Feldern, Straßen, Teich und Hof','Regenradar über unserer Hof- und Feldkarte')
+    .replace('</svg>',rain+marker+'</svg>');
+}
+
+function renderRobotFaultMemory(){
+  const robot=data.find(item=>item.id===robotProfileId),button=document.getElementById('robot-fault-memory');
+  if(!robot)return;
+  const alert=robot.alert;
+  button.className='robot-fault-memory '+(alert?'fault-memory-'+alert.severity:'fault-memory-ok');
+  button.innerHTML=`<span class="fault-memory-title">Fehlerspeicher <span>${alert?'1 aktive Meldung':'Keine aktiven Meldungen'}</span></span><strong>${alert?(alert.severity==='error'?'⛔ ':'⚠ ')+alert.message:'✓ Roboter ohne Meldung'}</strong><span class="fault-memory-link">Fehler dieses Roboters ↗</span>`;
+}
+function openFaultOverview(){
+  document.getElementById('fehler').dataset.originRobot=robotProfileId||'';
+  location.hash='fehler';
+}
+function closeFaultOverview(){
+  const id=Number(document.getElementById('fehler').dataset.originRobot);
+  location.hash=id?'roboter-'+id:'roboterverwaltung';
+}
+function renderFaultOverview(){
+  const id=Number(document.getElementById('fehler').dataset.originRobot),origin=data.find(robot=>robot.id===id);
+  document.getElementById('fault-back').textContent=origin?'← Zurück zur Roboterübersicht · '+robotDisplayName(id):'← Flottenmanagement';
+  document.getElementById('fault-page-subtitle').textContent=origin?robotDisplayName(id):'Kein Roboter ausgewählt';
+  const robots=data.filter(robot=>robot.id===id&&robot.alert);
+  const errors=robots.filter(robot=>robot.alert.severity==='error').length,warnings=robots.length-errors;
+  document.getElementById('fault-page-counts').innerHTML=`<span class="fleet-alert-error"><i aria-hidden="true"></i>${errors} Fehler</span><span class="fleet-alert-warning"><i aria-hidden="true"></i>${warnings} Warnung${warnings===1?'':'en'}</span>`;
+  document.getElementById('fault-list').innerHTML=robots.length?robots.map(robot=>{
+    const error=robot.alert.severity==='error';
+    return `<article class="panel fault-entry fault-entry-${robot.alert.severity}"><div class="fault-entry-top"><span>${error?'⛔ Fehler':'⚠ Warnung'} · Aktiv</span><span>MW–00${robot.id}</span></div><h2>${robot.alert.message}</h2><p>${robotDisplayName(robot.id)} · ${robot.area}</p><dl><div><dt>Bereich</dt><dd>${error?'Fahrantrieb':'Sämaschine · Saatgutbehälter'}</dd></div><div><dt>Details</dt><dd>${error?'Kein Vortrieb. Roboter benötigt Unterstützung.':'Saatgutfüllstand 8 % · 48 kg verbleibend.'}</dd></div></dl><a href="#roboter-${robot.id}">Roboter öffnen ↗</a></article>`;
+  }).join(''):(origin?'<div class="panel fault-empty">✓ Keine aktiven Meldungen für diesen Roboter.</div>':'<div class="panel fault-empty">Bitte einen Roboter öffnen, um seinen Fehlerspeicher anzuzeigen.</div>');
+}
+
+// Die Betriebsauswahl ändert ausschließlich den angezeigten Namen.
+const customerNames=['Agrarhof Albers','Auenhof','Bauernhof Becker','Birkenhof','Gut Sonnenhof','Hof Grünpark','Hof Lindenberg','Landwirtschaft Meyer','Sonnenacker','Südhof'].sort((a,b)=>a.localeCompare(b,'de'));
+function openCustomerPicker(){
+  document.getElementById('customer-search').value='';
+  renderCustomerPicker();
+  document.getElementById('customer-picker').showModal();
+  document.getElementById('customer-search').focus();
+}
+function renderCustomerPicker(){
+  const query=document.getElementById('customer-search').value.trim().toLocaleLowerCase('de');
+  const names=customerNames.filter(name=>name.toLocaleLowerCase('de').includes(query));
+  const selected=document.getElementById('field-customer-name').textContent;
+  const groups=new Map();
+  names.forEach(name=>{const initial=name[0].toLocaleUpperCase('de');if(!groups.has(initial))groups.set(initial,[]);groups.get(initial).push(name);});
+  document.getElementById('customer-picker-list').innerHTML=[...groups].map(([letter,items])=>`<section class="customer-letter-group"><h3>${letter}</h3><div>${items.map(name=>`<button type="button" data-customer-name="${name}" aria-pressed="${name===selected}">${name}</button>`).join('')}</div></section>`).join('');
+  document.getElementById('customer-picker-empty').hidden=names.length>0;
+}
+document.getElementById('customer-picker-list').addEventListener('click',event=>{
+  const button=event.target.closest('[data-customer-name]');if(!button)return;
+  document.getElementById('field-customer-name').textContent=button.dataset.customerName;
+  document.getElementById('customer-picker').close();
+});
+document.getElementById('customer-picker').addEventListener('click',event=>{
+  if(event.target!==event.currentTarget)return;
+  const box=event.currentTarget.getBoundingClientRect();
+  if(event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)event.currentTarget.close();
+});
+
+function openRobotPlan(){if(robotProfileId)location.hash='roboter-plan-'+robotProfileId;}
+function renderRobotPlan(id,selectedField=null){
+  const robot=fleetVehicles.find(item=>item.id===id),state=data.find(item=>item.id===id);
+  if(!robot){document.getElementById('robot-plan-name').textContent='Roboter nicht gefunden';return;}
+  const current=fields.find(field=>field.robots.includes(id));
+  const assigned=dispatchTasks.filter(task=>task.robot===id);
+  const upcoming=assigned.filter(task=>!current||task.field!==current.id||task.operation!==current.task);
+  const parts=[],tasks=[];
+  const now=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Berlin',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date()).split(':');
+  let cursor=Number(now[0])*60+Number(now[1]),previous=current?.id||null,equipment=current?dispatchEquipment({operation:current.task}):robot.fixed||null;
+  const add=(kind,duration,label,task,route=null)=>{parts.push({kind,duration,label,task,route,start:cursor});cursor+=duration;};
+  if(current){
+    const task=assigned.find(task=>task.field===current.id&&task.operation===current.task)||{id:1000+id,field:current.id,operation:current.task,robot:id};
+    tasks.push(task);add('work',Math.max(10,Math.round(dispatchDuration(task)*(100-state.p)/100)),current.task+' · '+current.name,task);
+  }
+  upcoming.forEach(task=>{
+    const tool=dispatchEquipment(task);
+    if(equipment!==tool){
+      if(previous){const road=roadRoute(null,previous);add('drive',road.minutes,'Zum Hof · Gerätewechsel',task,{...road,points:[...road.points].reverse()});previous=null;}
+      add('setup',30,tool+' anbauen',task);equipment=tool;
+    }
+    const road=roadRoute(previous,task.field);add('drive',road.minutes,'Fahrt · '+fields.find(field=>field.id===task.field).name,task,road);
+    add('work',dispatchDuration(task),task.operation+' · '+fields.find(field=>field.id===task.field).name,task);
+    tasks.push(task);previous=task.field;
+  });
+  document.getElementById('robot-plan-name').textContent=robot.name;
+  document.getElementById('robot-plan-back').onclick=()=>location.hash='roboter-'+id;
+  document.getElementById('robot-plan-caption').textContent=(current?'Aktueller Auftrag und nächste Schritte':'Nächste zugewiesene Aufträge')+' · '+upcoming.length+' weitere Aufträge';
+  const alert=document.getElementById('robot-plan-alert');alert.hidden=!state.alert;
+  if(state.alert){alert.className='robot-plan-notice robot-plan-notice-'+state.alert.severity;alert.textContent=(state.alert.severity==='error'?'⛔ ':'⚠ ')+state.alert.message+(state.alert.severity==='error'?' · Zeitplan wartet auf Störungsbehebung':'');}
+  const paused=state.alert?.severity==='error'||robotProfileState(id).action!=='running';
+  document.getElementById('robot-plan-timeline').innerHTML=parts.length?parts.map((part,index)=>{
+    const active=part.task.field===selectedField;
+    return `<button class="robot-plan-step step-${part.kind} ${active?'selected':''}" style="--step-size:${Math.max(150,Math.min(310,part.duration*1.4))}px" onclick="renderRobotPlan(${id},${part.task.field})" aria-pressed="${active}"><span>${index===0&&current?(paused?'Pausiert':'Aktuell'):minuteClock(part.start)+'–'+minuteClock(part.start+part.duration)}</span><strong>${part.kind==='drive'?'↗ ':part.kind==='setup'?'⚒ ':'▰ '}${part.label}</strong><small>${durationLabel(part.duration)}${index===0&&current?' Restzeit':''}</small></button>`;
+  }).join('')+(upcoming.length===0?'<span class="robot-plan-end">Keine weiteren Aufträge zugewiesen</span>':''):'<div class="robot-plan-empty">Keine Aufträge zugewiesen. In der Disposition können Aufgaben zugeordnet werden.</div>';
+  const roads=parts.filter(part=>part.route).map(part=>`<polyline points="${part.route.points.map(point=>point.join(',')).join(' ')}" fill="none" stroke="white" stroke-width="13"/><polyline points="${part.route.points.map(point=>point.join(',')).join(' ')}" fill="none" stroke="#427fad" stroke-width="7" stroke-dasharray="13 9"/>`).join('');
+  const tracks=tasks.map(dispatchFieldTracks).join('');
+  const selected=fields.find(field=>field.id===selectedField);
+  const highlight=selected?`<path d="${selected.path}" fill="#e7b65b" fill-opacity=".2" stroke="#c48a30" stroke-width="7"/>`:'';
+  const marker=`<circle cx="${state.x*10.4}" cy="${state.y*9}" r="18" fill="${state.color}" stroke="white" stroke-width="4"/><text x="${state.x*10.4}" y="${state.y*9+5}" text-anchor="middle" fill="white" font-family="sans-serif" font-size="14">${id}</text>`;
+  const map=document.getElementById('robot-plan-map');
+  (map.querySelector('.map-scene')||map).innerHTML=landscape('robot-plan').replace('</svg>',roads+tracks+highlight+marker+'</svg>');
+  document.getElementById('robot-plan-map-title').textContent=selected?selected.name:'Aufträge und Fahrwege';
+  if(!map.classList.contains('map-viewport'))enableMap(map);
+}
+const initialRobotPlan=location.hash.match(/^#roboter-plan-(\d+)$/);if(initialRobotPlan)renderRobotPlan(Number(initialRobotPlan[1]));
