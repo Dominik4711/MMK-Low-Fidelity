@@ -19,3 +19,9 @@ Nach Änderungen neu exportieren:
 ```bash
 python3 build_demo.py --output ROBOplan-Export.html
 ```
+
+## Disposition
+
+Der lokale Demo-Vorschlag berücksichtigt Prioritäten, Gerätewechsel und Fahrwege. „Vorschlag zurücksetzen“ stellt den vorherigen Plan wieder her. Im Oberflächenprototyp lassen sich Aufträge mit der Maus oder nach kurzem Festhalten auf Touchgeräten aufnehmen. Ablageflächen zeigen das Zurücklegen in den Aufgabenspeicher und das Löschen; beide Aktionen sind rückgängig machbar. Die Karte kann zugunsten einer breiteren Zeitleiste ausgeblendet werden.
+
+„Einsatzplan übernehmen“ speichert den Plan im Browser. Die Übertragung wird simuliert; es ist kein Roboterbackend angebunden. Beim erneuten Öffnen im selben Browser wird der gespeicherte Plan geladen.

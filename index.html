@@ -7,7 +7,8 @@
 <style>
 
 *{box-sizing:border-box}
-html,body{width:100%;height:100%;margin:0;overflow:hidden}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
+body{position:fixed;inset:0}
 body{display:grid;place-items:center;background:radial-gradient(ellipse at 50% 35%,#535a50,#252b27 65%,#181c1a);font-family:Arial,sans-serif}
 /* The tablet and the attached grip share one responsive hardware silhouette. */
 .ipad{position:relative;width:min(96vw,1320px,calc(94dvh * 1.6));aspect-ratio:1.6;isolation:isolate;filter:drop-shadow(0 22px 22px #0008)}
@@ -43,6 +44,12 @@ body{display:grid;place-items:center;background:radial-gradient(ellipse at 50% 3
 .grip-button{position:absolute;bottom:9%;width:31%;height:22%;display:grid;place-items:center;border-radius:27%;border:2px solid #0b1208;background:linear-gradient(#58614a,#27331e);box-shadow:inset 0 1px 1px #abb19388,0 3px 1px #0b1208;color:#eff4df;font-size:clamp(12px,2vw,25px);cursor:pointer}
 .grip-button:active{transform:translateY(2px);background:#76943c}.grip-start{left:13%}.grip-pause{left:50%}
 .grip-wheel{position:absolute;right:4%;top:29%;height:30%;width:12%;border-radius:35%;background:repeating-linear-gradient(0deg,#171f12 0 3px,#7a8369 3px 5px);border:2px solid #1e2917;box-shadow:2px 1px 3px #000}
+.case-emergency-stop{position:absolute;right:9%;top:.4%;width:7%;aspect-ratio:1;display:grid;place-items:center;padding:4px;border:3px solid #151b16;border-radius:50%;background:linear-gradient(145deg,#26312d,#0b100e);box-shadow:inset 0 0 0 1px #68756c66,0 2px 4px #0008;z-index:7;cursor:pointer;touch-action:manipulation}
+.case-emergency-stop span{display:grid;place-items:center;align-self:stretch;justify-self:stretch;border-radius:50%;color:#fff;font-size:clamp(5px,.85vw,12px);font-weight:700;letter-spacing:.01em;background:linear-gradient(145deg,#dc3a39,#b91f26);box-shadow:inset 0 1px 1px #ffaaa555}
+.case-emergency-stop:disabled{cursor:default}
+.case-emergency-stop:disabled span{visibility:hidden}
+.case-emergency-stop:not(:disabled):active span{background:#981a21}
+.case-emergency-stop:focus-visible{outline:3px solid #fff4a5;outline-offset:4px}
 @media(prefers-reduced-motion:no-preference){.joystick-stick{transition:transform .06s}}
 </style>
 </head>
@@ -51,16 +58,36 @@ body{display:grid;place-items:center;background:radial-gradient(ellipse at 50% 3
 <div class="ipad" aria-label="ROBOplan iPad mit robuster Schutzhülle und Joystick-Handgriff">
   <div class="case-body" aria-hidden="true"><div class="case-brand">ROBOplan</div><div class="case-bottom-accent"></div><i class="bumper tl"></i><i class="bumper tr"></i><i class="bumper bl"></i><i class="bumper br"></i><i class="screw s1"></i><i class="screw s2"></i><i class="screw s3"></i><i class="screw s4"></i></div>
   <div class="camera" aria-hidden="true"></div><div class="side-ribs" aria-hidden="true"></div><div class="port port-usb" aria-hidden="true">♧</div><div class="port port-power" aria-hidden="true">ϟ</div>
-  <div class="bezel"><div class="screen"><iframe src="app.html?v=20261104-robot-plan43" title="ROBOplan iPad"></iframe></div></div>
+  <div class="bezel"><div class="screen"><iframe src="app.html?v=20261111-proposal-no-banner" title="ROBOplan iPad"></iframe></div></div>
+  <button type="button" class="case-emergency-stop" aria-label="Touchdisplay · inaktiv" title="Touchdisplay · inaktiv" disabled onclick="releaseJoystick();sendCaseAction('stop')"><span></span></button>
   <div class="case-grip"><div class="grip-bridge" aria-hidden="true"></div><div class="grip-handle" aria-hidden="true"></div><div class="grip-head">
     <div class="case-joystick" role="slider" tabindex="0" aria-label="Joystick Fahrsteuerung" aria-valuemin="-1" aria-valuemax="1" aria-valuenow="0" aria-valuetext="neutral"><div class="joystick-stick"></div></div>
-    <button class="grip-button grip-start" aria-label="Auftrag starten" onclick="sendCaseAction('resume')">▶</button><button class="grip-button grip-pause" aria-label="Auftrag pausieren" onclick="sendCaseAction('pause')">Ⅱ</button><div class="grip-wheel" aria-hidden="true"></div>
+    <button class="grip-button grip-start" aria-label="Taste 1" onclick="sendCaseAction('resume')">1</button><button class="grip-button grip-pause" aria-label="Taste 2" onclick="sendCaseAction('pause')">2</button><div class="grip-wheel" aria-hidden="true"></div>
   </div></div>
 </div>
 <script>
-function sendCaseAction(action){document.querySelector('iframe').contentWindow.postMessage({type:'roboplan-case-action',action},location.origin);}
+// Die Hülle ist fest; Touch-Scrollen findet ausschließlich in der separaten App statt.
+document.addEventListener('touchmove',event=>{
+  if(event.touches.length===1&&event.cancelable)event.preventDefault();
+},{passive:false});
+function sendCaseAction(action){document.querySelector('iframe').contentWindow.postMessage({type:'roboplan-case-action',action},location.origin==='null'?'*':location.origin);}
+const caseTouchscreen=document.querySelector('.case-emergency-stop');
+function updateCaseTouchscreen(manual){
+  caseTouchscreen.disabled=!manual;
+  caseTouchscreen.querySelector('span').textContent=manual?'Nothalt':'';
+  const label=manual?'Nothalt für ausgewählten Roboter (Demo)':'Touchdisplay · inaktiv';
+  caseTouchscreen.setAttribute('aria-label',label);caseTouchscreen.title=label;
+}
+window.addEventListener('message',event=>{
+  if(event.source!==document.querySelector('iframe').contentWindow||event.origin!==location.origin||event.data?.type!=='roboplan-case-state')return;
+  updateCaseTouchscreen(event.data.manual===true);
+});
+document.querySelector('iframe').addEventListener('load',()=>{
+  updateCaseTouchscreen(false);
+  document.querySelector('iframe').contentWindow.postMessage({type:'roboplan-case-state-request'},location.origin==='null'?'*':location.origin);
+});
 const joystick=document.querySelector('.case-joystick'),stick=joystick.querySelector('.joystick-stick');
-function sendDirection(direction){document.querySelector('iframe').contentWindow.postMessage({type:'roboplan-joystick',direction},location.origin);joystick.setAttribute('aria-valuetext',direction);}
+function sendDirection(direction){document.querySelector('iframe').contentWindow.postMessage({type:'roboplan-joystick',direction},location.origin==='null'?'*':location.origin);joystick.setAttribute('aria-valuetext',direction);}
 function releaseJoystick(){stick.style.transform='';joystick.setAttribute('aria-valuenow','0');sendDirection('neutral');}
 joystick.addEventListener('pointerdown',event=>{joystick.setPointerCapture(event.pointerId);moveJoystick(event);});
 function moveJoystick(event){if(!joystick.hasPointerCapture(event.pointerId))return;const box=joystick.getBoundingClientRect(),x=Math.max(-15,Math.min(15,event.clientX-box.left-box.width/2)),y=Math.max(-15,Math.min(15,event.clientY-box.top-box.height/2));stick.style.transform=`translate(${x}px,${y}px)`;joystick.setAttribute('aria-valuenow',String(Math.round(-y/15)));sendDirection(Math.abs(x)<4&&Math.abs(y)<4?'neutral':Math.abs(x)>Math.abs(y)?(x>0?'Rechts':'Links'):(y>0?'Rückwärts':'Vorwärts'));}

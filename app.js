@@ -1,3 +1,42 @@
+// Lokale Benutzereinstellungen; das Demo-Konto hat keine Server-Anmeldung.
+const userAccountStorageKey='roboplan-user-settings-v1';
+const userAccountDefaults={name:'Hans Admin',business:'Hof Grünpark',email:'',startPage:'home',reduceMotion:false};
+function readUserAccount(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(userAccountStorageKey)||'{}')||{};
+    return {name:typeof saved.name==='string'&&saved.name.trim()?saved.name.trim().slice(0,80):userAccountDefaults.name,business:typeof saved.business==='string'?saved.business.slice(0,120):userAccountDefaults.business,email:typeof saved.email==='string'?saved.email.slice(0,160):'',startPage:['home','ackerschlagskarte','roboterverwaltung','auftragsverwaltung'].includes(saved.startPage)?saved.startPage:'home',reduceMotion:saved.reduceMotion===true};
+  }catch{return {...userAccountDefaults};}
+}
+let userAccount=readUserAccount(),userDemoSignedOut=false;
+// Rollen und weitere Profile sind lokale Demo-Daten; aktuell ist Hans Admin angemeldet.
+const managedUsersStorageKey='roboplan-managed-users-v1';
+const currentManagedUserId='hans-admin';
+const managedUserRoles={
+  admin:{label:'Admin',access:'Alle Arbeitsbereiche und Benutzerrollen verwalten',permissions:['overview','robots','fields','createTasks','dispatch','manageUsers']},
+  helper:{label:'Hilfsarbeiter',access:'Nur Übersicht und Roboter',permissions:['overview','robots']},
+  office:{label:'Bürokraft',access:'Nur Aufgaben anlegen',permissions:['createTasks']},
+  full:{label:'Vollbenutzer',access:'Alle Arbeitsbereiche, ohne Benutzerverwaltung',permissions:['overview','robots','fields','createTasks','dispatch']}
+};
+const defaultManagedUsers=[
+  {id:'hans-admin',name:'Hans Admin',email:userAccount.email,role:'admin'},
+  {id:'otto-hilfsarbeiter',name:'Otto Hilfsarbeiter',email:'',role:'helper'},
+  {id:'frank-buerokraft',name:'Frank Bürokraft',email:'',role:'office'},
+  {id:'anna-vollbenutzer',name:'Anna Vollbenutzer',email:'',role:'full'}
+];
+function readManagedUsers(){
+  const users=new Map(defaultManagedUsers.map(user=>[user.id,{...user}]));
+  try{
+    const saved=JSON.parse(localStorage.getItem(managedUsersStorageKey)||'[]');
+    if(Array.isArray(saved))saved.slice(0,100).forEach(user=>{
+      if(!user||typeof user.id!=='string'||!(/^[a-z0-9-]{1,80}$/).test(user.id)||typeof user.name!=='string'||!user.name.trim()||!Object.hasOwn(managedUserRoles,user.role))return;
+      users.set(user.id,{id:user.id,name:user.name.trim().slice(0,80),email:typeof user.email==='string'?user.email.slice(0,160):'',role:user.id===currentManagedUserId?'admin':user.role});
+    });
+  }catch{}
+  return [...users.values()];
+}
+let managedUsers=readManagedUsers();
+userAccount={...userAccount,name:managedUsers[0].name,email:managedUsers[0].email};
+
 // Gemeinsame Kartendaten, Darstellung und Interaktionen.
 const taskPriorities={immediate:{label:'Sofort',time:'So bald wie möglich'},week:{label:'Zeitnah',time:'Innerhalb einer Woche'},month:{label:'Geplant',time:'Innerhalb von vier Wochen'},flexible:{label:'Flexibel',time:'Ohne Zeitvorgabe'}};
 function priorityBadge(task){const key=Object.hasOwn(taskPriorities,task.priority)?task.priority:'flexible';const p=taskPriorities[key];return `<span class="priority-badge priority-${key}" title="${p.time}"><i aria-hidden="true"></i>${p.label} · ${p.time}</span>`;}
@@ -283,6 +322,7 @@ overview.insertAdjacentHTML('afterbegin',landscape(0));
 }
 );
 const alertCounts={error:data.filter(robot=>robot.alert?.severity==='error').length,warning:data.filter(robot=>robot.alert?.severity==='warning').length,ok:data.filter(robot=>!robot.alert).length};
+document.getElementById('header-alerts').innerHTML=[['error','Fehler'],['warning','Warnungen'],['ok','OK']].map(([kind,label])=>`<span class="fleet-alert-${kind}" title="${alertCounts[kind]} ${label}" aria-label="${alertCounts[kind]} ${label}"><i aria-hidden="true"></i><b aria-hidden="true">${alertCounts[kind]}</b></span>`).join('');
 document.getElementById('overview-alerts').innerHTML=`<button type="button" class="fleet-alert-error" data-robot-filter="error" aria-pressed="false" onclick="filterOverviewRobots('error')"><i aria-hidden="true"></i>${alertCounts.error} Fehler</button><button type="button" class="fleet-alert-warning" data-robot-filter="warning" aria-pressed="false" onclick="filterOverviewRobots('warning')"><i aria-hidden="true"></i>${alertCounts.warning} Warnung${alertCounts.warning===1?'':'en'}</button><button type="button" class="fleet-alert-ok" data-robot-filter="ok" aria-pressed="false" onclick="filterOverviewRobots('ok')"><i aria-hidden="true"></i>${alertCounts.ok} OK</button>`;
 function filterOverviewRobots(severity){
   if(!['error','warning','ok'].includes(severity))return;
@@ -349,6 +389,35 @@ document.getElementById('field-list').innerHTML=fields.map(f=>`<details class="f
     <div class="field-activity"><h4>Aktuell auf der Fläche</h4>${f.robots.length?f.robots.map(id=>`<div class="field-active-robot"><strong><i class="dot"></i>Roboter ${id}</strong><span>${f.task==='Hacken'?'Hacke':'Striegel'} · ${f.task}</span></div>`).join(''):'<p>Keine Roboter im Einsatz</p>'}</div>
   </div>
 </details>`).join('');
+function normalizeListSearch(value){return value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('de').replace(/ß/g,'ss').replace(/[–—−]/g,'-').replace(/\s+/g,' ').trim();}
+function matchesListSearch(text,query){const normalized=normalizeListSearch(text);return normalizeListSearch(query).split(' ').every(term=>normalized.includes(term));}
+function filterFieldList(){
+  const query=document.getElementById('field-search').value;
+  let visible=0;
+  fields.forEach(field=>{
+    const card=document.getElementById('field-card-'+field.id);
+    const matches=matchesListSearch(`${field.name} ${field.crop} ${field.area} ${fieldPlanning[field.id].next}`,query);
+    card.hidden=!matches;if(matches)visible++;
+  });
+  document.getElementById('field-search-empty').hidden=visible>0;
+  document.getElementById('field-customer-count').textContent=normalizeListSearch(query)?`${visible} von ${fields.length} Schlägen`:`${fields.length} Schläge`;
+}
+function sortFieldList(){
+  const list=document.getElementById('field-list');
+  const criterion=document.getElementById('field-sort').value;
+  const compareText=(a,b)=>a.localeCompare(b,'de',{numeric:true,sensitivity:'base'});
+  const sorted=[...fields].sort((a,b)=>{
+    let comparison=0;
+    if(criterion==='next')comparison=compareText(fieldPlanning[a.id].next,fieldPlanning[b.id].next);
+    else if(criterion==='crop')comparison=compareText(a.crop,b.crop);
+    else if(criterion==='area')comparison=parseFloat(b.area.replace(',','.'))-parseFloat(a.area.replace(',','.'));
+    else comparison=compareText(a.name,b.name);
+    return comparison||compareText(a.name,b.name)||a.id-b.id;
+  });
+  // Vorhandene Karten verschieben, damit Auswahl und aufgeklappte Einträge erhalten bleiben.
+  sorted.forEach(field=>list.append(document.getElementById('field-card-'+field.id)));
+}
+sortFieldList();
 document.getElementById('field-map-content').innerHTML=landscape('fields');
 function highlightField(id) {
   document.querySelectorAll('.field-shape').forEach(el=> {
@@ -360,6 +429,7 @@ function highlightField(id) {
   document.querySelectorAll('.field-card').forEach(el=>el.classList.toggle('selected',el.id==='field-card-'+id));
  }
 function selectField(id) {
+  if(document.getElementById('field-card-'+id).hidden){document.getElementById('field-search').value='';filterFieldList();}
   highlightField(id);
   document.getElementById('field-card-'+id).open=true;
   document.getElementById('field-card-'+id).scrollIntoView( {
@@ -391,25 +461,31 @@ document.querySelectorAll('.field-shape').forEach(el=> {
 }
 );
 function route()  {
-  const requested = location.hash.slice(1) || 'home';
+  const requested = location.hash.slice(1) || userAccount.startPage;
+  const accountMatch=requested.match(/^konto-(profil|einstellungen|benutzerverwaltung|logout)$/);
   const detailMatch=requested.match(/^aufgabe-(\d+)$/);
   const robotMatch=requested.match(/^roboter-(\d+)$/);
   const robotPlanMatch=requested.match(/^roboter-plan-(\d+)$/);
-  const page = robotPlanMatch?'robotereinsatz':robotMatch?'roboterdetail':detailMatch?'aufgabendetail':['home', 'wetter', 'fehler', 'ackerschlagskarte', 'roboterverwaltung', 'auftragsverwaltung', 'arbeitsspeicher'].includes(requested) ? requested : 'home';
+  const page = userDemoSignedOut||accountMatch?'benutzerkonto':robotPlanMatch?'robotereinsatz':robotMatch?'roboterdetail':detailMatch?'aufgabendetail':['home', 'wetter', 'fehler', 'ackerschlagskarte', 'roboterverwaltung', 'auftragsverwaltung', 'arbeitsspeicher'].includes(requested) ? requested : 'home';
+  const area=page==='benutzerkonto'?'account':page==='wetter'?'home':['roboterdetail','robotereinsatz','fehler'].includes(page)?'roboterverwaltung':['arbeitsspeicher','aufgabendetail'].includes(page)?'auftragsverwaltung':page;
+  document.body.dataset.area=area;
   const sections =  {
-    robotereinsatz:'robotereinsatz', home: 'home', wetter: 'wetter', fehler: 'fehler', ackerschlagskarte: 'fields', roboterverwaltung: 'roboterverwaltung', auftragsverwaltung: 'auftragsverwaltung', arbeitsspeicher: 'arbeitsspeicher', aufgabendetail: 'aufgabendetail', roboterdetail: 'roboterdetail'
+    benutzerkonto:'benutzerkonto', robotereinsatz:'robotereinsatz', home: 'home', wetter: 'wetter', fehler: 'fehler', ackerschlagskarte: 'fields', roboterverwaltung: 'roboterverwaltung', auftragsverwaltung: 'auftragsverwaltung', arbeitsspeicher: 'arbeitsspeicher', aufgabendetail: 'aufgabendetail', roboterdetail: 'roboterdetail'
   }
   ;
   if(robotPlanMatch&&window.robotProfileReady)renderRobotPlan(Number(robotPlanMatch[1]));
   if(robotMatch&&window.robotProfileReady)renderRobotProfile(Number(robotMatch[1]));
   if(page==='wetter')renderOverviewWeather();
   if(page==='fehler')renderFaultOverview();
+  if(page==='benutzerkonto')renderUserAccountPage(accountMatch?.[1]||'logout');
+  closeUserMenu();
   Object.entries(sections).forEach(([name, id]) =>  {
     document.getElementById(id).hidden = name !== page;
   }
   );
+  if(window.robotProfileReady)syncCaseTouchscreen();
   document.querySelectorAll('nav a').forEach(link =>  {
-    const active = link.dataset.page === (page==='wetter'?'home':['roboterdetail','robotereinsatz','fehler'].includes(page)?'roboterverwaltung':['arbeitsspeicher','aufgabendetail'].includes(page)?'auftragsverwaltung':page);
+    const active = link.dataset.page === area;
     link.classList.toggle('active', active);
     if (active) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
@@ -443,7 +519,7 @@ function enableMap(container) {
   container.append(expand);
   const [plus,minus,reset]=controls.children;
   let scale=1,x=0,y=0,drag=null,suppressClick=false;
-  const proportional = container.id === 'overview' || container.id === 'dispatch-map' || container.id === 'task-route-map' || container.id === 'record-map' || container.id === 'task-overview-map' || container.id === 'robot-profile-map' || container.id === 'robot-plan-map';
+  const proportional = container.id === 'overview' || container.id === 'dispatch-map' || container.id === 'task-route-map' || container.id === 'record-map' || container.id === 'task-overview-map' || container.id === 'robot-profile-map' || container.id === 'robot-plan-map' || container.classList.contains('fleet-robot-map');
   let aspect=Number(container.dataset.aspect) || 1040/900;
   let mapWidth=0,mapHeight=0,offsetX=0,offsetY=0;
   function render() {
@@ -556,35 +632,84 @@ function enableMap(container) {
 }
 document.querySelectorAll('#overview,.field-map').forEach(enableMap);
 
+// Flottenmanagement: gemeinsame Roboterdaten, ergänzte Demo-Betriebszustände.
+const fleetOperatingStates={1:{kind:'error',label:'Fehler',detail:'Festgefahren · Eingriff nötig'},5:{kind:'maintenance',label:'Wartung',detail:'Inspektion auf dem Hof'},6:{kind:'setup',label:'Rüstzeit',detail:'Sämaschine anbauen'}};
+const fleetImplements=[
+  {id:'AG–001',name:'HORSCH Terrano 3 FX · 1',type:'Universalgrubber',width:'3,0 m',depth:'5–30 cm',work:'Flach grubbern · Tief grubbern'},
+  {id:'AG–004',name:'HORSCH Terrano 3 FX · 2',type:'Universalgrubber',width:'3,0 m',depth:'5–30 cm',work:'Flach grubbern · Tief grubbern'},
+  {id:'AG–005',name:'Einböck TAIFUN 500',type:'Federzinken-Leichtgrubber',width:'5,0 m',depth:'Bis 15 cm · abhängig von Scharen und Boden',work:'Flach grubbern · Saatbettbereitung'},
+  {id:'AG–006',name:'LEMKEN Smaragd 9/300',type:'Grubber',width:'3,0 m',depth:'Mechanisch einstellbar · flacher Einsatz vorgesehen',work:'Flach grubbern'},
+  {id:'AG–002',name:'LEMKEN Saphir 9/300',type:'Drillmaschine',width:'3,0 m',depthLabel:'Saatgut-Ablagetiefe',depth:'Über Schardruck und Tiefenführung einstellbar',work:'Säen / Drillen'},
+  {id:'AG–007',name:'AMAZONE Cataya 3000 Super',type:'Drillmaschine',width:'3,0 m',depthLabel:'Saatgut-Ablagetiefe',depth:'0–6 cm · mit TwinTeC special',configuration:'TwinTeC special-Doppelscheibenschare',work:'Säen / Drillen'},
+  {id:'AG–008',name:'AMAZONE Cirrus 6003-2',type:'Drillmaschine',width:'6,0 m',depthLabel:'Saatgut-Ablagetiefe',depth:'Zentral einstellbar · abhängig von der Scharausstattung',work:'Säen / Drillen'},
+  {id:'AG–009',name:'TREFFLER TS 620 M3',type:'Striegel',width:'6,20 m',depth:'Einstellungs- und bodenabhängig',configuration:'Präzisions-Zinkenstriegel · Eingriff über Zinkendruck und Stützräder',work:'Striegeln'},
+  {id:'AG–010',name:'Einböck CHOPSTAR-TWIN',type:'Hackgerät',width:null,depth:'Stufenlos über Tastrad und Kurbel einstellbar',work:'Hacken'},
+  {id:'AG–003',name:'Einböck CHOPSTAR-ONE',type:'Hackgerät',width:null,depth:'Stufenlos über Tastrad und Kurbel einstellbar',work:'Hacken'}
+];
+// Aktuell angebaute Geräte; geplante Aufgaben ändern den Ist-Zustand nicht.
+const fleetMountedImplements={1:'AG–003',4:'AG–002',5:null,6:null};
+
 // Disposition: lokale, bearbeitbare Zeitplanung mit beispielhaften Dauern.
 const dispatchTasks = [
-  {id:1,field:2,operation:'Grubbern flach',speed:14,depth:5,robot:5},
+  {id:1,field:2,operation:'Grubbern flach',speed:14,depth:5,robot:5,implementId:'AG–001'},
   {id:2,field:7,operation:'Grubbern tief',speed:12,depth:20,priority:'week',robot:null},
-  {id:3,field:3,operation:'Säen',robot:6},
+  {id:3,field:3,operation:'Säen',robot:6,implementId:'AG–007'},
   {id:4,field:8,operation:'Säen',priority:'month',robot:null},
-  {id:5,field:1,operation:'Hacken',robot:2},
-  {id:6,field:4,operation:'Hacken',robot:2}
+  {id:5,field:1,operation:'Hacken',robot:2,implementId:'integrated'},
+  {id:6,field:4,operation:'Hacken',robot:2,implementId:'integrated'}
 ];
 const dispatchRobots=fleetVehicles;
-const dispatchDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+let dispatchDate=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 let planAccepted=false,selectedDispatchRobot=5,selectedDispatchTask=null,scheduleOffset=360,scheduleSpan=720;
+const scheduleTotalMinutes=4320;
+let scheduleScrollFrame=0;
+let planProposalSnapshot=null,committedDispatchPlan=null,planDragState=null,planDragFrame=0,planClickBlockedUntil=0,planEditUndo=null;
+const dispatchPlanStorageKey='roboplan-dispatch-plan-v1';
 const dispatchEquipment=task=>task.operation.startsWith('Grubbern')?'Grubber':task.operation==='Säen'?'Drillmaschine':task.operation==='Striegeln'?'Striegel':'Hacke';
 const dispatchType=task=>task.operation.startsWith('Grubbern')?'tillage':task.operation==='Säen'?'seed':'hoe';
 const compatibleRobots=task=>dispatchRobots.filter(r=>!r.fixed||r.fixed===dispatchEquipment(task));
+function dispatchTaskToolName(task){return task.implementId==='integrated'?'Integrierte Hackeinheit':fleetImplements.find(tool=>tool.id===task.implementId)?.name||dispatchEquipment(task);}
+function dispatchTaskEquipmentKey(task){return task.implementId==='integrated'?'integrated-'+task.robot:task.implementId||dispatchEquipment(task);}
+function compatibleTaskImplements(task){
+  return fleetImplements.filter(tool=>task.operation.startsWith('Grubbern')?tool.type.toLowerCase().includes('grubber')&&(!task.operation.includes('tief')||/tief/i.test(tool.work)):task.operation==='Säen'?tool.type==='Drillmaschine':task.operation==='Striegeln'?tool.type==='Striegel':task.operation==='Hacken'&&tool.type==='Hackgerät');
+}
+function taskImplementConflict(task,robotId,implementId,tasks=dispatchTasks){
+  if(implementId==='integrated')return '';
+  const mounted=dispatchRobots.find(robot=>robot.id!==robotId&&fleetMountedImplements[robot.id]===implementId);
+  if(mounted)return 'An '+robotShortName(mounted.id)+' angebaut';
+  const reserved=tasks.find(job=>job.id!==task.id&&job.robot&&job.robot!==robotId&&job.implementId===implementId);
+  return reserved?'Für '+robotShortName(reserved.robot)+' eingeplant':'';
+}
+function validTaskCombination(task,robotId,implementId,tasks=dispatchTasks){
+  const robot=compatibleRobots(task).find(r=>r.id===robotId);if(!robot)return false;
+  if(robot.fixed)return implementId==='integrated'&&task.operation==='Hacken';
+  return compatibleTaskImplements(task).some(tool=>tool.id===implementId)&&!taskImplementConflict(task,robotId,implementId,tasks);
+}
+function preferredTaskImplement(task,robotId){
+  const robot=compatibleRobots(task).find(r=>r.id===robotId);if(!robot)return null;
+  if(robot.fixed)return 'integrated';
+  return [task.implementId,fleetMountedImplements[robotId],...compatibleTaskImplements(task).map(tool=>tool.id)].find(id=>id&&validTaskCombination(task,robotId,id))||null;
+}
+function activeTaskCombinations(task){
+  return compatibleRobots(task).filter(robot=>{const state=data.find(r=>r.id===robot.id);return !state.atFarm&&state.alert?.severity!=='error';}).map(robot=>({robot,implementId:robot.fixed?'integrated':fleetMountedImplements[robot.id]})).filter(unit=>unit.implementId&&validTaskCombination(task,unit.robot.id,unit.implementId));
+}
+
 const dispatchDuration=task=>{const type=dispatchType(task),referenceSpeed={tillage:12,seed:10,hoe:5}[type],speed=Number(task.speed)>0?Number(task.speed):referenceSpeed;return Math.max(45,Math.round(parseFloat(fields.find(f=>f.id===task.field).area.replace(',','.'))*({tillage:17,seed:22,hoe:24}[type])*referenceSpeed/speed/5)*5);};
 const minuteClock=m=>String(Math.floor((m%1440)/60)).padStart(2,'0')+':'+String(Math.floor(m%60)).padStart(2,'0');
 const durationLabel=m=>m>=60?`${Math.floor(m/60)} h${m%60?' '+m%60+' min':''}`:m+' min';
 function dispatchDay(day){const d=new Date(dispatchDate+'T12:00:00');d.setDate(d.getDate()+day);return new Intl.DateTimeFormat('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'}).format(d);}
 function datedTime(m){return dispatchDay(Math.floor(m/1440))+' · '+minuteClock(m);}
 function markPlanDraft(message='Entwurf geändert · Bitte erneut übernehmen'){
+  clearPlanEditUndo();
   planAccepted=false;document.getElementById('plan-status').textContent=message;
-  const button=document.getElementById('accept-plan');button.textContent='Einsatzplan übernehmen';button.disabled=false;
+  syncDispatchPlanControls();
 }
 // Road network follows the roads and field entrances shown in the farm map.
 const roadNodes={hof:[230,795],a:[285,720],b:[320,660],c:[350,600],d:[385,495],e:[435,455],f:[510,370],g:[585,300],h:[680,225],i:[735,190],j:[865,157],west:[200,330],westGate:[175,322],south:[510,635],south2:[635,650],south3:[755,685],gate4:[342,477],gate5:[435,505],gate7:[390,657],gate8:[405,354]};
 const roadEdges=[['hof','a'],['a','b'],['b','c'],['c','d'],['d','e'],['e','f'],['f','g'],['g','h'],['h','i'],['i','j'],['e','west'],['west','westGate'],['c','south'],['south','south2'],['south2','south3'],['d','gate4'],['e','gate5'],['c','gate7'],['e','gate8']];
 const fieldRoadNodes={1:'westGate',2:'i',3:'h',4:'gate4',5:'gate5',6:'south3',7:'gate7',8:'gate8'};
 function roadRoute(fromField,toField){
+  if(fromField&&fromField===toField)return {points:[fields.find(field=>field.id===toField).entry],km:0,minutes:0};
   const start=fromField?fieldRoadNodes[fromField]:'hof',target=fieldRoadNodes[toField],dist={},prev={},queue=new Set(Object.keys(roadNodes));
   Object.keys(roadNodes).forEach(k=>dist[k]=Infinity);dist[start]=0;
   while(queue.size){const node=[...queue].reduce((a,b)=>dist[a]<dist[b]?a:b);queue.delete(node);if(node===target)break;
@@ -597,18 +722,18 @@ function roadRoute(fromField,toField){
   const km=points.reduce((sum,p,i)=>i?sum+Math.hypot(p[0]-points[i-1][0],p[1]-points[i-1][1])*.004:0,0);
   return {points,km,minutes:Math.max(5,Math.ceil(km/18*60/5)*5)};
 }
-function buildRobotSchedule(robot){
-  const tasks=dispatchTasks.filter(t=>t.robot===robot.id),segments=[];let cursor=480+(robot.id===2?45:0),previousField=null,equipment=robot.fixed||null;
+function buildRobotSchedule(robot,tasks=dispatchTasks.filter(t=>t.robot===robot.id)){
+  const segments=[],startingField=fields.find(field=>field.robots.includes(robot.id));let cursor=480+(robot.id===2?45:0),previousField=startingField?.id||null,previousDepth=null,equipment=robot.fixed?'integrated-'+robot.id:fleetMountedImplements[robot.id]||null;
   tasks.forEach(task=>{
-    const tool=dispatchEquipment(task);
+    const tool=dispatchTaskEquipmentKey(task);
     if(equipment!==tool){
       if(previousField){const route=roadRoute(null,previousField);segments.push({kind:'drive',start:cursor,duration:route.minutes,task,label:'Zum Hof · Gerätewechsel',route:{...route,points:[...route.points].reverse()}});cursor+=route.minutes;previousField=null;}
-      segments.push({kind:'setup',start:cursor,duration:30,task,label:tool+' anbauen'});cursor+=30;equipment=tool;
-    }else if(task.operation.startsWith('Grubbern')&&segments.some(s=>s.kind==='work'&&s.task.depth!==task.depth)){
+      segments.push({kind:'setup',start:cursor,duration:30,task,label:dispatchTaskToolName(task)+' anbauen'});cursor+=30;equipment=tool;previousDepth=null;
+    }else if(task.operation.startsWith('Grubbern')&&previousDepth!==null&&previousDepth!==task.depth){
       segments.push({kind:'setup',start:cursor,duration:10,task,label:'Arbeitstiefe einstellen'});cursor+=10;
     }
-    const route=roadRoute(previousField,task.field);segments.push({kind:'drive',start:cursor,duration:route.minutes,task,label:'Straßenfahrt',route});cursor+=route.minutes;
-    const duration=dispatchDuration(task);segments.push({kind:'work',start:cursor,duration,task,label:fields.find(f=>f.id===task.field).name});cursor+=duration;previousField=task.field;
+    const route=roadRoute(previousField,task.field);if(route.minutes)segments.push({kind:'drive',start:cursor,duration:route.minutes,task,label:'Straßenfahrt',route});cursor+=route.minutes;
+    const duration=dispatchDuration(task);segments.push({kind:'work',start:cursor,duration,task,label:fields.find(f=>f.id===task.field).name});cursor+=duration;previousField=task.field;previousDepth=task.operation.startsWith('Grubbern')?task.depth??null:null;
   });
   return {robot,tasks,segments,end:cursor};
 }
@@ -638,7 +763,7 @@ function renderStoredTasks(){
   document.getElementById('dispatch-tasks').innerHTML=pending.length?pending.map(t=>{
     const f=fields.find(f=>f.id===t.field),due=taskDeadline(t);
     const dueLabel=due?new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(due+'T12:00:00')):'Ohne Ablaufdatum';
-    return `<tr class="task-overview-row" onclick="if(!event.target.closest('select,button,a,input'))openTaskOverview(${t.id})"><td><button class="task-open-link" onclick="openTaskOverview(${t.id})">${f.name} ↗</button><small>${f.area}${t.crop?' · '+t.crop:''}</small></td><td><button class="storage-operation task-open-link" onclick="openTaskOverview(${t.id})"><i class="task-type-dot ${dispatchType(t)}"></i>${t.operation}</button><small>${t.depth?t.depth+' cm Tiefe':t.seedRate?t.seedRate.toLocaleString('de-DE')+' Körner/ha':''}</small></td><td class="storage-duration">${durationLabel(dispatchDuration(t))}</td><td>${due?`<time datetime="${due}">${dueLabel}</time>`:`<span class="no-deadline">${dueLabel}</span>`}${priorityBadge(t)}</td><td><select aria-label="Roboter für ${f.name}" onchange="assignDispatchTask(${t.id},Number(this.value))"><option value="">Roboter wählen …</option>${compatibleRobots(t).map(r=>`<option value="${r.id}">${robotDisplayName(r.id)} · ${r.type}</option>`).join('')}</select></td></tr>`;
+    return `<tr class="task-overview-row" onclick="if(!event.target.closest('select,button,a,input'))openTaskOverview(${t.id})"><td><button class="task-open-link" onclick="openTaskOverview(${t.id})">${f.name} ↗</button><small>${f.area}${t.crop?' · '+t.crop:''}</small></td><td><button class="storage-operation task-open-link" onclick="openTaskOverview(${t.id})"><i class="task-type-dot ${dispatchType(t)}"></i>${t.operation}</button><small>${t.depth?t.depth+' cm Tiefe':t.seedRate?t.seedRate.toLocaleString('de-DE')+' Körner/ha':''}</small></td><td class="storage-duration">${durationLabel(dispatchDuration(t))}</td><td>${due?`<time datetime="${due}">${dueLabel}</time>`:`<span class="no-deadline">${dueLabel}</span>`}${priorityBadge(t)}</td><td><button class="storage-assign-button" type="button" onclick="openTaskOverview(${t.id})">Details & zuweisen →</button></td></tr>`;
   }).join(''):(all.length?`<tr><td colspan="5"><div class="storage-empty"><strong>Keine offenen Aufgaben für ${storageTaskFilter}</strong><p>Wähle eine andere Arbeitsart oder zeige alle Aufgaben an.</p><button class="suggest-button" onclick="setStorageFilter('Alle')">Alle Aufgaben anzeigen</button></div></td></tr>`:'<tr><td colspan="5"><div class="storage-empty"><strong>Alles eingeplant ✓</strong><p>Keine offenen Aufgaben im Arbeitsspeicher.</p><a href="#auftragsverwaltung">Zurück zur Disposition →</a></div></td></tr>');
 }
 function renderDispatch(){
@@ -648,32 +773,70 @@ function renderDispatch(){
   document.getElementById('buffer-area').textContent=pending.reduce((sum,t)=>sum+parseFloat(fields.find(f=>f.id===t.field).area.replace(',','.')),0).toFixed(1).replace('.',',')+' ha noch zuzuweisen';
   renderStoredTasks();
   renderSchedule();renderDispatchRobot();
-  document.getElementById('accept-plan').disabled=planAccepted||!dispatchTasks.some(t=>t.robot);
+  syncDispatchPlanControls();
 }
 function renderSchedule(){
-  const end=scheduleOffset+scheduleSpan;
-  document.getElementById('schedule-slider').max=4320-scheduleSpan;
-  document.getElementById('schedule-slider').value=scheduleOffset;
-  document.getElementById('schedule-window').textContent=minuteClock(scheduleOffset)+'–'+minuteClock(end);
-  document.getElementById('schedule-date-caption').textContent=dispatchDay(Math.floor(scheduleOffset/1440))+(Math.floor((end-1)/1440)>Math.floor(scheduleOffset/1440)?' → '+dispatchDay(Math.floor((end-1)/1440)):'');
-  document.getElementById('schedule-days').innerHTML=[0,1,2].map(d=>`<button class="${Math.floor(scheduleOffset/1440)===d?'selected':''}" onclick="seekSchedule(${d*1440+360})">${d===0?'Heute · ':''}${dispatchDay(d)}</button>`).join('');
+  scheduleOffset=Math.max(0,Math.min(scheduleTotalMinutes-scheduleSpan,scheduleOffset));
+  document.getElementById('schedule-days').innerHTML=[0,1,2].map(d=>`<button data-schedule-day="${d}" onclick="seekSchedule(${d*1440+360})">${d===0?'Heute · ':''}${dispatchDay(d)}</button>`).join('');
   const tickStep=scheduleSpan>720?240:120,ticks=[];
-  for(let t=Math.ceil(scheduleOffset/tickStep)*tickStep;t<end;t+=tickStep)ticks.push(`<span style="left:${(t-scheduleOffset)/scheduleSpan*100}%">${minuteClock(t)}${t%1440===0?'<small>'+dispatchDay(t/1440)+'</small>':''}</span>`);
+  for(let t=0;t<scheduleTotalMinutes;t+=tickStep)ticks.push(`<span style="left:${t/scheduleTotalMinutes*100}%">${minuteClock(t)}${t%1440===0?'<small>'+dispatchDay(t/1440)+'</small>':''}</span>`);
   document.getElementById('schedule-ticks').innerHTML=ticks.join('');
   document.getElementById('robot-plans').innerHTML=[...dispatchRobots].sort((a,b)=>Number(dispatchTasks.some(t=>t.robot===b.id))-Number(dispatchTasks.some(t=>t.robot===a.id))||a.id-b.id).map(robot=>{
     const schedule=buildRobotSchedule(robot),jobs=schedule.tasks.length;
-    const blocks=schedule.segments.filter(s=>s.start<end&&s.start+s.duration>scheduleOffset).map(s=>{const work=s.kind==='work',type=work?dispatchType(s.task):s.kind;return `<button class="time-block block-${type} ${selectedDispatchTask===s.task.id?'selected-task':''}" style="left:${(s.start-scheduleOffset)/scheduleSpan*100}%;width:${s.duration/scheduleSpan*100}%" title="${s.label} · ${minuteClock(s.start)}–${minuteClock(s.start+s.duration)} · ${durationLabel(s.duration)}" aria-label="${robotDisplayName(robot.id)}: ${s.label}, ${minuteClock(s.start)} bis ${minuteClock(s.start+s.duration)}, ${durationLabel(s.duration)}" onclick="openTaskOverview(${s.task.id})"><strong>${work?s.label:s.kind==='setup'?'Rüsten':'↗ Fahrt'}</strong>${work?'<span>'+s.task.operation+' · '+durationLabel(s.duration)+'</span>':''}</button>`;}).join('');
-    return `<div class="timeline-row ${selectedDispatchRobot===robot.id?'selected':''}"><button class="timeline-robot-label" onclick="selectDispatchRobot(${robot.id})" aria-pressed="${selectedDispatchRobot===robot.id}"><strong><i style="background:${data.find(r=>r.id===robot.id).color}"></i>${robotShortName(robot.id)}</strong><small>${robot.type} · ${jobs} ${jobs===1?'Aufgabe':'Aufgaben'}</small></button><div class="timeline-lane">${blocks||'<span class="timeline-idle">'+(jobs?'Keine Einsätze in diesem Zeitfenster':'Bereit für Aufgaben')+'</span>'}</div></div>`;
+    const blocks=schedule.segments.filter(s=>s.start<scheduleTotalMinutes&&s.start+s.duration>0).map(s=>{const work=s.kind==='work',type=work?dispatchType(s.task):s.kind;return `<button class="time-block block-${type} ${selectedDispatchTask===s.task.id?'selected-task':''}" ${work?`draggable="true" aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight Alt+ArrowUp Alt+ArrowDown Alt+Backspace Delete" data-drag-task="${s.task.id}" data-drag-robot="${robot.id}"`:''} style="left:${s.start/scheduleTotalMinutes*100}%;width:${s.duration/scheduleTotalMinutes*100}%" title="${s.label} · ${minuteClock(s.start)}–${minuteClock(s.start+s.duration)} · ${durationLabel(s.duration)}" aria-label="${robotDisplayName(robot.id)}: ${s.label}, ${minuteClock(s.start)} bis ${minuteClock(s.start+s.duration)}, ${durationLabel(s.duration)}" onclick="openTaskOverview(${s.task.id})"><strong>${work?s.label:s.kind==='setup'?'Rüsten':'↗ Fahrt'}</strong>${work?'<span>'+s.task.operation+' · '+durationLabel(s.duration)+'</span><span class="task-drag-handle" title="Aufgabe ziehen · Alt + Pfeiltasten zum Verschieben" aria-hidden="true">⠿</span>':''}</button>`;}).join('');
+    return `<div class="timeline-row ${selectedDispatchRobot===robot.id?'selected':''}" data-drop-robot="${robot.id}"><button class="timeline-robot-label" onclick="selectDispatchRobot(${robot.id})" aria-pressed="${selectedDispatchRobot===robot.id}"><strong><i style="background:${data.find(r=>r.id===robot.id).color}"></i>${robotShortName(robot.id)}</strong><small>${robot.type} · ${jobs} ${jobs===1?'Aufgabe':'Aufgaben'}</small></button><div class="timeline-lane">${blocks||'<span class="timeline-idle">'+(jobs?'Keine Einsätze im Planungszeitraum':'Bereit für Aufgaben')+'</span>'}</div></div>`;
   }).join('');
+  document.getElementById('schedule-viewport').style.setProperty('--schedule-grid-step',tickStep/scheduleTotalMinutes*100+'%');
+  resizeScheduleViewport();updateScheduleChrome();
 }
 function selectDispatchRobot(id,task=null){selectedDispatchRobot=id;selectedDispatchTask=task;renderSchedule();renderDispatchRobot();}
 function selectDispatchField(id){const task=dispatchTasks.find(t=>t.field===id&&t.robot===selectedDispatchRobot)||dispatchTasks.find(t=>t.field===id&&t.robot);if(task)selectDispatchRobot(task.robot,task.id);}
-function seekSchedule(offset){scheduleOffset=Math.max(0,Math.min(4320-scheduleSpan,offset));renderSchedule();}
-function assignDispatchTask(id,robot){
-  const task=dispatchTasks.find(t=>t.id===id);if(!task)return;
-  if(robot&&!compatibleRobots(task).some(r=>r.id===robot))return;
-  task.robot=robot||null;selectedDispatchRobot=robot||selectedDispatchRobot;selectedDispatchTask=robot?id:null;
-  markPlanDraft('Entwurf geändert · Zeiten wurden neu berechnet');renderDispatch();
+function updateScheduleChrome(){
+  const end=scheduleOffset+scheduleSpan;
+  document.getElementById('schedule-slider').max=scheduleTotalMinutes-scheduleSpan;
+  document.getElementById('schedule-slider').value=scheduleOffset;
+  document.getElementById('schedule-window').textContent=minuteClock(scheduleOffset)+'–'+minuteClock(end);
+  document.getElementById('schedule-date-caption').textContent=dispatchDay(Math.floor(scheduleOffset/1440))+(Math.floor((end-1)/1440)>Math.floor(scheduleOffset/1440)?' → '+dispatchDay(Math.floor((end-1)/1440)):'');
+  document.querySelectorAll('#schedule-days [data-schedule-day]').forEach(button=>{
+    const selected=Number(button.dataset.scheduleDay)===Math.floor(scheduleOffset/1440);
+    button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected));
+  });
+}
+function resizeScheduleViewport(){
+  const viewport=document.getElementById('schedule-viewport');
+  if(!viewport.clientWidth)return;
+  const labelWidth=viewport.querySelector('.schedule-axis>span').getBoundingClientRect().width;
+  const laneWidth=Math.max(1,viewport.clientWidth-labelWidth);
+  viewport.style.setProperty('--schedule-content-width',(labelWidth+laneWidth*scheduleTotalMinutes/scheduleSpan)+'px');
+  const maxScroll=Math.max(0,viewport.scrollWidth-viewport.clientWidth);
+  viewport.scrollLeft=scheduleOffset/(scheduleTotalMinutes-scheduleSpan)*maxScroll;
+}
+function seekSchedule(offset,behavior='smooth'){
+  if(!Number.isFinite(offset))return;
+  const target=Math.max(0,Math.min(scheduleTotalMinutes-scheduleSpan,Math.round(offset)));
+  const viewport=document.getElementById('schedule-viewport'),maxScroll=viewport.scrollWidth-viewport.clientWidth;
+  const reduced=userAccount.reduceMotion||window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(viewport.clientWidth&&maxScroll>0){
+    const motion=reduced?'auto':behavior;
+    viewport.scrollTo({left:target/(scheduleTotalMinutes-scheduleSpan)*maxScroll,behavior:motion});
+    if(motion==='smooth')return;
+  }
+  scheduleOffset=target;updateScheduleChrome();
+}
+function assignDispatchTask(id,robot,implementId=null){
+  if(userDemoSignedOut)return false;
+  const task=dispatchTasks.find(t=>t.id===id);if(!task)return false;
+  const equipment=robot?(implementId||preferredTaskImplement(task,robot)):null;
+  if(robot&&!validTaskCombination(task,robot,equipment))return false;
+  task.robot=robot||null;
+  if(robot){
+    task.implementId=equipment;
+    const tool=fleetImplements.find(t=>t.id===equipment);if(tool?.width)task.workingWidth=parseFloat(tool.width.replace(',','.'));
+    // Aufgabe erst entfernen und dann an das Ende hängen; andere Reihenfolgen bleiben erhalten.
+    dispatchTasks.splice(dispatchTasks.indexOf(task),1);dispatchTasks.push(task);
+    selectedDispatchRobot=robot;selectedDispatchTask=id;
+  }else{delete task.implementId;selectedDispatchTask=null;}
+  markPlanDraft(robot?'Aufgabe am Ende der Fahrzeugliste angehängt · Entwurf prüfen':'Aufgabe zurück im Arbeitsspeicher');renderDispatch();return true;
 }
 function moveDispatchTask(id,delta){
   const task=dispatchTasks.find(t=>t.id===id),jobs=dispatchTasks.filter(t=>t.robot===task.robot),other=jobs[jobs.indexOf(task)+delta];if(!other)return;
@@ -700,7 +863,7 @@ function renderDispatchRobot(){
   document.getElementById('route-robot-title').textContent=robot.name+' · '+robot.type;
   const km=drives.reduce((sum,s)=>sum+s.route.km,0),setup=schedule.segments.filter(s=>s.kind==='setup').reduce((sum,s)=>sum+s.duration,0);
   document.getElementById('route-robot-summary').textContent=schedule.tasks.length+' Aufgaben · '+km.toFixed(1).replace('.',',')+' km Straßenfahrt · '+durationLabel(setup)+' Rüsten';
-  document.getElementById('route-jobs').innerHTML=schedule.tasks.map((task,index)=>{const f=fields.find(f=>f.id===task.field),work=schedule.segments.find(s=>s.kind==='work'&&s.task===task);return `<article class="route-job ${selectedDispatchTask===task.id?'active':''}"><button class="route-job-title" onclick="openTaskOverview(${task.id})"><span>${index+1}</span><div><strong>${f.name}</strong><small>${task.operation} · ${dispatchEquipment(task)} · ${f.area}</small></div></button><p>${datedTime(work.start)}–${minuteClock(work.start+work.duration)} · ${durationLabel(work.duration)}</p><div class="route-job-actions"><button onclick="moveDispatchTask(${task.id},-1)" ${index===0?'disabled':''} aria-label="${f.name} früher einplanen">←</button><button onclick="moveDispatchTask(${task.id},1)" ${index===schedule.tasks.length-1?'disabled':''} aria-label="${f.name} später einplanen">→</button><select aria-label="${f.name} einem anderen Roboter zuweisen" onchange="assignDispatchTask(${task.id},Number(this.value))">${compatibleRobots(task).map(r=>`<option value="${r.id}" ${r.id===robot.id?'selected':''}>${robotDisplayName(r.id)}</option>`).join('')}</select><button class="return-task" onclick="assignDispatchTask(${task.id},0)" title="In den Arbeitsspeicher zurücklegen">↶ Speicher</button></div></article>`;}).join('')||'<div class="storage-empty">Noch keine Aufgaben zugewiesen. Links eine Aufgabe auswählen und diesem Roboter zuweisen.</div>';
+  document.getElementById('route-jobs').innerHTML=schedule.tasks.map((task,index)=>{const f=fields.find(f=>f.id===task.field),work=schedule.segments.find(s=>s.kind==='work'&&s.task===task);return `<article class="route-job ${selectedDispatchTask===task.id?'active':''}"><button class="route-job-title" onclick="openTaskOverview(${task.id})"><span>${index+1}</span><div><strong>${f.name}</strong><small>${task.operation} · ${dispatchTaskToolName(task)} · ${f.area}</small></div></button><p>${datedTime(work.start)}–${minuteClock(work.start+work.duration)} · ${durationLabel(work.duration)}</p><div class="route-job-actions"><button onclick="moveDispatchTask(${task.id},-1)" ${index===0?'disabled':''} aria-label="${f.name} früher einplanen">←</button><button onclick="moveDispatchTask(${task.id},1)" ${index===schedule.tasks.length-1?'disabled':''} aria-label="${f.name} später einplanen">→</button><button type="button" onclick="openTaskOverview(${task.id},true)">Gespann ändern</button><button class="return-task" onclick="assignDispatchTask(${task.id},0)" title="In den Arbeitsspeicher zurücklegen">↶ Speicher</button></div></article>`;}).join('')||'<div class="storage-empty">Noch keine Aufgaben zugewiesen. Links eine Aufgabe auswählen und diesem Roboter zuweisen.</div>';
   const roadSvg=drives.map(s=>`<polyline pointer-events="none" points="${s.route.points.map(p=>p.join(',')).join(' ')}" fill="none" stroke="white" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><polyline pointer-events="none" points="${s.route.points.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#427fad" stroke-width="7" stroke-dasharray="13 9" stroke-linecap="round" stroke-linejoin="round"/>`).join('');
   const tracks=schedule.tasks.map(dispatchFieldTracks).join('');
   const selected=dispatchTasks.find(t=>t.id===selectedDispatchTask);
@@ -714,21 +877,19 @@ function renderDispatchRobot(){
   if(!map.classList.contains('map-viewport'))enableMap(map);
 }
 document.getElementById('storage-sort').onchange=renderStoredTasks;
-document.getElementById('schedule-slider').oninput=e=>seekSchedule(Number(e.target.value));
-document.getElementById('schedule-scale').onchange=e=>{scheduleSpan=Number(e.target.value);seekSchedule(scheduleOffset);};
+document.getElementById('schedule-slider').oninput=e=>seekSchedule(Number(e.target.value),'auto');
+document.getElementById('schedule-scale').onchange=e=>{scheduleSpan=Number(e.target.value);renderSchedule();};
 document.getElementById('schedule-back').onclick=()=>seekSchedule(scheduleOffset-120);
 document.getElementById('schedule-forward').onclick=()=>seekSchedule(scheduleOffset+120);
-document.getElementById('suggest-plan').onclick=()=>{
-  dispatchTasks.filter(t=>!t.robot).forEach(t=>t.robot=t.operation.startsWith('Grubbern')?5:t.operation==='Säen'?6:t.operation==='Striegeln'?4:2);
-  markPlanDraft('Beispielvorschlag ergänzt · Zuweisung und Reihenfolge sind anpassbar');renderDispatch();
-};
-document.getElementById('accept-plan').onclick=()=>{planAccepted=true;document.getElementById('plan-status').textContent='Einsatzplan übernommen · Demo, keine Roboter gestartet';const button=document.getElementById('accept-plan');button.textContent='Plan übernommen ✓';button.disabled=true;};
+document.getElementById('suggest-plan').onclick=()=>toggleDispatchSuggestion();
+document.getElementById('accept-plan').onclick=acceptDispatchPlan;
 document.getElementById('task-field').innerHTML=fields.map(f=>`<option value="${f.id}">${f.name} · ${f.area}</option>`).join('');
 document.getElementById('task-form').onsubmit=e=>{
   e.preventDefault();const operation=document.getElementById('task-operation').value;
   dispatchTasks.push({id:Math.max(0,...dispatchTasks.map(t=>t.id))+1,field:Number(document.getElementById('task-field').value),operation,priority:document.getElementById('task-priority').value,createdOn:dispatchDate,speed:({'Grubbern tief':12,'Grubbern flach':14,'Säen':10,'Hacken':5,'Striegeln':5})[operation],depth:operation==='Grubbern tief'?20:operation==='Grubbern flach'?5:null,robot:null});
   markPlanDraft('Neue Aufgabe im Arbeitsspeicher · Noch keinem Roboter zugewiesen');renderDispatch();document.getElementById('new-task').close();
 };
+loadCommittedDispatchPlan();
 renderDispatch();
 
 function updateHeaderClock(){
@@ -884,13 +1045,15 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelect
 
 // Gemeinsame Detailansicht für gespeicherte und bereits disponierte Aufgaben.
 let taskOverviewId=null,taskOverviewMode='field',taskOverviewReturn={hash:'#auftragsverwaltung',inspector:false};
-function openTaskOverview(id){
+let taskAssignment={taskId:null,mode:'existing',robotId:null,implementId:null,expanded:false};
+function openTaskOverview(id,chooseUnit=false){
   if(!dispatchTasks.some(t=>t.id===id))return;
   if(!/^#aufgabe-/.test(location.hash))taskOverviewReturn={hash:location.hash||'#auftragsverwaltung',inspector:document.getElementById('dispatch-inspector').open};
   const dialog=document.getElementById('dispatch-inspector');if(dialog.open)dialog.close();
   const task=dispatchTasks.find(t=>t.id===id);if(task.robot){selectedDispatchRobot=task.robot;selectedDispatchTask=id;renderSchedule();renderDispatchRobot();}
   taskOverviewMode='field';location.hash='aufgabe-'+id;
   renderTaskOverview(id);
+  if(chooseUnit)openTaskAssignment();
 }
 function closeTaskOverview(){
   location.hash=taskOverviewReturn.hash;
@@ -898,9 +1061,11 @@ function closeTaskOverview(){
 }
 function taskInfoGroup(title,rows){return `<section class="panel task-info-group"><h2>${title}</h2><dl>${rows.filter(r=>r[1]!==null&&r[1]!==undefined).map(([label,value])=>`<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl></section>`;}
 function renderTaskOverview(id){
+  document.getElementById('task-assignment-status').textContent='';
   const task=dispatchTasks.find(t=>t.id===id);
-  if(!task){document.getElementById('task-overview-title').textContent='Aufgabe nicht verfügbar';document.getElementById('task-overview-subtitle').textContent='Diese Demo-Aufgabe ist in dieser Sitzung nicht vorhanden.';document.getElementById('task-overview-information').innerHTML='';document.getElementById('task-overview-map').hidden=true;document.getElementById('task-overview-id').textContent='';document.getElementById('task-overview-status').textContent='';document.getElementById('task-overview-assign').hidden=true;document.getElementById('task-overview-map-caption').textContent='';taskOverviewId=null;return;}
+  if(!task){document.getElementById('task-overview-title').textContent='Aufgabe nicht verfügbar';document.getElementById('task-overview-subtitle').textContent='Diese Demo-Aufgabe ist in dieser Sitzung nicht vorhanden.';document.getElementById('task-overview-information').innerHTML='';document.getElementById('task-overview-work-data').innerHTML='';document.getElementById('task-overview-map').hidden=true;document.getElementById('task-overview-id').textContent='';document.getElementById('task-overview-status').textContent='';document.getElementById('task-overview-assign').hidden=true;document.getElementById('task-overview-map-caption').textContent='';taskOverviewId=null;return;}
   taskOverviewId=id;
+  if(taskAssignment.taskId!==id)taskAssignment={taskId:id,mode:activeTaskCombinations(task).length?'existing':'new',robotId:null,implementId:null,expanded:!task.robot};
   document.getElementById('task-overview-map').hidden=false;
   const f=fields.find(f=>f.id===task.field),robot=dispatchRobots.find(r=>r.id===task.robot),schedule=robot?buildRobotSchedule(robot):null;
   const work=schedule?.segments.find(s=>s.kind==='work'&&s.task.id===id),drives=schedule?schedule.segments.filter(s=>s.kind==='drive'&&s.task.id===id):[],setups=schedule?schedule.segments.filter(s=>s.kind==='setup'&&s.task.id===id):[];
@@ -910,11 +1075,15 @@ function renderTaskOverview(id){
   document.getElementById('task-overview-title').textContent=f.name+' · '+task.operation;
   document.getElementById('task-overview-subtitle').textContent=f.area+' · '+(task.crop||f.crop);
   document.getElementById('task-overview-status').textContent=robot?'Eingeplant · '+robotShortName(robot.id):'Offen · Im Arbeitsspeicher';
-  document.getElementById('task-overview-assign').hidden=!!robot;
-  let details=taskInfoGroup('Aufgabe & Fläche', [['Fläche',f.name],['Flächengröße',f.area],['Arbeit',task.operation],['Frucht',task.crop||f.crop],['Angelegt am',dateLabel(task.createdOn||dispatchDate)],['Priorität',priority.label],['Zeitrahmen',priority.time],['Ablaufdatum',due?dateLabel(due):'Ohne Ablaufdatum']]);
-  details+=taskInfoGroup('Arbeitsparameter', [['Arbeitstiefe',task.depth?task.depth+' cm':null],['Geschwindigkeit',task.speed?task.speed+' km/h':'Nicht festgelegt'],['Arbeitsbreite',task.workingWidth?task.workingWidth.toLocaleString('de-DE')+' m':'Noch nicht festgelegt'],['Bearbeitungsrichtung',(task.bearingDegrees??defaultAngles[f.id])+'°'],['Vorgewendebahnen',task.headlandPasses??2],['Saatkultur',task.operation==='Säen'?(task.crop||f.crop):null],['Saatstärke',task.operation==='Säen'?(task.seedRate?task.seedRate.toLocaleString('de-DE')+' Körner/ha':'Nicht festgelegt'):null],['Applikationskarte',task.operation==='Säen'?(task.applicationMap?'Teilflächenspezifisch':'Keine hinterlegt'):null],['Fahrgassenabstand',task.operation==='Säen'?(task.tramlineSpacing?task.tramlineSpacing+' m':'Keine Fahrgassen'):null]]);
-  details+=taskInfoGroup('Einsatz & Anfahrt', [['Roboter',robot?robot.name+' · '+robot.type:'Noch nicht zugewiesen'],['Anbaugerät',robot?dispatchEquipment(task):'Auswahl in der Disposition'],['Geschätzte Arbeitsdauer',durationLabel(dispatchDuration(task))],['Geplanter Beginn',work?datedTime(work.start):'Noch nicht eingeplant'],['Geplantes Ende',work?datedTime(work.start+work.duration):'Noch nicht eingeplant'],['Rüstzeit',schedule?durationLabel(setups.reduce((sum,s)=>sum+s.duration,0)):null],['Straßenfahrt',schedule?durationLabel(drives.reduce((sum,s)=>sum+s.duration,0)):null],['Fahrtstrecke',schedule?drives.reduce((sum,s)=>sum+s.route.km,0).toFixed(1).replace('.',',')+' km':null],['Anfahrt',robot?'Autonom über das Straßennetz':'Noch nicht disponiert']]);
+  document.getElementById('task-overview-assign').hidden=false;
+  document.getElementById('task-overview-assign').textContent=robot?'Gespann ändern':'Gespann wählen';
+  let workDetails=taskInfoGroup('Aufgabe & Fläche', [['Fläche',f.name],['Flächengröße',f.area],['Arbeit',task.operation],['Frucht',task.crop||f.crop],['Angelegt am',dateLabel(task.createdOn||dispatchDate)],['Priorität',priority.label],['Zeitrahmen',priority.time],['Ablaufdatum',due?dateLabel(due):'Ohne Ablaufdatum']]);
+  let details=`<section id="task-assignment-panel" class="panel task-assignment-panel"${taskAssignment.expanded?'':' hidden'}>${taskAssignmentContents(task)}</section>`;
+  workDetails+=taskInfoGroup('Arbeitsdaten', [['Arbeitstiefe',task.depth?task.depth+' cm':null],['Geschwindigkeit',task.speed?task.speed+' km/h':'Nicht festgelegt'],['Arbeitsbreite',task.workingWidth?task.workingWidth.toLocaleString('de-DE')+' m':'Noch nicht festgelegt'],['Bearbeitungsrichtung',(task.bearingDegrees??defaultAngles[f.id])+'°'],['Vorgewendebahnen',task.headlandPasses??2],['Saatkultur',task.operation==='Säen'?(task.crop||f.crop):null],['Saatstärke',task.operation==='Säen'?(task.seedRate?task.seedRate.toLocaleString('de-DE')+' Körner/ha':'Nicht festgelegt'):null],['Applikationskarte',task.operation==='Säen'?(task.applicationMap?'Teilflächenspezifisch':'Keine hinterlegt'):null],['Fahrgassenabstand',task.operation==='Säen'?(task.tramlineSpacing?task.tramlineSpacing+' m':'Keine Fahrgassen'):null]]);
+  details+=taskInfoGroup('Einsatz & Anfahrt', [['Roboter',robot?robot.name+' · '+robot.type:'Noch nicht zugewiesen'],['Anbaugerät',robot?dispatchTaskToolName(task):'Gespann für diese Aufgabe wählen'],['Geschätzte Arbeitsdauer',durationLabel(dispatchDuration(task))],['Geplanter Beginn',work?datedTime(work.start):'Noch nicht eingeplant'],['Geplantes Ende',work?datedTime(work.start+work.duration):'Noch nicht eingeplant'],['Rüstzeit',schedule?durationLabel(setups.reduce((sum,s)=>sum+s.duration,0)):null],['Straßenfahrt',schedule?durationLabel(drives.reduce((sum,s)=>sum+s.duration,0)):null],['Fahrtstrecke',schedule?drives.reduce((sum,s)=>sum+s.route.km,0).toFixed(1).replace('.',',')+' km':null],['Anfahrt',robot?'Autonom über das Straßennetz':'Noch nicht disponiert']]);
+  document.getElementById('task-overview-work-data').innerHTML=workDetails;
   document.getElementById('task-overview-information').innerHTML=details;
+  updateTaskAssignmentSummary();
   setTaskOverviewMap(taskOverviewMode);
 }
 function setTaskOverviewMap(mode){
@@ -943,37 +1112,45 @@ function setTaskOverviewMap(mode){
 window.dispatchReady=true;
 const initialTaskMatch=location.hash.match(/^#aufgabe-(\d+)$/);if(initialTaskMatch)renderTaskOverview(Number(initialTaskMatch[1]));
 
-// Flottenmanagement: gemeinsame Roboterdaten, ergänzte Demo-Betriebszustände.
-const fleetOperatingStates={1:{kind:'error',label:'Fehler',detail:'Festgefahren · Eingriff nötig'},5:{kind:'maintenance',label:'Wartung',detail:'Inspektion auf dem Hof'},6:{kind:'setup',label:'Rüstzeit',detail:'Sämaschine anbauen'}};
-const fleetImplements=[
-  {id:'AG–001',name:'HORSCH Terrano 3 FX · 1',type:'Universalgrubber',width:'3,0 m',depth:'5–30 cm',work:'Flach grubbern · Tief grubbern'},
-  {id:'AG–004',name:'HORSCH Terrano 3 FX · 2',type:'Universalgrubber',width:'3,0 m',depth:'5–30 cm',work:'Flach grubbern · Tief grubbern'},
-  {id:'AG–005',name:'Einböck TAIFUN 500',type:'Federzinken-Leichtgrubber',width:'5,0 m',depth:'Bis 15 cm · abhängig von Scharen und Boden',work:'Flach grubbern · Saatbettbereitung'},
-  {id:'AG–006',name:'LEMKEN Smaragd 9/300',type:'Grubber',width:'3,0 m',depth:'Mechanisch einstellbar · flacher Einsatz vorgesehen',work:'Flach grubbern'},
-  {id:'AG–002',name:'LEMKEN Saphir 9/300',type:'Drillmaschine',width:'3,0 m',depthLabel:'Saatgut-Ablagetiefe',depth:'Über Schardruck und Tiefenführung einstellbar',work:'Säen / Drillen'},
-  {id:'AG–007',name:'AMAZONE Cataya 3000 Super',type:'Drillmaschine',width:'3,0 m',depthLabel:'Saatgut-Ablagetiefe',depth:'0–6 cm · mit TwinTeC special',configuration:'TwinTeC special-Doppelscheibenschare',work:'Säen / Drillen'},
-  {id:'AG–008',name:'AMAZONE Cirrus 6003-2',type:'Drillmaschine',width:'6,0 m',depthLabel:'Saatgut-Ablagetiefe',depth:'Zentral einstellbar · abhängig von der Scharausstattung',work:'Säen / Drillen'},
-  {id:'AG–009',name:'TREFFLER TS 620 M3',type:'Striegel',width:'6,20 m',depth:'Einstellungs- und bodenabhängig',configuration:'Präzisions-Zinkenstriegel · Eingriff über Zinkendruck und Stützräder',work:'Striegeln'},
-  {id:'AG–010',name:'Einböck CHOPSTAR-TWIN',type:'Hackgerät',width:null,depth:'Stufenlos über Tastrad und Kurbel einstellbar',work:'Hacken'},
-  {id:'AG–003',name:'Einböck CHOPSTAR-ONE',type:'Hackgerät',width:null,depth:'Stufenlos über Tastrad und Kurbel einstellbar',work:'Hacken'}
-];
-// Aktuell angebaute Geräte; geplante Aufgaben ändern den Ist-Zustand nicht.
-const fleetMountedImplements={1:'AG–003',4:'AG–002',5:null,6:null};
 document.querySelectorAll('[data-robot-tool]').forEach(element=>{
   const id=Number(element.dataset.robotTool),vehicle=fleetVehicles.find(robot=>robot.id===id);
   const tool=fleetImplements.find(item=>item.id===fleetMountedImplements[id]);
   const name=vehicle.fixed?'Integrierte Hackeinheit':tool?tool.name:'Kein Anbaugerät';
   element.textContent=name;element.title='Anbaugerät: '+name;
 });
+function fleetMachineStatus(robot){
+  return fleetOperatingStates[robot.id]||(robot.atFarm?{kind:'ready',label:'Bereit',detail:'Auf dem Hof'}:{kind:'working',label:'Aufgabe wird ausgeführt',detail:robot.status+' · '+robot.area});
+}
+function fleetMountedToolName(vehicle){
+  return vehicle.fixed?'Integrierte Hackeinheit':fleetImplements.find(tool=>tool.id===fleetMountedImplements[vehicle.id])?.name||'Kein Anbaugerät';
+}
+function fleetToolCarrier(id){return fleetVehicles.find(vehicle=>fleetMountedImplements[vehicle.id]===id);}
+function fleetMachineDetails(kind,machine){
+  let facts=[],footer='';
+  if(kind==='robot'){
+    const robot=data.find(r=>r.id===machine.id),state=fleetMachineStatus(robot),field=fields.find(f=>f.robots.includes(machine.id));
+    facts=[['Maschinentyp',machine.type],['Status',state.label],['Standort',field?.name||'Hof Grünpark'],['Aktuelle Arbeit',field?.task||'Kein laufender Feldauftrag'],['Arbeitsgerät',fleetMountedToolName(machine)],[machine.fixed?'Batterie':'Tankfüllstand',robot.b+' %'],['Betriebszustand',state.detail]];
+    if(robot.alert)footer=`<p class="fleet-selection-alert fleet-alert-${robot.alert.severity}">${robot.alert.severity==='error'?'⛔':'⚠'} ${robot.alert.message}</p>`;
+    footer+=`<a class="fleet-machine-open" href="#roboter-${machine.id}">Roboter öffnen ↗</a>`;
+  }else{
+    const carrier=fleetToolCarrier(machine.id);
+    facts=[['Gerätetyp',machine.type],['Arbeitsbreite',machine.width||'Noch nicht festgelegt'],[machine.depthLabel||'Arbeitstiefe',machine.depth||'Noch nicht festgelegt'],['Mögliche Arbeiten',machine.work],['Angebaut an',carrier?.name||'Nicht angebaut'],['Standort',carrier?(fields.find(f=>f.robots.includes(carrier.id))?.name||'Hof Grünpark'):'Kein Standort hinterlegt']];
+    if(machine.configuration)facts.push(['Ausstattung',machine.configuration]);
+    if(carrier)footer=`<a class="fleet-machine-open" href="#roboter-${carrier.id}">Trägerroboter öffnen ↗</a>`;
+  }
+  const information=`<div class="fleet-machine-information"><dl class="fleet-machine-facts">${facts.map(([label,value])=>`<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>${footer?`<div class="fleet-machine-footer">${footer}</div>`:''}</div>`;
+  if(kind!=='robot')return `<div class="fleet-machine-details">${information}</div>`;
+  const field=fields.find(f=>f.robots.includes(machine.id));
+  return `<div class="fleet-machine-details fleet-robot-details"><figure class="fleet-inline-map-panel"><div class="fleet-inline-map-heading"><strong>${field?.name||'Hof Grünpark'}</strong><span>Standort</span></div><div id="fleet-robot-map-${machine.id}" class="map fleet-robot-map" data-robot-id="${machine.id}" aria-label="Standortkarte ${machine.name}"></div><figcaption>${field?'Auf aktuelles Feld gezoomt':'Auf den Hof gezoomt'} · Schematische Karte</figcaption></figure>${information}</div>`;
+}
 document.getElementById('fleet-robots').innerHTML=data.map(robot=>{
-  const state=fleetOperatingStates[robot.id]||(robot.atFarm?{kind:'ready',label:'Bereit',detail:'Auf dem Hof'}:{kind:'working',label:'Aufgabe wird ausgeführt',detail:robot.status+' · '+robot.area});
-  const vehicle=fleetVehicles.find(v=>v.id===robot.id);
-  const mounted=fleetImplements.find(tool=>tool.id===fleetMountedImplements[robot.id]);
-  const toolName=vehicle.fixed?'Integrierte Hackeinheit':mounted?mounted.name:'Nichts angebaut';
-  return `<tr><td class="fleet-id">MW–00${robot.id}</td><td><div class="fleet-robot-name"><i style="background:${robot.color}" aria-hidden="true"></i><strong>${vehicle.name}</strong></div><small>${vehicle.type} · ${vehicle.fixed?'Festes Arbeitsgerät':'Wechselbare Anbaugeräte'}</small></td><td><span class="fleet-mounted-tool ${!vehicle.fixed&&!mounted?'empty':''}">${toolName}</span>${mounted?`<small>${mounted.id} · ${mounted.width||'Arbeitsbreite noch offen'}</small>`:''}</td><td><span class="fleet-state fleet-state-${state.kind}"><i aria-hidden="true"></i>${state.label}</span><small>${state.detail}</small></td><td><a class="fleet-open-robot" href="#roboter-${robot.id}" aria-label="${vehicle.name} öffnen">Roboter öffnen ↗</a></td></tr>`;
+  const vehicle=fleetVehicles.find(v=>v.id===robot.id),state=fleetMachineStatus(robot);
+  return `<details class="fleet-machine-item" data-machine-kind="robot" data-machine-id="${robot.id}" ontoggle="prepareFleetRobotMap(this)"><summary><span class="fleet-machine-icon" aria-hidden="true">▰</span><span class="fleet-machine-identity"><strong>${vehicle.name}</strong><small>MW–00${robot.id} · ${vehicle.type}</small></span><span class="fleet-machine-context">${robot.area}</span><span class="fleet-state fleet-state-${state.kind}"><i aria-hidden="true"></i>${state.label}</span><span class="fleet-machine-chevron" aria-hidden="true">⌄</span></summary>${fleetMachineDetails('robot',vehicle)}</details>`;
 }).join('');
-const renderFleetImplement=tool=>`<details class="fleet-implement"><summary><span class="fleet-id">${tool.id}</span><span class="implement-name"><strong>${tool.name}</strong><small>${tool.type}${tool.width?' · '+tool.width:''}</small></span><span class="fleet-section-chevron" aria-hidden="true">⌄</span></summary><dl class="implement-facts"><div><dt>Geräte-ID</dt><dd>${tool.id}</dd></div><div><dt>Typ</dt><dd>${tool.type}</dd></div><div><dt>Arbeitsbreite</dt><dd>${tool.width||'Noch nicht festgelegt'}</dd></div><div><dt>${tool.depthLabel||'Arbeitstiefe'}</dt><dd>${tool.depth||'Noch nicht festgelegt'}</dd></div>${tool.configuration?`<div><dt>Ausstattung</dt><dd>${tool.configuration}</dd></div>`:''}<div><dt>Mögliche Arbeiten</dt><dd>${tool.work}</dd></div></dl></details>`;
-
+const renderFleetImplement=tool=>{
+  const carrier=fleetToolCarrier(tool.id);
+  return `<details class="fleet-machine-item" data-machine-kind="implement" data-machine-id="${tool.id}"><summary><span class="fleet-machine-icon" aria-hidden="true">⚒</span><span class="fleet-machine-identity"><strong>${tool.name}</strong><small>${tool.id} · ${tool.type}${tool.width?' · '+tool.width:''}</small></span><span class="fleet-machine-context">${carrier?robotShortName(carrier.id):'Nicht angebaut'}</span><span class="fleet-machine-chevron" aria-hidden="true">⌄</span></summary>${fleetMachineDetails('implement',tool)}</details>`;
+};
 const fleetEquipmentGroups=[
   {label:'Grubber',matches:tool=>tool.type.toLowerCase().includes('grubber')},
   {label:'Drillmaschinen',matches:tool=>tool.type==='Drillmaschine'},
@@ -981,8 +1158,21 @@ const fleetEquipmentGroups=[
 ];
 document.getElementById('fleet-implements').innerHTML=fleetEquipmentGroups.map(group=>{
   const tools=fleetImplements.filter(group.matches);
-  return `<details class="panel fleet-section"><summary><span class="fleet-section-icon" aria-hidden="true">⚒</span><span><strong>${group.label}</strong><small>${tools.length} ${tools.length===1?'Gerät':'Geräte'}</small></span><span class="fleet-section-chevron" aria-hidden="true">⌄</span></summary><div class="fleet-implement-list">${tools.map(renderFleetImplement).join('')}</div></details>`;
+  return `<details class="fleet-section fleet-device-group" data-group-label="${group.label}"><summary class="fleet-group-heading"><h3>${group.label}</h3><span>${tools.length} ${tools.length===1?'Gerät':'Geräte'}</span><span class="fleet-group-chevron" aria-hidden="true">⌄</span></summary><div class="fleet-machine-items">${tools.map(renderFleetImplement).join('')}</div></details>`;
 }).join('');
+document.getElementById('fleet-machine-count').textContent=`${fleetVehicles.length} Roboter · ${fleetImplements.length} Geräte`;
+function prepareFleetRobotMap(details){
+  if(!details.open)return;
+  const map=details.querySelector('.fleet-robot-map');
+  if(!map||map.classList.contains('map-viewport'))return;
+  const robot=data.find(r=>r.id===Number(map.dataset.robotId));
+  if(!robot)return;
+  map.innerHTML=robotOverviewMap(robot);
+  const view=map.querySelector('svg').getAttribute('viewBox').split(/\s+/).map(Number);
+  map.dataset.aspect=view[2]/view[3];
+  enableMap(map);
+}
+
 
 // Roboterspezifische Leitstandsansicht. Sämtliche Bedienelemente simulieren nur den UI-Zustand.
 const robotProfileStates=new Map();let robotProfileId=null;
@@ -1054,23 +1244,29 @@ function renderRobotMachineData(vehicle,tool,metrics,working){
       '<section class="machine-data-group"><div class="machine-data-group-heading"><h3>Anbaugerät</h3><span>Kein Arbeitsgerät angebaut</span></div></section>');
   document.getElementById('robot-machine-data').scrollTop=0;
 }
+function syncCaseTouchscreen(){
+  if(window.parent===window)return;
+  const manual=!document.getElementById('roboterdetail').hidden&&robotManualEnabled();
+  window.parent.postMessage({type:'roboplan-case-state',manual},location.origin==='null'?'*':location.origin);
+}
 function updateRobotProfileControls(){
   if(!robotProfileId)return;const state=robotProfileState(robotProfileId),r=data.find(r=>r.id===robotProfileId),operating=fleetOperatingStates[robotProfileId];
   const status=document.getElementById('robot-profile-status');
-  status.textContent=state.action==='stopped'?'Not-Aus':state.action==='paused'?'Pause · Manuell':operating?operating.label:'Automatik aktiv';
+  status.textContent=state.action==='stopped'?'Nothalt':state.action==='paused'?'Pause · Manuell':operating?operating.label:'Automatik aktiv';
   status.className=state.action==='stopped'?'robot-status-emergency':state.action==='paused'?'robot-status-paused':operating?'robot-status-'+operating.kind:'robot-status-active';
   document.getElementById('robot-action-pause').disabled=r.atFarm||state.action!=='running';
   document.getElementById('robot-action-resume').disabled=r.atFarm||state.action==='running';
   document.getElementById('robot-action-stop').disabled=state.action==='stopped';
-  document.getElementById('robot-control-mode-label').textContent=state.action==='paused'?'Manuell · Joystick':state.action==='stopped'?'Not-Aus aktiv':'Automatik';
+  document.getElementById('robot-control-mode-label').textContent=state.action==='paused'?'Manuell · Joystick':state.action==='stopped'?'Nothalt aktiv':'Automatik';
   updateRobotImplementControls();
   renderRobotFaultMemory();
+  syncCaseTouchscreen();
 }
 function robotManualEnabled(){
   return !!robotProfileId&&robotProfileState(robotProfileId).action==='paused'&&!data.find(r=>r.id===robotProfileId).atFarm;
 }
 function setRobotDemoAction(action){
-  if(!robotProfileId||!['pause','resume','stop'].includes(action))return;
+  if(userDemoSignedOut||!robotProfileId||!['pause','resume','stop'].includes(action))return;
   if(action!=='stop'&&data.find(r=>r.id===robotProfileId).atFarm)return;
   const state=robotProfileState(robotProfileId),values=robotImplementState();
   cancelAnimationFrame(values.liftFrame||0);values.liftFrame=null;
@@ -1235,7 +1431,8 @@ function setRobotCamera(direction){
 
 window.addEventListener('message',event=>{
   if(event.origin!==location.origin||event.source!==window.parent||event.data?.type!=='roboplan-case-action')return;
-  if(['resume','pause'].includes(event.data.action))setRobotDemoAction(event.data.action);
+  if(event.data.action==='stop'&&(document.getElementById('roboterdetail').hidden||!robotManualEnabled()))return;
+  if(['resume','pause','stop'].includes(event.data.action))setRobotDemoAction(event.data.action);
 });
 
 function openOverviewWeather(){location.hash='wetter';}
@@ -1296,10 +1493,9 @@ function renderFaultOverview(){
 // Die Betriebsauswahl ändert ausschließlich den angezeigten Namen.
 const customerNames=['Agrarhof Albers','Auenhof','Bauernhof Becker','Birkenhof','Gut Sonnenhof','Hof Grünpark','Hof Lindenberg','Landwirtschaft Meyer','Sonnenacker','Südhof'].sort((a,b)=>a.localeCompare(b,'de'));
 function openCustomerPicker(){
-  document.getElementById('customer-search').value='';
-  renderCustomerPicker();
+  setInlineSearch('customer-search',false);
   document.getElementById('customer-picker').showModal();
-  document.getElementById('customer-search').focus();
+  document.getElementById('customer-search-toggle').focus();
 }
 function renderCustomerPicker(){
   const query=document.getElementById('customer-search').value.trim().toLocaleLowerCase('de');
@@ -1327,28 +1523,30 @@ function renderRobotPlan(id,selectedField=null){
   if(!robot){document.getElementById('robot-plan-name').textContent='Roboter nicht gefunden';return;}
   const current=fields.find(field=>field.robots.includes(id));
   const assigned=dispatchTasks.filter(task=>task.robot===id);
-  const upcoming=assigned.filter(task=>!current||task.field!==current.id||task.operation!==current.task);
+  const activeTask=current?assigned.find(task=>task.field===current.id&&task.operation===current.task):null;
+  const upcoming=assigned.filter(task=>task.id!==activeTask?.id);
   const parts=[],tasks=[];
   const now=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Berlin',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date()).split(':');
-  let cursor=Number(now[0])*60+Number(now[1]),previous=current?.id||null,equipment=current?dispatchEquipment({operation:current.task}):robot.fixed||null;
+  let cursor=Number(now[0])*60+Number(now[1]),previous=current?.id||null,previousDepth=null,equipment=robot.fixed?'integrated-'+robot.id:fleetMountedImplements[robot.id]||null;
   const add=(kind,duration,label,task,route=null)=>{parts.push({kind,duration,label,task,route,start:cursor});cursor+=duration;};
   if(current){
-    const task=assigned.find(task=>task.field===current.id&&task.operation===current.task)||{id:1000+id,field:current.id,operation:current.task,robot:id};
+    const task=activeTask||{id:1000+id,field:current.id,operation:current.task,robot:id};
     tasks.push(task);add('work',Math.max(10,Math.round(dispatchDuration(task)*(100-state.p)/100)),current.task+' · '+current.name,task);
   }
   upcoming.forEach(task=>{
-    const tool=dispatchEquipment(task);
+    const tool=dispatchTaskEquipmentKey(task);
     if(equipment!==tool){
       if(previous){const road=roadRoute(null,previous);add('drive',road.minutes,'Zum Hof · Gerätewechsel',task,{...road,points:[...road.points].reverse()});previous=null;}
-      add('setup',30,tool+' anbauen',task);equipment=tool;
-    }
-    const road=roadRoute(previous,task.field);add('drive',road.minutes,'Fahrt · '+fields.find(field=>field.id===task.field).name,task,road);
+      add('setup',30,dispatchTaskToolName(task)+' anbauen',task);equipment=tool;previousDepth=null;
+    }else if(task.operation.startsWith('Grubbern')&&previousDepth!==null&&previousDepth!==task.depth){add('setup',10,'Arbeitstiefe einstellen',task);}
+    const road=roadRoute(previous,task.field);if(road.minutes)add('drive',road.minutes,'Fahrt · '+fields.find(field=>field.id===task.field).name,task,road);
     add('work',dispatchDuration(task),task.operation+' · '+fields.find(field=>field.id===task.field).name,task);
-    tasks.push(task);previous=task.field;
+    tasks.push(task);previous=task.field;previousDepth=task.operation.startsWith('Grubbern')?task.depth??null:null;
   });
   document.getElementById('robot-plan-name').textContent=robot.name;
   document.getElementById('robot-plan-back').onclick=()=>location.hash='roboter-'+id;
   document.getElementById('robot-plan-caption').textContent=(current?'Aktueller Auftrag und nächste Schritte':'Nächste zugewiesene Aufträge')+' · '+upcoming.length+' weitere Aufträge';
+  document.getElementById('robot-plan-caption').textContent+=planAccepted?' · Plan gespeichert · Übertragung simuliert':' · Planentwurf';
   const alert=document.getElementById('robot-plan-alert');alert.hidden=!state.alert;
   if(state.alert){alert.className='robot-plan-notice robot-plan-notice-'+state.alert.severity;alert.textContent=(state.alert.severity==='error'?'⛔ ':'⚠ ')+state.alert.message+(state.alert.severity==='error'?' · Zeitplan wartet auf Störungsbehebung':'');}
   const paused=state.alert?.severity==='error'||robotProfileState(id).action!=='running';
@@ -1367,3 +1565,641 @@ function renderRobotPlan(id,selectedField=null){
   if(!map.classList.contains('map-viewport'))enableMap(map);
 }
 const initialRobotPlan=location.hash.match(/^#roboter-plan-(\d+)$/);if(initialRobotPlan)renderRobotPlan(Number(initialRobotPlan[1]));
+
+// Flottensuche erhält die Klappzustände von Geräten und Gerätegruppen.
+const fleetDeviceSearchStates=new Map();
+function filterFleetList(){
+  const query=document.getElementById('fleet-search').value,active=Boolean(normalizeListSearch(query));
+  const groups=document.querySelectorAll('#roboterverwaltung .fleet-section');
+  if(active&&!fleetDeviceSearchStates.size)groups.forEach(group=>{if(group.matches('details'))fleetDeviceSearchStates.set(group,group.open);});
+  let robots=0,implements=0;
+  groups.forEach(group=>{
+    const isRobots=Boolean(group.querySelector('#fleet-robots'));
+    const entries=group.querySelectorAll('.fleet-machine-item');
+    const heading=group.dataset.groupLabel;
+    let visible=0;
+    entries.forEach(entry=>{
+      const text=entry.querySelector('summary').textContent+' '+entry.querySelector('.fleet-machine-information').textContent;
+      const matches=matchesListSearch(heading+' '+text,query);
+      entry.hidden=!matches;if(matches)visible++;
+    });
+    group.hidden=visible===0;
+    if(group.matches('details')){
+      if(active)group.open=visible>0;
+      else if(fleetDeviceSearchStates.has(group))group.open=fleetDeviceSearchStates.get(group);
+    }
+    if(isRobots)robots+=visible;else implements+=visible;
+  });
+  if(!active)fleetDeviceSearchStates.clear();
+  const status=document.getElementById('fleet-search-results');
+  status.textContent=`${robots} Roboter · ${implements} ${implements===1?'Gerät':'Geräte'} gefunden`;status.hidden=!active;
+  document.getElementById('fleet-search-empty').hidden=robots+implements>0;
+}
+
+window.addEventListener('message',event=>{
+  if(event.source!==window.parent||event.origin!==location.origin||event.data?.type!=='roboplan-case-state-request')return;
+  syncCaseTouchscreen();
+});
+syncCaseTouchscreen();
+
+// Sichtbarer Sprachmodus für den Prototyp, ohne Mikrofon- oder KI-Anbindung.
+function setVoiceAssistantRecording(recording){
+  const button=document.getElementById('voice-assistant');
+  button.classList.toggle('is-listening',recording);
+  button.setAttribute('aria-pressed',String(recording));
+  const label=recording?'Demo-Aufnahme läuft: Aufnahme beenden':'KI-Assistent: Demo-Aufnahme starten';
+  button.setAttribute('aria-label',label);button.title=recording?'Demo-Aufnahme beenden':'Demo-Aufnahme starten';
+  document.getElementById('voice-label').textContent=recording?'Aufnehmen':'KI-Assistent';
+  document.getElementById('voice-listening').hidden=!recording;
+  document.getElementById('voice-status').textContent=recording?'Demo-Aufnahme gestartet. Erneut antippen oder Escape drücken zum Beenden.':'Demo-Aufnahme beendet.';
+}
+function toggleVoiceAssistant(){setVoiceAssistantRecording(document.getElementById('voice-assistant').getAttribute('aria-pressed')!=='true');}
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.getElementById('voice-assistant').getAttribute('aria-pressed')==='true')setVoiceAssistantRecording(false);});
+window.addEventListener('pagehide',()=>setVoiceAssistantRecording(false));
+
+// Suche wird platzsparend in der jeweiligen Überschriftenzeile geöffnet.
+function setInlineSearch(id,expanded,restoreFocus=false){
+  const input=document.getElementById(id),button=document.getElementById(id+'-toggle');
+  const heading=button.closest('.search-heading');
+  input.hidden=!expanded;
+  button.setAttribute('aria-expanded',String(expanded));
+  button.setAttribute('aria-label',expanded?'Suche schließen':input.getAttribute('aria-label'));
+  button.title=expanded?'Suche schließen':input.getAttribute('aria-label');
+  heading.classList.toggle('search-is-open',expanded);
+  if(expanded)input.focus();
+  else{
+    input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));
+    if(restoreFocus)button.focus();
+  }
+}
+function toggleInlineSearch(id){setInlineSearch(id,document.getElementById(id+'-toggle').getAttribute('aria-expanded')!=='true',true);}
+
+// Benutzermenü und gemeinsame Kontoseite.
+function closeUserMenu(restoreFocus=false){
+  document.getElementById('user-dropdown').hidden=true;
+  document.getElementById('user-menu-trigger').setAttribute('aria-expanded','false');
+  if(restoreFocus)document.getElementById('user-menu-trigger').focus();
+}
+function toggleUserMenu(){
+  if(userDemoSignedOut)return;
+  const menu=document.getElementById('user-dropdown'),open=menu.hidden;
+  menu.hidden=!open;document.getElementById('user-menu-trigger').setAttribute('aria-expanded',String(open));
+  if(open)menu.querySelector('[role="menuitem"]').focus();
+}
+function updateUserAccountIdentity(){
+  const words=userAccount.name.trim().split(/\s+/);
+  const initials=(words.length>1?words[0][0]+words[words.length-1][0]:words[0].slice(0,2)).toLocaleUpperCase('de');
+  document.querySelectorAll('[data-user-name]').forEach(node=>node.textContent=userAccount.name);
+  document.querySelectorAll('[data-user-email]').forEach(node=>node.textContent=userAccount.email||'Nicht hinterlegt');
+  document.querySelectorAll('[data-user-initials]').forEach(node=>node.textContent=initials);
+  document.getElementById('user-menu-trigger').title=userAccount.name+' · Benutzerkonto';
+  document.querySelectorAll('[data-user-role]').forEach(node=>node.textContent=managedUserRoles.admin.label);
+}
+function applyUserPreferences(){document.body.classList.toggle('user-reduce-motion',userAccount.reduceMotion);}
+function renderUserAccountPage(tab){
+  const active=userDemoSignedOut?'abgemeldet':tab;
+  if(active==='benutzerverwaltung')renderManagedUsers();
+  ['profil','einstellungen','benutzerverwaltung','logout','abgemeldet'].forEach(key=>document.getElementById('account-pane-'+key).hidden=key!==active);
+  document.getElementById('account-sidebar').hidden=userDemoSignedOut;
+  document.getElementById('account-layout').classList.toggle('is-logged-out',userDemoSignedOut);
+  document.querySelectorAll('[data-account-tab]').forEach(link=>{
+    const selected=link.dataset.accountTab===active;
+    link.classList.toggle('active',selected);
+    if(selected)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');
+  });
+  document.getElementById('account-name').value=userAccount.name;
+  document.getElementById('account-business').value=userAccount.business;
+  document.getElementById('account-email').value=userAccount.email;
+  document.getElementById('account-start-page').value=userAccount.startPage;
+  document.getElementById('account-reduce-motion').checked=userAccount.reduceMotion;
+  document.getElementById('account-profile-status').textContent='';
+  document.getElementById('account-preferences-status').textContent='';
+}
+function storeUserAccount(){
+  try{localStorage.setItem(userAccountStorageKey,JSON.stringify(userAccount));return true;}catch{return false;}
+}
+function saveUserProfile(event){
+  event.preventDefault();if(userDemoSignedOut)return;
+  const form=document.getElementById('account-profile-form'),name=document.getElementById('account-name');
+  name.value=name.value.trim();if(!form.reportValidity())return;
+  userAccount={...userAccount,name:name.value,business:document.getElementById('account-business').value.trim(),email:document.getElementById('account-email').value.trim()};
+  managedUsers=managedUsers.map(user=>user.id===currentManagedUserId?{...user,name:userAccount.name,email:userAccount.email}:user);
+  const profileSaved=storeUserAccount(),saved=storeManagedUsers()&&profileSaved;updateUserAccountIdentity();
+  document.getElementById('account-profile-status').textContent=saved?'Profil gespeichert.':'Für diese Sitzung übernommen. Der Browser erlaubt kein lokales Speichern.';
+}
+function saveUserPreferences(event){
+  event.preventDefault();if(userDemoSignedOut)return;
+  userAccount={...userAccount,startPage:document.getElementById('account-start-page').value,reduceMotion:document.getElementById('account-reduce-motion').checked};
+  const saved=storeUserAccount();applyUserPreferences();
+  document.getElementById('account-preferences-status').textContent=saved?'Einstellungen gespeichert.':'Für diese Sitzung übernommen. Der Browser erlaubt kein lokales Speichern.';
+}
+function logoutUserDemo(){
+  userDemoSignedOut=true;closeUserMenu();setVoiceAssistantRecording(false);
+  document.body.classList.add('is-demo-logged-out');document.getElementById('user-menu-trigger').disabled=true;
+  location.hash='konto-logout';route();
+}
+function resumeUserDemo(){
+  userDemoSignedOut=false;document.body.classList.remove('is-demo-logged-out');document.getElementById('user-menu-trigger').disabled=false;
+  location.hash=userAccount.startPage;route();
+}
+document.addEventListener('pointerdown',event=>{if(!document.getElementById('user-account-menu').contains(event.target))closeUserMenu();});
+document.getElementById('user-account-menu').addEventListener('focusout',event=>{if(!event.currentTarget.contains(event.relatedTarget))closeUserMenu();});
+document.getElementById('user-account-menu').addEventListener('keydown',event=>{
+  const menu=document.getElementById('user-dropdown'),trigger=document.getElementById('user-menu-trigger');
+  if(event.key==='Escape'&&!menu.hidden){event.preventDefault();event.stopPropagation();closeUserMenu(true);return;}
+  if(!['ArrowDown','ArrowUp','Home','End'].includes(event.key))return;
+  if(menu.hidden&&event.target!==trigger)return;
+  event.preventDefault();event.stopPropagation();
+  const wasHidden=menu.hidden;if(wasHidden)toggleUserMenu();
+  const items=[...menu.querySelectorAll('[role="menuitem"]')],index=items.indexOf(document.activeElement);
+  const next=event.key==='Home'?0:event.key==='End'?items.length-1:wasHidden?(event.key==='ArrowUp'?items.length-1:0):(index+(event.key==='ArrowUp'?-1:1)+items.length)%items.length;
+  items[next].focus();
+});
+updateUserAccountIdentity();applyUserPreferences();
+
+function escapeManagedUserText(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+function storeManagedUsers(){try{localStorage.setItem(managedUsersStorageKey,JSON.stringify(managedUsers));return true;}catch{return false;}}
+function canManageDemoUsers(){return !userDemoSignedOut&&managedUsers.find(user=>user.id===currentManagedUserId)?.role==='admin';}
+function managedRoleOptions(selected){return Object.entries(managedUserRoles).map(([key,role])=>`<option value="${key}"${key===selected?' selected':''}>${role.label}</option>`).join('');}
+function renderManagedUsers(){
+  const body=document.getElementById('account-managed-users');
+  body.innerHTML=managedUsers.map(user=>{
+    const current=user.id===currentManagedUserId,role=managedUserRoles[user.role];
+    const roleControl=current?'<span class="account-user-badge">Admin</span>':`<select aria-label="Rolle für ${escapeManagedUserText(user.name)}" onchange="setManagedUserRole('${user.id}',this.value)"${canManageDemoUsers()?'':' disabled'}>${managedRoleOptions(user.role)}</select>`;
+    return `<tr><td><strong>${escapeManagedUserText(user.name)}</strong><small>${current?'Angemeldet · aktuelles Konto':user.email?escapeManagedUserText(user.email):'Benutzerprofil'}</small></td><td>${roleControl}</td><td class="account-user-access">${role.access}</td></tr>`;
+  }).join('');
+  document.getElementById('account-users-count').textContent=managedUsers.length+' Benutzer';
+  document.getElementById('account-new-user-button').disabled=!canManageDemoUsers();
+}
+function setManagedUserRole(id,role){
+  if(!canManageDemoUsers()||id===currentManagedUserId||!Object.hasOwn(managedUserRoles,role))return;
+  const user=managedUsers.find(user=>user.id===id);if(!user)return;
+  user.role=role;const saved=storeManagedUsers();renderManagedUsers();
+  document.getElementById('account-users-status').textContent=saved?`Rolle für ${user.name} gespeichert.`:'Rolle für diese Sitzung übernommen. Der Browser erlaubt kein lokales Speichern.';
+}
+function showNewManagedUserForm(){
+  if(!canManageDemoUsers())return;
+  document.getElementById('account-new-user-form').hidden=false;
+  document.getElementById('account-new-user-name').focus();
+}
+function closeNewManagedUserForm(){
+  const form=document.getElementById('account-new-user-form');form.hidden=true;form.reset();
+  document.getElementById('account-new-user-button').focus();
+}
+function createManagedUser(event){
+  event.preventDefault();if(!canManageDemoUsers())return;
+  const form=document.getElementById('account-new-user-form'),name=document.getElementById('account-new-user-name');
+  name.value=name.value.trim();if(!form.reportValidity())return;
+  const role=document.getElementById('account-new-user-role').value;if(!Object.hasOwn(managedUserRoles,role))return;
+  let id='user-'+Date.now().toString(36);while(managedUsers.some(user=>user.id===id))id+='-1';
+  managedUsers.push({id,name:name.value.slice(0,80),email:document.getElementById('account-new-user-email').value.trim().slice(0,160),role});
+  const saved=storeManagedUsers();renderManagedUsers();closeNewManagedUserForm();
+  document.getElementById('account-users-status').textContent=saved?'Benutzerprofil angelegt.':'Benutzerprofil für diese Sitzung angelegt. Der Browser erlaubt kein lokales Speichern.';
+}
+
+// Native horizontale Touch-Bewegung mit iPad-Nachlauf; Zeitleiste und Aufgaben scrollen gemeinsam.
+function enableScheduleSwipe(){
+  const viewport=document.getElementById('schedule-viewport');
+  viewport.addEventListener('scroll',()=>{
+    if(scheduleScrollFrame)return;
+    scheduleScrollFrame=requestAnimationFrame(()=>{
+      scheduleScrollFrame=0;
+      const maxScroll=viewport.scrollWidth-viewport.clientWidth;
+      if(maxScroll<=0)return;
+      scheduleOffset=Math.max(0,Math.min(scheduleTotalMinutes-scheduleSpan,Math.round(viewport.scrollLeft/maxScroll*(scheduleTotalMinutes-scheduleSpan))));
+      updateScheduleChrome();
+    });
+  },{passive:true});
+  viewport.addEventListener('keydown',event=>{
+    if(event.target!==viewport||event.altKey||event.ctrlKey||event.metaKey)return;
+    const targets={ArrowLeft:scheduleOffset-120,ArrowRight:scheduleOffset+120,PageUp:scheduleOffset-scheduleSpan,PageDown:scheduleOffset+scheduleSpan,Home:0,End:scheduleTotalMinutes-scheduleSpan};
+    if(!Object.hasOwn(targets,event.key))return;
+    event.preventDefault();seekSchedule(targets[event.key]);
+  });
+  new ResizeObserver(resizeScheduleViewport).observe(viewport);
+}
+enableScheduleSwipe();
+
+// Zuweisung aus der Aufgabendetailansicht: bestehendes Gespann oder Fahrzeug + Gerät.
+function taskAssignmentContents(task){
+  const state=taskAssignment,units=activeTaskCombinations(task),newMode=state.mode==='new';
+  const existing=units.length?units.map(unit=>{
+    const selected=state.robotId===unit.robot.id&&state.implementId===unit.implementId;
+    const toolName=unit.implementId==='integrated'?'Integrierte Hackeinheit':fleetImplements.find(tool=>tool.id===unit.implementId).name;
+    const queue=dispatchTasks.filter(job=>job.robot===unit.robot.id&&job.id!==task.id).length;
+    return `<label class="task-unit-card"><input type="radio" name="task-assignment-existing" value="${unit.robot.id}"${selected?' checked':''} onchange="selectExistingTaskUnit(${unit.robot.id})"><span><strong>${unit.robot.name}</strong><span>${toolName}</span><small>Im Einsatz · ${data.find(r=>r.id===unit.robot.id).area} · ${queue} Aufgaben eingeplant</small></span></label>`;
+  }).join(''):'<p class="task-assignment-note">Kein passendes aktives Gespann vorhanden.</p><button type="button" class="task-assignment-secondary" onclick="setTaskAssignmentMode(\'new\')">Zugfahrzeug und Gerät auswählen</button>';
+  const vehicle=compatibleRobots(task).find(robot=>robot.id===state.robotId);
+  const tools=compatibleTaskImplements(task);
+  const toolOptions=vehicle?.fixed?'<option value="integrated" selected>Integrierte Hackeinheit</option>':'<option value="">Anbaugerät wählen …</option>'+tools.map(tool=>{
+    const conflict=vehicle?taskImplementConflict(task,vehicle.id,tool.id):'';
+    return `<option value="${tool.id}"${state.implementId===tool.id?' selected':''}${conflict?' disabled':''}>${tool.name}${tool.width?' · '+tool.width:''}${conflict?' · '+conflict:''}</option>`;
+  }).join('');
+  return `<h2>Gespann zuweisen</h2><p class="task-assignment-note">Die Aufgabe wird hinter den bereits geplanten Aufgaben des Fahrzeugs angehängt.</p><div class="task-assignment-modes" role="group" aria-label="Gespannauswahl"><button id="task-unit-mode-existing" type="button" aria-pressed="${!newMode}" onclick="setTaskAssignmentMode('existing')">Aktuelles Gespann</button><button id="task-unit-mode-new" type="button" aria-pressed="${newMode}" onclick="setTaskAssignmentMode('new')">Gespann zusammenstellen</button></div><div class="task-assignment-mode-pane"${newMode?' hidden':''}>${existing}</div><div class="task-assignment-mode-pane"${newMode?'':' hidden'}><label class="task-assignment-label">Zugfahrzeug<select id="task-unit-vehicle" onchange="selectTaskAssignmentVehicle(this.value)"><option value="">Fahrzeug wählen …</option>${compatibleRobots(task).map(robot=>`<option value="${robot.id}"${state.robotId===robot.id?' selected':''}>${robot.name} · ${robot.type}</option>`).join('')}</select></label><label class="task-assignment-label">Anbaugerät<select id="task-unit-implement" onchange="selectTaskAssignmentImplement(this.value)"${!vehicle||vehicle.fixed?' disabled':''}>${toolOptions}</select></label><p class="task-assignment-note">Es werden passende Geräte angeboten. Bereits an anderen Fahrzeugen angebaute oder dafür eingeplante Geräte sind nicht auswählbar.</p></div><p id="task-assignment-summary" class="task-assignment-summary"></p><p id="task-assignment-validation" class="task-assignment-validation" role="status"></p><button id="task-assignment-save" type="button" class="primary" onclick="confirmTaskAssignment()" disabled>An Auftragsliste anhängen</button>`;
+}
+function refreshTaskAssignment(focusId=null){
+  const task=dispatchTasks.find(job=>job.id===taskOverviewId),panel=document.getElementById('task-assignment-panel');
+  if(!task||!panel)return;
+  panel.innerHTML=taskAssignmentContents(task);panel.hidden=!taskAssignment.expanded;
+  updateTaskAssignmentSummary();
+  if(focusId)document.getElementById(focusId)?.focus();
+}
+function openTaskAssignment(){
+  if(userDemoSignedOut||!dispatchTasks.some(task=>task.id===taskOverviewId))return;
+  taskAssignment.expanded=true;refreshTaskAssignment();
+  document.getElementById('task-assignment-panel').scrollIntoView({block:'start',behavior:userAccount.reduceMotion?'auto':'smooth'});
+  document.getElementById('task-unit-mode-'+taskAssignment.mode).focus({preventScroll:true});
+}
+function setTaskAssignmentMode(mode){
+  if(!['new','existing'].includes(mode))return;
+  taskAssignment.mode=mode;taskAssignment.robotId=null;taskAssignment.implementId=null;
+  refreshTaskAssignment('task-unit-mode-'+mode);
+}
+function selectExistingTaskUnit(robotId){
+  const task=dispatchTasks.find(job=>job.id===taskOverviewId);if(!task)return;
+  const unit=activeTaskCombinations(task).find(item=>item.robot.id===robotId);if(!unit)return;
+  taskAssignment.robotId=unit.robot.id;taskAssignment.implementId=unit.implementId;updateTaskAssignmentSummary();
+}
+function selectTaskAssignmentVehicle(value){
+  const task=dispatchTasks.find(job=>job.id===taskOverviewId);if(!task)return;
+  const vehicle=compatibleRobots(task).find(robot=>robot.id===Number(value));
+  taskAssignment.robotId=vehicle?.id||null;taskAssignment.implementId=vehicle?.fixed?'integrated':null;
+  refreshTaskAssignment('task-unit-vehicle');
+}
+function selectTaskAssignmentImplement(id){taskAssignment.implementId=id||null;updateTaskAssignmentSummary();}
+function updateTaskAssignmentSummary(){
+  const task=dispatchTasks.find(job=>job.id===taskOverviewId);if(!task)return;
+  const valid=validTaskCombination(task,taskAssignment.robotId,taskAssignment.implementId);
+  const button=document.getElementById('task-assignment-save');if(!button)return;
+  button.disabled=!valid;
+  const summary=document.getElementById('task-assignment-summary');
+  if(!valid){summary.textContent='Wähle ein passendes Gespann für diese Aufgabe.';return;}
+  const robot=dispatchRobots.find(r=>r.id===taskAssignment.robotId),queue=dispatchTasks.filter(job=>job.robot===robot.id&&job.id!==task.id);
+  const tool=taskAssignment.implementId==='integrated'?'Integrierte Hackeinheit':fleetImplements.find(tool=>tool.id===taskAssignment.implementId).name;
+  summary.textContent=`${robot.name} + ${tool} · Position ${queue.length+1} am Listenende${queue.length?' · nach '+queue.length+' geplanten Aufgaben':''}.`;
+}
+function confirmTaskAssignment(){
+  const task=dispatchTasks.find(job=>job.id===taskOverviewId);if(!task||userDemoSignedOut)return;
+  const robotId=taskAssignment.robotId,implementId=taskAssignment.implementId;
+  if(!validTaskCombination(task,robotId,implementId)||!assignDispatchTask(task.id,robotId,implementId)){
+    document.getElementById('task-assignment-validation').textContent='Das Gespann passt nicht mehr zur Aufgabe oder das Gerät ist anderweitig eingeplant. Bitte erneut auswählen.';return;
+  }
+  taskAssignment.expanded=false;renderTaskOverview(task.id);
+  const position=dispatchTasks.filter(job=>job.robot===robotId).findIndex(job=>job.id===task.id)+1;
+  document.getElementById('task-assignment-status').textContent=`Aufgabe an Position ${position} bei ${robotDisplayName(robotId)} angehängt.`;
+}
+
+// Lokaler Planvorschlag: Prioritäten, Geräte bündeln und kurze Fahrten. Keine globale Optimalitätsgarantie.
+function copyDispatchTasks(tasks){return tasks.map(task=>({...task}));}
+function robotAvailableForSuggestion(robot){return data.find(r=>r.id===robot.id)?.alert?.severity!=='error'&&fleetOperatingStates[robot.id]?.kind!=='maintenance';}
+function dispatchPlanMetrics(tasks){
+  let setup=0,drive=0,km=0,work=0,end=480,urgency=0,invalid=0;
+  const baseDate=new Date(dispatchDate+'T12:00:00').getTime();
+  dispatchRobots.forEach(robot=>{
+    const jobs=tasks.filter(task=>task.robot===robot.id);if(!jobs.length)return;
+    if(!robotAvailableForSuggestion(robot))invalid+=jobs.length*100000;
+    jobs.forEach(task=>{if(!validTaskCombination(task,robot.id,task.implementId,tasks))invalid+=1000000;});
+    const schedule=buildRobotSchedule(robot,jobs);end=Math.max(end,schedule.end);
+    schedule.segments.forEach(segment=>{
+      if(segment.kind==='setup')setup+=segment.duration;
+      if(segment.kind==='drive'){drive+=segment.duration;km+=segment.route.km;}
+      if(segment.kind==='work'){
+        work+=segment.duration;
+        urgency+=Math.max(0,segment.start-480)*({immediate:20,week:3,month:1,flexible:.15}[segment.task.priority]??.15);
+        const due=taskDeadline(segment.task);
+        if(due){const limit=(new Date(due+'T12:00:00').getTime()-baseDate)/86400000*1440+1020;urgency+=Math.max(0,segment.start+segment.duration-limit)*25;}
+      }
+    });
+  });
+  const unassigned=tasks.filter(task=>!task.robot).length;
+  return {setup,drive,km,work,end,unassigned,assigned:tasks.length-unassigned,score:unassigned*1000000+invalid+setup*3+drive+Math.max(0,end-480)*.2+urgency};
+}
+function candidatePlanTools(task,robot,tasks){
+  const ids=robot.fixed?['integrated']:[task.implementId,fleetMountedImplements[robot.id],...tasks.filter(job=>job.robot===robot.id).map(job=>job.implementId),...compatibleTaskImplements(task).map(tool=>tool.id)];
+  return [...new Set(ids.filter(Boolean))].filter(id=>validTaskCombination(task,robot.id,id,tasks));
+}
+function insertDispatchPlanTask(tasks,task,robotId,implementId,index){
+  const next={...task,robot:robotId,implementId};
+  const tool=fleetImplements.find(item=>item.id===implementId);if(tool?.width)next.workingWidth=parseFloat(tool.width.replace(',','.'));
+  const queue=tasks.filter(job=>job.robot===robotId),before=queue[index];
+  const result=[...tasks],position=before?result.findIndex(job=>job.id===before.id):result.length;
+  result.splice(position,0,next);return result;
+}
+function suggestDispatchTasks(source,budget=2200){
+  const priorities={immediate:0,week:1,month:2,flexible:3};
+  const ordered=copyDispatchTasks(source).sort((a,b)=>(priorities[a.priority]??3)-(priorities[b.priority]??3)||(taskDeadline(a)||'9999').localeCompare(taskDeadline(b)||'9999')||dispatchEquipment(a).localeCompare(dispatchEquipment(b),'de')||a.id-b.id);
+  let evaluations=0,greedy=[];
+  const robots=dispatchRobots.filter(robotAvailableForSuggestion);
+  // Zunächst jede Aufgabe an der günstigsten Stelle eines passenden Gespanns einfügen.
+  for(const task of ordered){
+    let best=null,bestScore=Infinity;
+    for(const robot of robots){
+      const count=greedy.filter(job=>job.robot===robot.id).length;
+      for(const gear of candidatePlanTools(task,robot,greedy))for(let position=0;position<=count;position++){
+        if(evaluations++>=budget)break;
+        const candidate=insertDispatchPlanTask(greedy,task,robot.id,gear,position),score=dispatchPlanMetrics(candidate).score;
+        if(score<bestScore-.0001){best=candidate;bestScore=score;}
+      }
+    }
+    if(!best&&evaluations>=budget){
+      const fallback=[...robots].sort((a,b)=>greedy.filter(job=>job.robot===a.id).length-greedy.filter(job=>job.robot===b.id).length).map(robot=>({robot,gear:candidatePlanTools(task,robot,greedy)[0]})).find(unit=>unit.gear);
+      if(fallback)best=insertDispatchPlanTask(greedy,task,fallback.robot.id,fallback.gear,greedy.filter(job=>job.robot===fallback.robot.id).length);
+    }
+    if(best)greedy=best;else{const pending={...task,robot:null};delete pending.implementId;greedy.push(pending);}
+  }
+  let best=copyDispatchTasks(source),bestScore=dispatchPlanMetrics(best).score;
+  if(dispatchPlanMetrics(greedy).score<bestScore-.0001){best=greedy;bestScore=dispatchPlanMetrics(best).score;}
+  // Begrenzte lokale Verbesserung: Reihenfolge, Fahrzeug und konkretes Gerät gemeinsam bewerten.
+  for(let pass=0;pass<3&&evaluations<budget;pass++){
+    let improved=false;
+    for(const id of ordered.map(task=>task.id)){
+      const task=best.find(job=>job.id===id),remaining=best.filter(job=>job.id!==id);
+      let improvedPlan=null,improvedScore=bestScore;
+      for(const robot of robots){
+        const count=remaining.filter(job=>job.robot===robot.id).length;
+        for(const gear of candidatePlanTools(task,robot,remaining))for(let position=0;position<=count;position++){
+          if(evaluations++>=budget)break;
+          const candidate=insertDispatchPlanTask(remaining,task,robot.id,gear,position),score=dispatchPlanMetrics(candidate).score;
+          if(score<improvedScore-.0001){improvedPlan=candidate;improvedScore=score;}
+        }
+      }
+      if(improvedPlan){best=improvedPlan;bestScore=improvedScore;improved=true;}
+      if(evaluations>=budget)break;
+    }
+    if(!improved)break;
+  }
+  return best;
+}
+function syncDispatchPlanControls(){
+  document.querySelectorAll('[data-plan-suggestion]').forEach(button=>{
+    button.textContent=planProposalSnapshot?'Vorschlag zurücksetzen':'✧ KI-Vorschlag';
+    button.setAttribute('aria-pressed',String(Boolean(planProposalSnapshot)));
+    button.title=planProposalSnapshot?'Ursprünglichen Plan wiederherstellen':'Demo-Vorschlag nach Priorität, Geräten und Fahrwegen erstellen';
+  });
+  const accept=document.getElementById('accept-plan');
+  accept.textContent=planAccepted?'Plan gespeichert ✓':'Einsatzplan übernehmen';
+  accept.disabled=planAccepted||(!dispatchTasks.some(task=>task.robot)&&!committedDispatchPlan?.tasks.some(task=>task.robot));
+
+}
+function toggleDispatchSuggestion(fromOverview=false){
+  if(userDemoSignedOut)return;
+  clearPlanEditUndo();
+  cancelPlanDrag();
+  if(planProposalSnapshot){
+    const snapshot=planProposalSnapshot,known=new Set(snapshot.tasks.map(task=>task.id));
+    const added=dispatchTasks.filter(task=>!known.has(task.id)).map(task=>{const copy={...task,robot:null};delete copy.implementId;return copy;});
+    dispatchTasks.splice(0,dispatchTasks.length,...copyDispatchTasks(snapshot.tasks),...added);
+    selectedDispatchRobot=snapshot.selectedRobot;selectedDispatchTask=snapshot.selectedTask;
+    scheduleOffset=snapshot.offset;scheduleSpan=snapshot.span;document.getElementById('schedule-scale').value=scheduleSpan;
+    planAccepted=snapshot.accepted&&!added.length;planProposalSnapshot=null;
+    document.getElementById('plan-status').textContent=added.length?'Ursprünglicher Plan wiederhergestellt · Neue Aufgaben bleiben offen':snapshot.status;
+    renderDispatch();
+  }else{
+    if(!dispatchTasks.length)return;
+    planProposalSnapshot={tasks:copyDispatchTasks(dispatchTasks),accepted:planAccepted,selectedRobot:selectedDispatchRobot,selectedTask:selectedDispatchTask,offset:scheduleOffset,span:scheduleSpan,status:document.getElementById('plan-status').textContent};
+    const proposed=suggestDispatchTasks(dispatchTasks);
+    dispatchTasks.splice(0,dispatchTasks.length,...proposed);
+    selectedDispatchRobot=dispatchTasks.find(task=>task.robot)?.robot||selectedDispatchRobot;selectedDispatchTask=null;
+    markPlanDraft('KI-Vorschlag · Demo · Prioritäten, Gerätewechsel und Fahrwege berücksichtigt');renderDispatch();
+  }
+  if(fromOverview)location.hash='auftragsverwaltung';
+}
+function validDispatchDate(value){return typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&!Number.isNaN(new Date(value+'T12:00:00').getTime())&&new Date(value+'T12:00:00').toISOString().slice(0,10)===value;}
+function sanitizeStoredDispatchTask(task){
+  if(!task||!Number.isInteger(task.id)||task.id<1||!fields.some(field=>field.id===task.field)||!['Grubbern','Grubbern tief','Grubbern flach','Säen','Hacken','Striegeln'].includes(task.operation))return null;
+  const robot=task.robot==null?null:dispatchRobots.find(robot=>robot.id===task.robot)?.id;
+  if(task.robot!=null&&!robot)return null;
+  const copy={id:task.id,field:task.field,operation:task.operation,robot};
+  if(robot){if(task.implementId!=='integrated'&&!fleetImplements.some(tool=>tool.id===task.implementId))return null;copy.implementId=task.implementId;}
+  const limits={speed:50,depth:100,workingWidth:50,seedRate:100000000,direction:359,bearingDegrees:359,headlandPasses:8,tramlineSpacing:100};
+  for(const [key,limit] of Object.entries(limits))if(Number.isFinite(task[key])&&task[key]>=0&&task[key]<=limit)copy[key]=task[key];
+  if(typeof task.crop==='string')copy.crop=task.crop.slice(0,100).replace(/[<>&"']/g,'');
+  if(Object.hasOwn(taskPriorities,task.priority))copy.priority=task.priority;
+  for(const key of ['createdOn','dueDate'])if(validDispatchDate(task[key]))copy[key]=task[key];
+  if(typeof task.applicationMap==='boolean')copy.applicationMap=task.applicationMap;
+  return copy;
+}
+function loadCommittedDispatchPlan(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(dispatchPlanStorageKey)||'null');
+    if(!saved||saved.version!==1||!validDispatchDate(saved.date)||!Array.isArray(saved.tasks)||!saved.tasks.length||saved.tasks.length>200)return false;
+    const tasks=saved.tasks.map(sanitizeStoredDispatchTask);
+    if(tasks.some(task=>!task)||new Set(tasks.map(task=>task.id)).size!==tasks.length||tasks.some(task=>task.robot&&!validTaskCombination(task,task.robot,task.implementId,tasks)))return false;
+    if(!tasks.some(task=>task.robot)&&!(saved.transferMode==='simulation'&&Array.isArray(saved.transmissions)&&saved.transmissions.length))return false;
+    dispatchTasks.splice(0,dispatchTasks.length,...tasks);dispatchDate=saved.date;
+    planAccepted=true;committedDispatchPlan=saved;planProposalSnapshot=null;
+    selectedDispatchRobot=tasks.find(task=>task.robot)?.robot||dispatchRobots[0].id;
+    document.getElementById('plan-status').textContent='Gespeicherter Plan geladen · Übertragung an Roboter simuliert';
+    return true;
+  }catch{return false;}
+}
+function acceptDispatchPlan(){
+  if(userDemoSignedOut||planAccepted)return false;
+  const tasks=copyDispatchTasks(dispatchTasks),assigned=tasks.filter(task=>task.robot);
+  if(!assigned.length&&!committedDispatchPlan?.tasks.some(task=>task.robot))return false;
+  if(assigned.some(task=>!validTaskCombination(task,task.robot,task.implementId,tasks))){document.getElementById('plan-status').textContent='Plan nicht übernommen · Gespannzuweisungen prüfen';return false;}
+  const acceptedAt=new Date().toISOString();
+  const transmissions=dispatchRobots.filter(robot=>tasks.some(task=>task.robot===robot.id)||committedDispatchPlan?.tasks.some(task=>task.robot===robot.id)).map(robot=>({robotId:robot.id,status:'simulated',tasks:tasks.filter(task=>task.robot===robot.id).map(task=>task.id),segments:buildRobotSchedule(robot,tasks.filter(task=>task.robot===robot.id)).segments.map(segment=>({kind:segment.kind,start:segment.start,duration:segment.duration,taskId:segment.task.id,equipment:dispatchTaskToolName(segment.task),...(segment.route?{route:segment.route}:{} )}))}));
+  const saved={version:1,date:dispatchDate,acceptedAt,tasks,transferMode:'simulation',transmissions};
+  try{localStorage.setItem(dispatchPlanStorageKey,JSON.stringify(saved));}catch{document.getElementById('plan-status').textContent='Plan konnte lokal nicht gespeichert werden · Nicht übernommen';return false;}
+  committedDispatchPlan=saved;planAccepted=true;planProposalSnapshot=null;clearPlanEditUndo();
+  document.getElementById('plan-status').textContent=`Plan gespeichert · Übertragung an ${transmissions.length} Roboter simuliert · Keine Live-Verbindung`;
+  syncDispatchPlanControls();return true;
+}
+function planDropEquipment(task,robotId,tasks=dispatchTasks){
+  const robot=dispatchRobots.find(robot=>robot.id===robotId);if(!robot)return null;
+  const preferred=[...tasks.filter(job=>job.robot===robotId&&job.id!==task.id)].reverse().map(job=>job.implementId);
+  const ids=robot.fixed?['integrated']:[...preferred,fleetMountedImplements[robotId],task.implementId,...compatibleTaskImplements(task).map(tool=>tool.id)];
+  return [...new Set(ids.filter(Boolean))].find(id=>validTaskCombination(task,robotId,id,tasks))||null;
+}
+function moveTaskInPlan(taskId,robotId,beforeTaskId=null){
+  if(userDemoSignedOut)return false;
+  const task=dispatchTasks.find(task=>task.id===taskId);if(!task)return false;
+  if(beforeTaskId===taskId)return true;
+  const remaining=dispatchTasks.filter(job=>job.id!==taskId),gear=planDropEquipment(task,robotId,remaining);
+  if(!gear){document.getElementById('plan-edit-message').textContent='Verschieben nicht möglich: kein passendes freies Gespann für dieses Fahrzeug.';return false;}
+  const queue=remaining.filter(job=>job.robot===robotId);
+  const index=beforeTaskId===null?queue.length:queue.findIndex(job=>job.id===beforeTaskId);if(index<0)return false;
+  const next=insertDispatchPlanTask(remaining,task,robotId,gear,index);
+  dispatchTasks.splice(0,dispatchTasks.length,...next);selectedDispatchRobot=robotId;selectedDispatchTask=taskId;
+  markPlanDraft('Aufgabe verschoben · Rüstzeiten und Straßenfahrten neu berechnet');renderDispatch();
+  document.getElementById('plan-edit-message').textContent=`${fields.find(field=>field.id===task.field).name} → ${robotShortName(robotId)} · Position ${index+1}`;
+  return true;
+}
+
+// Prototyp-Ansicht: Karte ausblenden und Aufgaben per Halten aufnehmen.
+function toggleDispatchMap(){
+  const hidden=document.getElementById('auftragsverwaltung').classList.toggle('dispatch-map-hidden');
+  document.getElementById('dispatch-map-toggle').setAttribute('aria-expanded',String(!hidden));
+  document.getElementById('dispatch-map-toggle-label').textContent=hidden?'Karte einblenden':'Karte ausblenden';
+  requestAnimationFrame(resizeScheduleViewport);
+}
+function clearPlanEditUndo(){planEditUndo=null;const feedback=document.getElementById('plan-action-feedback');if(feedback)feedback.hidden=true;}
+function applyPlanTaskAction(taskId,action){
+  if(userDemoSignedOut||!['storage','delete'].includes(action))return false;
+  const index=dispatchTasks.findIndex(task=>task.id===taskId);if(index<0)return false;
+  const task=dispatchTasks[index],record={task:{...task},index,accepted:planAccepted,status:document.getElementById('plan-status').textContent,action};
+  if(action==='delete')dispatchTasks.splice(index,1);else{task.robot=null;delete task.implementId;}
+  selectedDispatchTask=null;
+  markPlanDraft(action==='delete'?'Aufgabe gelöscht · Planentwurf geändert':'Aufgabe zurück im Aufgabenspeicher');renderDispatch();
+  planEditUndo=record;
+  const label=fields.find(field=>field.id===record.task.field).name+' · '+record.task.operation;
+  document.getElementById('plan-action-feedback-text').textContent=label+(action==='delete'?' gelöscht.':' im Aufgabenspeicher.');
+  document.getElementById('plan-action-feedback').hidden=false;
+  document.getElementById('plan-edit-message').textContent=action==='delete'?'Aufgabe gelöscht – Rückgängig möglich.':'Aufgabe in den Aufgabenspeicher zurückgelegt.';
+  return true;
+}
+function undoPlanTaskAction(){
+  if(!planEditUndo||userDemoSignedOut)return;
+  const undo=planEditUndo,current=dispatchTasks.findIndex(task=>task.id===undo.task.id);
+  if(current>=0)dispatchTasks.splice(current,1);
+  dispatchTasks.splice(Math.min(undo.index,dispatchTasks.length),0,{...undo.task});
+  clearPlanEditUndo();planAccepted=undo.accepted;
+  document.getElementById('plan-status').textContent=undo.status;renderDispatch();
+  document.getElementById('plan-edit-message').textContent='Letzte Aktion rückgängig gemacht.';
+}
+function clearPlanDropHighlight(){document.querySelectorAll('.plan-drop-target,.plan-drop-invalid,.plan-drop-before').forEach(node=>node.classList.remove('plan-drop-target','plan-drop-invalid','plan-drop-before'));}
+function planTargetAt(x,y,taskId){
+  const hit=document.elementFromPoint(x,y),action=hit?.closest('[data-plan-drop-action]');
+  if(action&&!document.getElementById('plan-drop-dock').hidden&&dispatchTasks.some(task=>task.id===taskId))return {action:action.dataset.planDropAction,element:action,valid:true};
+  const row=hit?.closest('[data-drop-robot]');
+  if(!row||!document.getElementById('schedule-viewport').contains(row))return null;
+  const robotId=Number(row.dataset.dropRobot),task=dispatchTasks.find(task=>task.id===taskId),robot=dispatchRobots.find(robot=>robot.id===robotId);if(!task||!robot)return null;
+  const remaining=dispatchTasks.filter(job=>job.id!==taskId),gear=planDropEquipment(task,robotId,remaining);
+  const lane=row.querySelector('.timeline-lane'),rect=lane.getBoundingClientRect();
+  const minute=(x-rect.left)/Math.max(1,rect.width)*scheduleTotalMinutes;
+  const work=buildRobotSchedule(robot).segments.filter(segment=>segment.kind==='work'&&segment.task.id!==taskId);
+  const before=hit.closest('.timeline-robot-label')?null:work.find(segment=>minute<segment.start+segment.duration/2)?.task.id??null;
+  return {row,robotId,beforeTaskId:before,valid:Boolean(gear)};
+}
+function updatePlanDragTarget(x,y){
+  if(!planDragState)return;
+  planDragState.x=x;planDragState.y=y;planDragState.target=planTargetAt(x,y,planDragState.taskId);
+  clearPlanDropHighlight();
+  const target=planDragState.target;
+  if(target){
+    (target.element||target.row).classList.add(target.valid?'plan-drop-target':'plan-drop-invalid');
+    if(target.valid&&!target.action&&target.beforeTaskId!==null)target.row.querySelector(`[data-drag-task="${target.beforeTaskId}"]`)?.classList.add('plan-drop-before');
+  }
+  if(planDragState.ghost){
+    planDragState.ghost.style.left=Math.min(x+14,Math.max(8,window.innerWidth-240))+'px';
+    planDragState.ghost.style.top=Math.max(8,Math.min(y-70,window.innerHeight-90))+'px';
+    const caption=target?.action==='storage'?'Zurück in den Aufgabenspeicher':target?.action==='delete'?'Zum Löschen loslassen':target?(target.valid?robotShortName(target.robotId)+' · '+(target.beforeTaskId===null?'ans Listenende':'vor Aufgabe '+target.beforeTaskId):'Kein passendes Gespann'):'Fahrzeug oder Ablagefläche wählen';
+    planDragState.ghost.querySelector('small').textContent=caption;
+    planDragState.ghost.classList.toggle('is-invalid',Boolean(target&&!target.valid));
+    planDragState.ghost.classList.toggle('is-delete',target?.action==='delete');
+  }
+}
+function beginPlanDrag(){
+  const drag=planDragState;if(!drag||drag.active)return;
+  if(drag.holdTimer)clearTimeout(drag.holdTimer);
+  drag.active=true;drag.block?.classList.remove('plan-hold-pending');drag.block?.classList.add('plan-drag-source');
+  document.body.classList.add('plan-is-dragging');document.getElementById('plan-drop-dock').hidden=false;
+  document.getElementById('plan-edit-message').textContent='Aufgabe aufgenommen · Verschieben, zurücklegen oder löschen';
+  if(!drag.native){
+    const task=dispatchTasks.find(task=>task.id===drag.taskId),ghost=document.createElement('div');ghost.className='plan-drag-ghost';
+    const title=document.createElement('strong'),caption=document.createElement('small');title.textContent=fields.find(field=>field.id===task.field).name+' · '+task.operation;
+    ghost.append(title,caption);document.body.append(ghost);drag.ghost=ghost;
+  }
+  updatePlanDragTarget(drag.x,drag.y);planDragFrame=requestAnimationFrame(planDragAutoScroll);
+}
+function planDragAutoScroll(){
+  planDragFrame=0;if(!planDragState?.active)return;
+  const viewport=document.getElementById('schedule-viewport'),box=viewport.getBoundingClientRect(),{x,y}=planDragState;
+  if(x>=box.left&&x<=box.right&&y>=box.top&&y<=box.bottom){
+    if(x>box.right-32)viewport.scrollLeft+=12;else if(x<box.left+32)viewport.scrollLeft-=12;
+    if(y>box.bottom-32)viewport.scrollTop+=9;else if(y<box.top+32)viewport.scrollTop-=9;
+    updatePlanDragTarget(x,y);
+  }
+  planDragFrame=requestAnimationFrame(planDragAutoScroll);
+}
+function cancelPlanDrag(blockClick=false){
+  const drag=planDragState;planDragState=null;
+  if(drag?.holdTimer)clearTimeout(drag.holdTimer);
+  if(planDragFrame){cancelAnimationFrame(planDragFrame);planDragFrame=0;}
+  if(blockClick)planClickBlockedUntil=performance.now()+450;
+  drag?.ghost?.remove();clearPlanDropHighlight();document.body.classList.remove('plan-is-dragging');
+  document.getElementById('plan-drop-dock').hidden=true;
+  document.querySelectorAll('.plan-drag-source,.plan-hold-pending').forEach(node=>node.classList.remove('plan-drag-source','plan-hold-pending'));
+  if(drag?.active)document.getElementById('plan-edit-message').textContent='↔ Wischen · Aufgabe kurz halten zum Verschieben';
+  const viewport=document.getElementById('schedule-viewport');
+  if(drag?.pointerId!==undefined&&viewport.hasPointerCapture(drag.pointerId))viewport.releasePointerCapture(drag.pointerId);
+}
+function finishPlanDrop(){
+  const drag=planDragState,target=drag?.target;cancelPlanDrag(Boolean(drag?.active));
+  if(!drag?.active)return;
+  if(!target||!target.valid){document.getElementById('plan-edit-message').textContent=target?'Dieses Fahrzeug hat kein passendes Gespann.':'Verschieben abgebrochen.';return;}
+  if(target.action){applyPlanTaskAction(drag.taskId,target.action);return;}
+  moveTaskInPlan(drag.taskId,target.robotId,target.beforeTaskId);
+}
+function setupDispatchDragging(){
+  const viewport=document.getElementById('schedule-viewport'),dock=document.getElementById('plan-drop-dock');
+  viewport.addEventListener('click',event=>{if(performance.now()<planClickBlockedUntil&&event.target.closest('.time-block')){event.preventDefault();event.stopImmediatePropagation();}},true);
+  viewport.addEventListener('contextmenu',event=>{if(event.target.closest('[data-drag-task]'))event.preventDefault();});
+  viewport.addEventListener('dragstart',event=>{
+    const block=event.target.closest('[data-drag-task]');if(!block||userDemoSignedOut||planDragState&&!planDragState.native){event.preventDefault();return;}
+    cancelPlanDrag();planDragState={taskId:Number(block.dataset.dragTask),native:true,active:false,x:event.clientX,y:event.clientY,target:null,block};
+    event.dataTransfer.setData('text/plain',String(planDragState.taskId));event.dataTransfer.effectAllowed='move';beginPlanDrag();
+  });
+  const dragover=event=>{
+    if(!planDragState?.active||!planDragState.native)return;
+    event.preventDefault();updatePlanDragTarget(event.clientX,event.clientY);event.dataTransfer.dropEffect=planDragState.target?.valid?'move':'none';
+  };
+  const drop=event=>{if(!planDragState?.active||!planDragState.native)return;event.preventDefault();updatePlanDragTarget(event.clientX,event.clientY);finishPlanDrop();};
+  [viewport,dock].forEach(node=>{node.addEventListener('dragover',dragover);node.addEventListener('drop',drop);});
+  viewport.addEventListener('dragend',()=>cancelPlanDrag(Boolean(planDragState?.active)));
+  // Der Griff bleibt als alternative Maus-/Stiftbedienung verfügbar.
+  viewport.addEventListener('pointerdown',event=>{
+    const handle=event.target.closest('.task-drag-handle'),block=handle?.closest('[data-drag-task]');
+    if(!block||userDemoSignedOut||event.button!==0||!event.isPrimary)return;
+    event.preventDefault();cancelPlanDrag();planDragState={taskId:Number(block.dataset.dragTask),pointerId:event.pointerId,active:false,startX:event.clientX,startY:event.clientY,x:event.clientX,y:event.clientY,target:null,block};viewport.setPointerCapture(event.pointerId);
+  });
+  viewport.addEventListener('pointermove',event=>{
+    const drag=planDragState;if(!drag||drag.pointerId!==event.pointerId)return;
+    if(!drag.active&&Math.hypot(event.clientX-drag.startX,event.clientY-drag.startY)<6)return;
+    event.preventDefault();beginPlanDrag();updatePlanDragTarget(event.clientX,event.clientY);
+  },{passive:false});
+  viewport.addEventListener('pointerup',event=>{if(planDragState?.pointerId===event.pointerId)finishPlanDrop();});
+  viewport.addEventListener('pointercancel',event=>{if(planDragState?.pointerId===event.pointerId)cancelPlanDrag(Boolean(planDragState?.active));});
+  viewport.addEventListener('lostpointercapture',event=>{if(planDragState?.pointerId===event.pointerId)cancelPlanDrag(Boolean(planDragState?.active));});
+  // Ein kurzer Tipp öffnet Details; eine Wischbewegung bleibt Scrollen. Erst Halten nimmt die Aufgabe auf.
+  viewport.addEventListener('touchstart',event=>{
+    if(userDemoSignedOut)return;
+    if(event.touches.length!==1){cancelPlanDrag(Boolean(planDragState?.active));return;}
+    const block=event.target.closest('[data-drag-task]');if(!block||event.target.closest('.task-drag-handle'))return;
+    cancelPlanDrag();const touch=event.touches[0];
+    const drag={taskId:Number(block.dataset.dragTask),touchId:touch.identifier,active:false,startX:touch.clientX,startY:touch.clientY,x:touch.clientX,y:touch.clientY,target:null,block};
+    planDragState=drag;block.classList.add('plan-hold-pending');
+    drag.holdTimer=setTimeout(()=>{if(planDragState===drag)beginPlanDrag();},400);
+  },{passive:true});
+  viewport.addEventListener('touchmove',event=>{
+    const drag=planDragState;if(!drag||drag.touchId===undefined)return;
+    if(event.touches.length!==1){cancelPlanDrag(Boolean(drag.active));return;}
+    const touch=[...event.touches].find(touch=>touch.identifier===drag.touchId);if(!touch)return;
+    if(!drag.active){if(Math.hypot(touch.clientX-drag.startX,touch.clientY-drag.startY)>6)cancelPlanDrag();return;}
+    if(event.cancelable)event.preventDefault();updatePlanDragTarget(touch.clientX,touch.clientY);
+  },{passive:false});
+  viewport.addEventListener('touchend',event=>{
+    const drag=planDragState;if(!drag||drag.touchId===undefined)return;
+    const touch=[...event.changedTouches].find(touch=>touch.identifier===drag.touchId);if(!touch)return;
+    if(drag.active){if(event.cancelable)event.preventDefault();updatePlanDragTarget(touch.clientX,touch.clientY);finishPlanDrop();}else cancelPlanDrag();
+  },{passive:false});
+  viewport.addEventListener('touchcancel',()=>{if(planDragState?.touchId!==undefined)cancelPlanDrag(Boolean(planDragState?.active));},{passive:true});
+  viewport.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&planDragState){event.preventDefault();event.stopPropagation();cancelPlanDrag(true);return;}
+    if(userDemoSignedOut)return;
+    const block=event.target.closest('[data-drag-task]');if(!block)return;
+    const id=Number(block.dataset.dragTask),task=dispatchTasks.find(task=>task.id===id);if(!task)return;
+    if(event.key==='Delete'||event.altKey&&event.key==='Backspace'){
+      event.preventDefault();event.stopPropagation();applyPlanTaskAction(id,event.key==='Delete'?'delete':'storage');viewport.focus({preventScroll:true});return;
+    }
+    if(!event.altKey)return;
+    if(['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();event.stopPropagation();moveDispatchTask(id,event.key==='ArrowLeft'?-1:1);}
+    else if(['ArrowUp','ArrowDown'].includes(event.key)){
+      event.preventDefault();event.stopPropagation();const options=dispatchRobots.filter(robot=>planDropEquipment(task,robot.id,dispatchTasks.filter(job=>job.id!==id))),index=options.findIndex(robot=>robot.id===task.robot);const robot=options[index+(event.key==='ArrowUp'?-1:1)];if(robot)moveTaskInPlan(id,robot.id);
+    }else return;
+    viewport.querySelector(`[data-drag-task="${id}"]`)?.focus({preventScroll:true});
+  });
+  window.addEventListener('blur',()=>cancelPlanDrag());window.addEventListener('pagehide',()=>cancelPlanDrag());window.addEventListener('hashchange',()=>cancelPlanDrag());
+}
+setupDispatchDragging();

@@ -10,14 +10,13 @@
     </div>
     <aside class="panel" style="display:flex;flex-direction:column;min-height:0">
       <div class="field-customer-picker"><span>Betrieb / Kunde</span><button id="field-customer" type="button" aria-haspopup="dialog" onclick="openCustomerPicker()"><span id="field-customer-name">Hof Grünpark</span><span aria-hidden="true">⌄</span></button></div>
-      <div class="panelhead">
-        <h2>
-          Feldliste
-        </h2>
-        <span class="tiny" id="field-customer-count">
-          8 Schläge
-        </span>
+      <div class="panelhead field-list-heading search-heading">
+        <div class="field-list-title"><h2>Feldliste</h2><span class="tiny search-heading-count" id="field-customer-count" role="status">8 Schläge</span></div>
+        <div class="inline-search" role="search" aria-label="Felder suchen"><input id="field-search" type="search" aria-label="Felder suchen" placeholder="Name, Frucht oder Aufgabe …" oninput="filterFieldList()" aria-controls="field-list" autocomplete="off" hidden onkeydown="if(event.key==='Escape'){event.preventDefault();event.stopPropagation();setInlineSearch('field-search',false,true)}"><button id="field-search-toggle" type="button" class="inline-search-toggle" aria-label="Felder suchen" title="Felder suchen" aria-expanded="false" aria-controls="field-search" onclick="toggleInlineSearch('field-search')"><svg class="search-open-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><svg class="search-close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+        <label class="field-sort-label" for="field-sort">Sortieren nach<select id="field-sort" onchange="sortFieldList()"><option value="name">Name · A–Z</option><option value="next">Nächste Aufgabe · A–Z</option><option value="crop">Fruchtart · A–Z</option><option value="area">Feldgröße · größte zuerst</option></select></label>
       </div>
+
+      <p id="field-search-empty" class="list-search-empty" hidden>Keine passenden Felder gefunden.</p>
       <div class="field-list" id="field-list" style="margin:0 10px 10px">
       </div>
     </aside>
@@ -33,7 +32,7 @@
 </section>
 
 <dialog id="customer-picker" class="customer-picker-dialog" aria-labelledby="customer-picker-title">
-  <div class="customer-picker-heading"><h2 id="customer-picker-title">Betrieb auswählen</h2><label class="customer-picker-search"><span class="sr-only">Betrieb suchen</span><input id="customer-search" type="search" placeholder="Betrieb suchen …" oninput="renderCustomerPicker()" autocomplete="off"></label><button class="customer-picker-close" type="button" aria-label="Schließen" onclick="document.getElementById('customer-picker').close()">×</button></div>
+  <div class="customer-picker-heading search-heading"><h2 id="customer-picker-title">Betrieb auswählen</h2><div class="inline-search" role="search" aria-label="Betriebe suchen"><input id="customer-search" type="search" aria-label="Betriebe suchen" placeholder="Betrieb suchen …" oninput="renderCustomerPicker()" aria-controls="customer-picker-list" autocomplete="off" hidden onkeydown="if(event.key==='Escape'){event.preventDefault();event.stopPropagation();setInlineSearch('customer-search',false,true)}"><button id="customer-search-toggle" type="button" class="inline-search-toggle" aria-label="Betriebe suchen" title="Betriebe suchen" aria-expanded="false" aria-controls="customer-search" onclick="toggleInlineSearch('customer-search')"><svg class="search-open-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><svg class="search-close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div><button class="customer-picker-close" type="button" aria-label="Schließen" onclick="document.getElementById('customer-picker').close()">×</button></div>
   <div id="customer-picker-list" class="customer-picker-list"></div>
   <p id="customer-picker-empty" class="customer-picker-empty" hidden>Keine Betriebe gefunden.</p>
 </dialog>

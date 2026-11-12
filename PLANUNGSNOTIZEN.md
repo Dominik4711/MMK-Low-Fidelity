@@ -94,3 +94,122 @@
 - Bestehendes ROBOplan-Design, responsive Tabletansicht. Kamera als SVG-Illustration, Wetter und Messwerte als Demo markiert.
 - FarmDroid zeigt Batterie-/Solarwerte, übrige Fahrzeuge beispielhafte Motor-/Tankdaten. Keine Echtzeit-Anbindung.
 - Pause, Weiter, Stopp, Manuell/Automatik, Richtungstasten und Geschwindigkeit simulieren nur den UI-Zustand. Wartung/Rüstzeit lassen keinen aktiven Auftrag pausieren.
+
+## Globale Statusampel
+
+- Kopfzeile zeigt auf allen Seiten rote, gelbe und grüne Punkte übereinander mit jeweiliger Anzahl rechts daneben. Zahlen aus denselben Roboterdaten wie die Startseitenanzeige.
+- Beschriftungen per Tooltip und für Screenreader. Bestehende Statusanzeige und Filter auf der Startseite unverändert.
+
+## Sortierung der Feldliste
+
+- Dropdown neben „Feldliste“: Name (A–Z, Standard), nächste Aufgabe (A–Z), Fruchtart (A–Z), Feldgröße (größte zuerst).
+- Gleiche Werte werden nach Feldname sortiert. Geöffnete Felder und Kartenauswahl bleiben erhalten.
+
+## Not-Aus an der Hülle
+
+- Roter Not-Aus mit gelbem Sockel oben rechts über dem Joystick. Löst dieselbe Demo-Stoppaktion für den ausgewählten Roboter aus wie die Bedienung in der App.
+- Hüllensteuerung unterstützt auch die lokale HTML-Exportdatei.
+
+## Suche in Feldliste und Flotte
+
+- Feldliste: Live-Suche nach Feldname, Fruchtart, nächster Aufgabe und Größe. Sortierung und aufgeklappte Einträge bleiben erhalten. Auswahl eines ausgeblendeten Feldes auf der Karte setzt die Suche zurück.
+- Flottenmanagement: Suche über Roboter und Geräte, einschließlich Name, ID, Status und Gerätegruppe. Treffergruppen öffnen sich automatisch; beim Leeren kehrt der vorherige Klappzustand zurück.
+- Beide Suchen ignorieren Groß-/Kleinschreibung, berücksichtigen mehrere Suchwörter und zeigen leere Ergebnisse an.
+
+## Touchdisplay am Griff
+
+- Das bisherige rote Nothalt-Bedienelement ist ein kleines flaches Touchdisplay an derselben Position.
+- Zeigt „Nothalt“ ausschließlich bei manueller Bedienung auf der Roboterseite (Pause/Manuell). Sonst bleibt das Display dunkel und inaktiv. Bei Automatik, Seitenwechsel und nach dem Demo-Stopp erlischt die Anzeige.
+- Hülle und App synchronisieren den Zustand auch in der Offline-Exportdatei.
+
+## Funktionsfarben
+
+- Grünes Grunddesign bleibt erhalten. Navigation und Funktionsakzente: Flottenmanagement/Roboter türkis, Disposition einschließlich offener Aufgaben blau, Ackerschläge einschließlich Kartei und Schlagplanung gelb.
+- Auch Unterseiten erhalten ihre Bereichsfarbe; Übersichts-Roboterkarten tragen türkise Akzente. Gelbe Flächen verwenden dunkle Schrift für Lesbarkeit.
+- Ampel, Prioritäten, Karten-Layer und Arbeitsarten behalten ihre inhaltlichen Farbcodes.
+
+## Sprachmodus des KI-Assistenten
+
+- Antippen wechselt von „KI-Assistent“ zu „Aufnehmen“ mit animierten Wellen und „Demo · hört zu …“. Erneut antippen oder Escape beendet den Modus.
+- Bleibt auf allen Seiten verfügbar. Berücksichtigt reduzierte Animationen und kündigt den Zustand für Screenreader an. Rein visueller Demo-Modus ohne Mikrofonaufnahme oder KI-Auswertung.
+
+## Flottenmanagement mit Karte und Maschineninfo
+
+- Zweispaltig wie die Übersicht: links oben schematische Standortkarte, links unten Informationen der ausgewählten Maschine; rechts durchsuchbare Liste mit Robotern und allen bisherigen Anbaugeräten.
+- Auswahl per Listeneintrag oder Roboterpunkt auf der Karte; türkis markierte Auswahl. Maschineninfos enthalten Status, Feld/Aufgabe, Energie und Arbeitsgerät beziehungsweise die bisherigen Geräteangaben. Roboterseite bleibt über „Roboter öffnen“ erreichbar.
+- Nicht angebaute Geräte haben keinen hinterlegten Standort; dafür wird kein Standort erfunden. Bei angebauten Geräten zeigt die Karte den Trägerroboter.
+- Suche, Gruppierung, Kartenvergrößerung und Offline-Export bleiben verfügbar; kleine Bildschirme zeigen die Bereiche untereinander.
+
+## Platzsparende Suche auf dem iPad
+
+- Lupe neben Maschinen, Feldliste und Betriebsauswahl; Antippen öffnet die Suche innerhalb derselben Überschriftenzeile und fokussiert das Feld. Schließen per Kreuz oder Escape setzt den Filter zurück.
+- Feldsortierung wird während der Suche vorübergehend ausgeblendet und ist nach dem Schließen wieder verfügbar.
+- Permanente Suchzeilen entfallen; Flottenliste und Maschineninfos verwenden größere, besser lesbare Schrift und Touchflächen.
+
+## Flottenmanagement als aufklappbare Liste
+
+- Ersetzt die geteilte Karten-/Infoansicht durch eine breite Maschinenliste mit einzeln aufklappbaren Einträgen; alle sechs Roboter und zehn Geräte bleiben erhalten.
+- Gruppen Roboter, Grubber, Drillmaschinen und Hacke/Striegel sind als Überschriften sichtbar. Geschlossene Einträge zeigen Name, ID/Typ, Standort/Träger und bei Robotern den Status.
+- Aufgeklappt stehen alle Maschineninformationen direkt im Eintrag sowie der Zugang zur Roboterseite. Mehrere Einträge lassen sich gleichzeitig öffnen.
+- Suche per Lupe bleibt in der Kopfzeile, filtert auch Detailinformationen und erhält die Klappzustände.
+
+## Aufklappbare Gerätegruppen und Roboterkarten
+
+- Grubber, Drillmaschinen und Hacke/Striegel sind wieder aufklappbare Gruppen; darunter bleiben die einzelnen Geräte aufklappbar. Die Suche öffnet Treffergruppen und stellt beim Leeren deren vorherigen Zustand wieder her.
+- Jeder aufgeklappte Robotereintrag zeigt links seine Standortkarte und rechts die Informationen. Karte auf das aktuelle Feld gezoomt; Roboter ohne Feldauftrag werden auf dem Hof gezeigt. Auf kleinen Telefonbildschirmen stehen Karte und Infos untereinander.
+- Karten werden beim ersten Aufklappen vorbereitet, unterstützen Zoom und seitenfüllende Vergrößerung. Kartentexte fließen nicht in die Maschinensuche ein.
+
+## Benutzermenü und Kontoeinstellungen
+
+- Runder Benutzerbutton oben links öffnet Profil, Einstellungen und Logout. Alle drei führen zur gemeinsamen Kontoseite mit linker Navigation und rechtem Inhalt.
+- Profil: Anzeigename, Betrieb und E-Mail lokal speichern; Initialen aktualisieren sich im Benutzerbutton. Einstellungen: Standard-Startseite und reduzierte Animationen. Kein Serverkonto; Speichern bleibt browserlokal.
+- Logout öffnet zunächst die Kontoseite mit Abmeldeaktion. Demo-Abmeldung sperrt die Ansicht und lässt sich über „Demo wieder öffnen“ aufheben. Profileinstellungen bleiben erhalten.
+- Dropdown bedienbar per Touch und Tastatur, schließt bei Escape oder Klick außerhalb. Neue Unterseite auch im Offline-Export enthalten.
+
+- Kontomenü ergänzt um „Benutzerverwaltung“ mit eigener rechter Inhaltsansicht und Übersicht des lokalen Demo-Profils. Anzeigename und E-Mail übernehmen Änderungen aus dem Profil.
+
+## Admin-Konto und Rollenübersicht
+
+- Aktuelles Konto: Hans Admin. Benutzerverwaltung zeigt zusätzlich Otto Hilfsarbeiter, Frank Bürokraft und Anna Vollbenutzer.
+- Admin: alle Arbeitsbereiche und Rollen zuweisen; Hilfsarbeiter: nur Übersicht und Roboter; Bürokraft: nur Aufgaben anlegen; Vollbenutzer: alle Arbeitsbereiche ohne Benutzerverwaltung.
+- Oben „Neues Benutzerprofil anlegen“, darunter Profile mit Rollenwahl und Kurzbeschreibung des Zugriffs. Aktuelles Admin-Konto bleibt Admin. Neue Profile und Rollenzuweisungen werden lokal gespeichert.
+- Bewusst grobe Demo-Darstellung: kein Kontowechsel und keine echte Anmeldung oder serverseitige Rechteprüfung. Bestehende Ansicht bleibt das Admin-Konto.
+
+## Wischen im Dispositionszeitplan
+
+- Der dreitägige Planungszeitraum ist als durchgehende Zeittabelle horizontal mit nativem Touch-Nachlauf scrollbar. Zeitachse und Auftragsbalken bewegen sich gemeinsam; die Roboterspalte bleibt links stehen.
+- Zeitregler, Datumsanzeige und Tagesauswahl folgen dem sichtbaren Ausschnitt. Tagesbuttons und Pfeile scrollen weich, bei reduzierten Animationen direkt. Ansichten 8/12/24 Stunden behalten ihre Bedeutung.
+- Zeitplan kann fokussiert auch per Pfeiltasten, Bild auf/ab und Anfang/Ende verschoben werden. Antippen einer Aufgabe bleibt erhalten.
+
+## Aufgaben durch Gespannauswahl zuweisen
+
+- Im Aufgabenspeicher zuerst Aufgabe anklicken: Informationen und Gespannauswahl in der Detailansicht. Direkte Roboter-Dropdowns in der Speicherliste entfallen.
+- Wahl zwischen passenden aktiven Gespannen und Zugfahrzeug plus passendem Anbaugerät. Integrierte Hackroboter bleiben feste Einheiten. Fehlerbehaftete oder auf dem Hof stehende Fahrzeuge werden nicht als aktive Gespanne angeboten.
+- Geräte an anderen Zugfahrzeugen oder dafür eingeplante Geräte sind nicht auswählbar. Reine Aufgaben-/Gerätekompatibilität, keine zusätzliche Leistungsberechnung.
+- Bestätigen hängt die Aufgabe ans Ende der Fahrzeug-Auftragsliste. Konkrete Geräte-ID wird in der Aufgabe gespeichert und bei Rüstzeit sowie Aufgaben- und Einsatzinfos berücksichtigt. Bestehende Ist-Anbaugeräte werden durch Planung nicht verändert.
+- Umplanen aus den Einsatzdetails führt ebenfalls zur Gespannauswahl. Rückgabe in den Aufgabenspeicher bleibt möglich.
+
+## Feste Hülle beim Wischen
+
+- Dokumente von Hülle und App gegen Viewport-Overscroll abgesichert; Körper fest im Browserfenster. Einfinger-Touchbewegungen auf der äußeren Hülle lösen keine Seitenscrollbewegung aus. Ereignisse innerhalb der separaten iframe-App bleiben davon unberührt.
+- Zeitplan hat eine begrenzte Scrollfläche mit eigener Größenbegrenzung; die mehrtägige Innenbreite vergrößert nicht das Layout. Horizontales und vertikales Overscroll der Tabelle wird nicht weitergegeben.
+
+- Fahrzeugzuweisung: linke Spalte mit kleinerer Karte, darunter Aufgabe/Fläche und Arbeitsdaten. Rechte Spalte für Gespannauswahl und Einsatz-/Anfahrtsinformationen. Beide Spalten können unabhängig scrollen.
+
+- Aufgabenüberschrift samt Flächendaten, Aufgabennummer und Status sitzt kompakt in derselben Kopfzeile wie „Zurück“ und „Gespann wählen“, um mehr Höhe für Karte und Zuweisung zu gewinnen.
+
+## Tagesvorschlag, Übernahme und direktes Bearbeiten
+
+- KI-Vorschlag auf Übersicht und Disposition. Lokaler heuristischer Demo-Planer berücksichtigt Priorität/Ablaufdatum, Gerätewechsel, Fahrwege und Fahrzeugverfügbarkeit; keine echte KI-Anbindung oder mathematische Optimalitätsgarantie.
+- Vorschlag setzt den Button auf „Vorschlag zurücksetzen“. Snapshot enthält ursprüngliche Aufgaben, Zuweisungen, Reihenfolge und Annahmestatus. Nachträglich angelegte Aufgaben bleiben beim Zurücksetzen offen erhalten.
+- Übernehmen speichert Aufgaben und abgeleitete Fahrzeugpläne browserlokal; Übertragung wird ausdrücklich simuliert, da kein Roboterbackend angebunden ist. Gespeicherter Plan wird beim erneuten Öffnen geladen. Änderungen bleiben Entwurf bis zur erneuten Übernahme.
+- Arbeitsbalken sind per Drag-and-drop zwischen Fahrzeugen und innerhalb der Reihenfolge verschiebbar. Auf Touch-Geräten am Ziehgriff, damit horizontales Wischen erhalten bleibt. Tastaturalternative: Alt+Links/Rechts für Reihenfolge, Alt+Oben/Unten für Fahrzeug.
+- Geeignetes Gerät wird berücksichtigt, gebundene Geräte nicht doppelt vergeben. Rüstzeit und Straßenfahrt werden nach jeder Änderung abgeleitet; bei aufeinanderfolgenden Arbeiten auf derselben Fläche entfällt die Straßenfahrt.
+
+## Prototyp-Bedienung auf dem iPad
+
+- Oberfläche und sichtbarer Ablauf stehen im Vordergrund; keine zusätzliche Backend-Anbindung. Karte in der Disposition per Schaltfläche aus-/einblendbar, Zeitleiste nutzt dann die volle Breite.
+- Aufgabe etwa 0,4 Sekunden halten, um sie aufzunehmen. Direktes Wischen bleibt Scrollen, kurzer Tipp öffnet weiterhin die Informationen. Ziehgriff und Maus-Drag bleiben als Alternativen.
+- Beim Aufnehmen erscheinen große Ablageflächen für „Aufgabenspeicher“ und „Löschen“. Speicher entfernt nur die Zuweisung; Löschen entfernt den lokalen Demo-Auftrag. Letzte Aktion direkt per „Rückgängig“ wiederherstellbar.
+
+- Zusätzliche Vorschlags-Infozeile entfernt, um die sichtbare Zeitleistenhöhe zu erhalten. Der KI-Button wechselt weiterhin auf „Vorschlag zurücksetzen“.
