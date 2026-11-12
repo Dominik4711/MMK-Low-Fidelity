@@ -25,6 +25,7 @@ def build_demo(output="ROBOplan-Demo.html"):
         'robotereinsatz.html',
         'fehler.html',
         'auftragsverwaltung.html',
+        'benutzerkonto.html',
     ]
     content = '\n'.join((ROOT / 'pages' / page).read_text() for page in pages)
 

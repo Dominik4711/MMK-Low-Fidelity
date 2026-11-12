@@ -9,6 +9,7 @@ async function startApplication() {
     'pages/robotereinsatz.html',
     'pages/fehler.html',
     'pages/auftragsverwaltung.html',
+    'pages/benutzerkonto.html',
   ];
 
   try {
@@ -19,7 +20,7 @@ async function startApplication() {
     }));
     content.innerHTML = fragments.join('\n');
     const script = document.createElement('script');
-    script.src = 'app.js?v=20261104-robot-plan43';
+    script.src = 'app.js?v=20261111-proposal-no-banner';
     script.onerror = () => { content.textContent = 'Die Anwendung konnte nicht gestartet werden. Bitte lade die Seite erneut.'; };
     document.body.append(script);
   } catch (error) {
