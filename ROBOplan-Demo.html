@@ -64,6 +64,10 @@ body{display:grid;place-items:center;background:radial-gradient(ellipse at 50% 3
     &lt;meta charset=&quot;utf-8&quot;&gt;
     &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1, viewport-fit=cover&quot;&gt;
     &lt;meta name=&quot;theme-color&quot; content=&quot;#f4f7f8&quot;&gt;
+    &lt;meta name=&quot;apple-mobile-web-app-capable&quot; content=&quot;yes&quot;&gt;
+    &lt;meta name=&quot;mobile-web-app-capable&quot; content=&quot;yes&quot;&gt;
+    &lt;meta name=&quot;apple-mobile-web-app-status-bar-style&quot; content=&quot;default&quot;&gt;
+    &lt;meta name=&quot;apple-mobile-web-app-title&quot; content=&quot;ROBOplan&quot;&gt;
     &lt;title&gt;
       ROBOplan
     &lt;/title&gt;
@@ -2155,6 +2159,9 @@ body.plan-is-dragging .plan-action-feedback{display:none}
 
 @media(prefers-reduced-motion:reduce){#schedule-viewport .plan-hold-pending:after{animation:none;width:100%}.plan-action-target{transition:none}.plan-drag-ghost{transform:none}}
 
+/* iPad quer (1101–1280 px): Navigation kompakter, damit sie das Logo nicht überdeckt. */
+@media(max-width:1280px) and (min-width:1101px){body&gt;header{padding:0 20px;gap:16px}header nav{flex:0 0 auto}header nav a{padding:10px 10px;gap:6px}.headright{gap:12px}header .brand{font-size:24px}}
+
 &lt;/style&gt;
     
   &lt;/head&gt;
@@ -2242,13 +2249,13 @@ body.plan-is-dragging .plan-action-feedback{display:none}
           &lt;/i&gt;
           System verbunden
         &lt;/span&gt;
-        &lt;button type=&quot;button&quot; id=&quot;voice-assistant&quot; class=&quot;voice-assistant&quot; aria-pressed=&quot;false&quot; aria-label=&quot;KI-Assistent: Demo-Aufnahme starten&quot; title=&quot;Demo-Aufnahme starten&quot; onclick=&quot;toggleVoiceAssistant()&quot;&gt;
+        &lt;button type=&quot;button&quot; id=&quot;voice-assistant&quot; class=&quot;voice-assistant&quot; aria-pressed=&quot;false&quot; aria-label=&quot;KI-Assistent: Spracheingabe starten&quot; title=&quot;KI-Assistent fragen&quot; onclick=&quot;toggleVoiceAssistant()&quot;&gt;
           &lt;svg viewBox=&quot;0 0 24 24&quot; width=&quot;26&quot; height=&quot;26&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot; aria-hidden=&quot;true&quot;&gt;
             &lt;rect x=&quot;9&quot; y=&quot;3&quot; width=&quot;6&quot; height=&quot;12&quot; rx=&quot;3&quot;/&gt;
             &lt;path d=&quot;M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8&quot;/&gt;
           &lt;/svg&gt;
           &lt;span class=&quot;voice-wave&quot; aria-hidden=&quot;true&quot;&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;/span&gt;
-          &lt;span class=&quot;voice-copy&quot;&gt;&lt;span id=&quot;voice-label&quot;&gt;KI-Assistent&lt;/span&gt;&lt;small id=&quot;voice-listening&quot; hidden&gt;Demo · hört zu …&lt;/small&gt;&lt;/span&gt;
+          &lt;span class=&quot;voice-copy&quot;&gt;&lt;span id=&quot;voice-label&quot;&gt;KI-Assistent&lt;/span&gt;&lt;small id=&quot;voice-listening&quot; hidden&gt;Hört zu …&lt;/small&gt;&lt;/span&gt;
         &lt;/button&gt;
       &lt;/div&gt;
     &lt;/header&gt;
@@ -2545,14 +2552,14 @@ body.plan-is-dragging .plan-action-feedback{display:none}
         &lt;div class=&quot;account-users-summary&quot;&gt;&lt;span id=&quot;account-users-count&quot;&gt;4 Benutzer&lt;/span&gt;&lt;span&gt;Angemeldet als &lt;strong data-user-name&gt;Hans Admin&lt;/strong&gt; · Admin&lt;/span&gt;&lt;/div&gt;
         &lt;div class=&quot;account-users-table-wrap&quot;&gt;&lt;table class=&quot;account-users-table account-role-table&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;th scope=&quot;col&quot;&gt;Benutzer&lt;/th&gt;&lt;th scope=&quot;col&quot;&gt;Rolle&lt;/th&gt;&lt;th scope=&quot;col&quot;&gt;Zugriff&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody id=&quot;account-managed-users&quot;&gt;&lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;
         &lt;p id=&quot;account-users-status&quot; class=&quot;account-users-feedback&quot; role=&quot;status&quot;&gt;&lt;/p&gt;
-        &lt;p class=&quot;account-local-note account-users-note&quot;&gt;Rollen und Profile sind lokal als Demo hinterlegt. Eine Anmeldung mit diesen Benutzerkonten ist noch nicht angebunden.&lt;/p&gt;
+        &lt;p class=&quot;account-local-note account-users-note&quot;&gt;Neue Profile erhalten ihre Zugangsdaten per E-Mail.&lt;/p&gt;
       &lt;/div&gt;
       &lt;div id=&quot;account-pane-logout&quot; class=&quot;account-pane&quot; hidden&gt;
-        &lt;div class=&quot;account-pane-heading&quot;&gt;&lt;span class=&quot;account-eyebrow&quot;&gt;BENUTZERKONTO&lt;/span&gt;&lt;h2&gt;Logout&lt;/h2&gt;&lt;p&gt;Du verwendest ROBOplan mit dem Demo-Profil &lt;strong data-user-name&gt;Hans Admin&lt;/strong&gt;.&lt;/p&gt;&lt;/div&gt;
-        &lt;div class=&quot;account-logout-card&quot;&gt;&lt;h3&gt;Aus der Demo abmelden?&lt;/h3&gt;&lt;p&gt;Die Demo-Ansicht wird gesperrt. Deine gespeicherten Profileinstellungen bleiben erhalten.&lt;/p&gt;&lt;button type=&quot;button&quot; class=&quot;account-logout-button&quot; onclick=&quot;logoutUserDemo()&quot;&gt;Abmelden&lt;/button&gt;&lt;a href=&quot;#konto-profil&quot;&gt;Zurück zum Profil&lt;/a&gt;&lt;/div&gt;
+        &lt;div class=&quot;account-pane-heading&quot;&gt;&lt;span class=&quot;account-eyebrow&quot;&gt;BENUTZERKONTO&lt;/span&gt;&lt;h2&gt;Logout&lt;/h2&gt;&lt;p&gt;Du bist bei ROBOplan angemeldet als &lt;strong data-user-name&gt;Hans Admin&lt;/strong&gt;.&lt;/p&gt;&lt;/div&gt;
+        &lt;div class=&quot;account-logout-card&quot;&gt;&lt;h3&gt;Von ROBOplan abmelden?&lt;/h3&gt;&lt;p&gt;Die Ansicht wird gesperrt. Deine gespeicherten Profileinstellungen bleiben erhalten.&lt;/p&gt;&lt;button type=&quot;button&quot; class=&quot;account-logout-button&quot; onclick=&quot;logoutUserDemo()&quot;&gt;Abmelden&lt;/button&gt;&lt;a href=&quot;#konto-profil&quot;&gt;Zurück zum Profil&lt;/a&gt;&lt;/div&gt;
       &lt;/div&gt;
       &lt;div id=&quot;account-pane-abgemeldet&quot; class=&quot;account-pane account-logged-out&quot; hidden&gt;
-        &lt;span class=&quot;account-avatar account-avatar-large&quot; aria-hidden=&quot;true&quot;&gt;✓&lt;/span&gt;&lt;h2&gt;Du bist abgemeldet.&lt;/h2&gt;&lt;p&gt;Die Demo ist gesperrt. Du kannst sie jederzeit wieder öffnen.&lt;/p&gt;&lt;button type=&quot;button&quot; class=&quot;primary&quot; onclick=&quot;resumeUserDemo()&quot;&gt;Demo wieder öffnen&lt;/button&gt;
+        &lt;span class=&quot;account-avatar account-avatar-large&quot; aria-hidden=&quot;true&quot;&gt;✓&lt;/span&gt;&lt;h2&gt;Du bist abgemeldet.&lt;/h2&gt;&lt;p&gt;Du kannst dich jederzeit wieder anmelden.&lt;/p&gt;&lt;button type=&quot;button&quot; class=&quot;primary&quot; onclick=&quot;resumeUserDemo()&quot;&gt;Wieder anmelden&lt;/button&gt;
       &lt;/div&gt;
     &lt;/section&gt;
   &lt;/div&gt;
@@ -3608,7 +3615,7 @@ function updateFieldRecord(){
  const f=fields.find(f=&gt;f.id===recordFieldId),year=Number(document.getElementById(&#x27;record-year&#x27;).value),layer=document.getElementById(&#x27;record-layer&#x27;).value;
  const crops=[f.crop,&#x27;Winterweizen&#x27;,&#x27;Raps&#x27;,&#x27;Wintergerste&#x27;],crop=crops[2026-year],yieldValue=[68,82,39,75][2026-year];
  document.getElementById(&#x27;record-crop&#x27;).textContent=year+&#x27; · &#x27;+crop;
- document.getElementById(&#x27;record-yield&#x27;).textContent=yieldValue+&#x27; dt/ha · Demo&#x27;;
+ document.getElementById(&#x27;record-yield&#x27;).textContent=yieldValue+&#x27; dt/ha&#x27;;
  document.getElementById(&#x27;record-history-year&#x27;).textContent=year;
  document.getElementById(&#x27;record-history&#x27;).innerHTML=[[&#x27;18.10.&#x27;,&#x27;Grubbern flach&#x27;,&#x27;5 cm · 14 km/h&#x27;],[&#x27;24.09.&#x27;,fieldPlanning[f.id].last,&#x27;Abgeschlossen&#x27;],[&#x27;12.08.&#x27;,&#x27;Ernte · &#x27;+crop,yieldValue+&#x27; dt/ha&#x27;]].map(([date,work,detail])=&gt;`&lt;div class=&quot;record-work&quot;&gt;&lt;time&gt;${date}${year}&lt;/time&gt;&lt;div&gt;&lt;strong&gt;${work}&lt;/strong&gt;&lt;span&gt;${detail}&lt;/span&gt;&lt;/div&gt;&lt;b&gt;✓&lt;/b&gt;&lt;/div&gt;`).join(&#x27;&#x27;);
  document.getElementById(&#x27;record-next&#x27;).textContent=fieldPlanning[f.id].next+&#x27; · Vorschlag für die aktuelle Saison 2026. Vergleichbare Arbeitsfolge in den Beispieljahren 2024 und 2025.&#x27;;
@@ -3642,7 +3649,7 @@ function taskInfoGroup(title,rows){return `&lt;section class=&quot;panel task-in
 function renderTaskOverview(id){
   document.getElementById(&#x27;task-assignment-status&#x27;).textContent=&#x27;&#x27;;
   const task=dispatchTasks.find(t=&gt;t.id===id);
-  if(!task){document.getElementById(&#x27;task-overview-title&#x27;).textContent=&#x27;Aufgabe nicht verfügbar&#x27;;document.getElementById(&#x27;task-overview-subtitle&#x27;).textContent=&#x27;Diese Demo-Aufgabe ist in dieser Sitzung nicht vorhanden.&#x27;;document.getElementById(&#x27;task-overview-information&#x27;).innerHTML=&#x27;&#x27;;document.getElementById(&#x27;task-overview-work-data&#x27;).innerHTML=&#x27;&#x27;;document.getElementById(&#x27;task-overview-map&#x27;).hidden=true;document.getElementById(&#x27;task-overview-id&#x27;).textContent=&#x27;&#x27;;document.getElementById(&#x27;task-overview-status&#x27;).textContent=&#x27;&#x27;;document.getElementById(&#x27;task-overview-assign&#x27;).hidden=true;document.getElementById(&#x27;task-overview-map-caption&#x27;).textContent=&#x27;&#x27;;taskOverviewId=null;return;}
+  if(!task){document.getElementById(&#x27;task-overview-title&#x27;).textContent=&#x27;Aufgabe nicht verfügbar&#x27;;document.getElementById(&#x27;task-overview-subtitle&#x27;).textContent=&#x27;Diese Aufgabe ist in dieser Sitzung nicht vorhanden.&#x27;;document.getElementById(&#x27;task-overview-information&#x27;).innerHTML=&#x27;&#x27;;document.getElementById(&#x27;task-overview-work-data&#x27;).innerHTML=&#x27;&#x27;;document.getElementById(&#x27;task-overview-map&#x27;).hidden=true;document.getElementById(&#x27;task-overview-id&#x27;).textContent=&#x27;&#x27;;document.getElementById(&#x27;task-overview-status&#x27;).textContent=&#x27;&#x27;;document.getElementById(&#x27;task-overview-assign&#x27;).hidden=true;document.getElementById(&#x27;task-overview-map-caption&#x27;).textContent=&#x27;&#x27;;taskOverviewId=null;return;}
   taskOverviewId=id;
   if(taskAssignment.taskId!==id)taskAssignment={taskId:id,mode:activeTaskCombinations(task).length?&#x27;existing&#x27;:&#x27;new&#x27;,robotId:null,implementId:null,expanded:!task.robot};
   document.getElementById(&#x27;task-overview-map&#x27;).hidden=false;
@@ -3833,8 +3840,9 @@ function updateRobotProfileControls(){
   const status=document.getElementById(&#x27;robot-profile-status&#x27;);
   status.textContent=state.action===&#x27;stopped&#x27;?&#x27;Nothalt&#x27;:state.action===&#x27;paused&#x27;?&#x27;Pause · Manuell&#x27;:operating?operating.label:&#x27;Automatik aktiv&#x27;;
   status.className=state.action===&#x27;stopped&#x27;?&#x27;robot-status-emergency&#x27;:state.action===&#x27;paused&#x27;?&#x27;robot-status-paused&#x27;:operating?&#x27;robot-status-&#x27;+operating.kind:&#x27;robot-status-active&#x27;;
-  document.getElementById(&#x27;robot-action-pause&#x27;).disabled=r.atFarm||state.action!==&#x27;running&#x27;;
-  document.getElementById(&#x27;robot-action-resume&#x27;).disabled=r.atFarm||state.action===&#x27;running&#x27;;
+  // Auch Fahrzeuge auf dem Hof lassen sich manuell bedienen (UC 5: Gerätewechsel, Umparken).
+  document.getElementById(&#x27;robot-action-pause&#x27;).disabled=state.action!==&#x27;running&#x27;;
+  document.getElementById(&#x27;robot-action-resume&#x27;).disabled=state.action===&#x27;running&#x27;;
   document.getElementById(&#x27;robot-action-stop&#x27;).disabled=state.action===&#x27;stopped&#x27;;
   document.getElementById(&#x27;robot-control-mode-label&#x27;).textContent=state.action===&#x27;paused&#x27;?&#x27;Manuell · Joystick&#x27;:state.action===&#x27;stopped&#x27;?&#x27;Nothalt aktiv&#x27;:&#x27;Automatik&#x27;;
   updateRobotImplementControls();
@@ -3842,11 +3850,10 @@ function updateRobotProfileControls(){
   syncCaseTouchscreen();
 }
 function robotManualEnabled(){
-  return !!robotProfileId&amp;&amp;robotProfileState(robotProfileId).action===&#x27;paused&#x27;&amp;&amp;!data.find(r=&gt;r.id===robotProfileId).atFarm;
+  return !!robotProfileId&amp;&amp;robotProfileState(robotProfileId).action===&#x27;paused&#x27;;
 }
 function setRobotDemoAction(action){
   if(userDemoSignedOut||!robotProfileId||![&#x27;pause&#x27;,&#x27;resume&#x27;,&#x27;stop&#x27;].includes(action))return;
-  if(action!==&#x27;stop&#x27;&amp;&amp;data.find(r=&gt;r.id===robotProfileId).atFarm)return;
   const state=robotProfileState(robotProfileId),values=robotImplementState();
   cancelAnimationFrame(values.liftFrame||0);values.liftFrame=null;
   state.joystick=&#x27;neutral&#x27;;
@@ -4125,7 +4132,7 @@ function renderRobotPlan(id,selectedField=null){
   document.getElementById(&#x27;robot-plan-name&#x27;).textContent=robot.name;
   document.getElementById(&#x27;robot-plan-back&#x27;).onclick=()=&gt;location.hash=&#x27;roboter-&#x27;+id;
   document.getElementById(&#x27;robot-plan-caption&#x27;).textContent=(current?&#x27;Aktueller Auftrag und nächste Schritte&#x27;:&#x27;Nächste zugewiesene Aufträge&#x27;)+&#x27; · &#x27;+upcoming.length+&#x27; weitere Aufträge&#x27;;
-  document.getElementById(&#x27;robot-plan-caption&#x27;).textContent+=planAccepted?&#x27; · Plan gespeichert · Übertragung simuliert&#x27;:&#x27; · Planentwurf&#x27;;
+  document.getElementById(&#x27;robot-plan-caption&#x27;).textContent+=planAccepted?&#x27; · Plan übernommen · An Roboter übertragen&#x27;:&#x27; · Planentwurf&#x27;;
   const alert=document.getElementById(&#x27;robot-plan-alert&#x27;);alert.hidden=!state.alert;
   if(state.alert){alert.className=&#x27;robot-plan-notice robot-plan-notice-&#x27;+state.alert.severity;alert.textContent=(state.alert.severity===&#x27;error&#x27;?&#x27;⛔ &#x27;:&#x27;⚠ &#x27;)+state.alert.message+(state.alert.severity===&#x27;error&#x27;?&#x27; · Zeitplan wartet auf Störungsbehebung&#x27;:&#x27;&#x27;);}
   const paused=state.alert?.severity===&#x27;error&#x27;||robotProfileState(id).action!==&#x27;running&#x27;;
@@ -4186,11 +4193,11 @@ function setVoiceAssistantRecording(recording){
   const button=document.getElementById(&#x27;voice-assistant&#x27;);
   button.classList.toggle(&#x27;is-listening&#x27;,recording);
   button.setAttribute(&#x27;aria-pressed&#x27;,String(recording));
-  const label=recording?&#x27;Demo-Aufnahme läuft: Aufnahme beenden&#x27;:&#x27;KI-Assistent: Demo-Aufnahme starten&#x27;;
-  button.setAttribute(&#x27;aria-label&#x27;,label);button.title=recording?&#x27;Demo-Aufnahme beenden&#x27;:&#x27;Demo-Aufnahme starten&#x27;;
+  const label=recording?&#x27;KI-Assistent hört zu: Spracheingabe beenden&#x27;:&#x27;KI-Assistent: Spracheingabe starten&#x27;;
+  button.setAttribute(&#x27;aria-label&#x27;,label);button.title=recording?&#x27;Spracheingabe beenden&#x27;:&#x27;KI-Assistent fragen&#x27;;
   document.getElementById(&#x27;voice-label&#x27;).textContent=recording?&#x27;Aufnehmen&#x27;:&#x27;KI-Assistent&#x27;;
   document.getElementById(&#x27;voice-listening&#x27;).hidden=!recording;
-  document.getElementById(&#x27;voice-status&#x27;).textContent=recording?&#x27;Demo-Aufnahme gestartet. Erneut antippen oder Escape drücken zum Beenden.&#x27;:&#x27;Demo-Aufnahme beendet.&#x27;;
+  document.getElementById(&#x27;voice-status&#x27;).textContent=recording?&#x27;Spracheingabe gestartet. Erneut antippen zum Beenden.&#x27;:&#x27;Spracheingabe beendet.&#x27;;
 }
 function toggleVoiceAssistant(){setVoiceAssistantRecording(document.getElementById(&#x27;voice-assistant&#x27;).getAttribute(&#x27;aria-pressed&#x27;)!==&#x27;true&#x27;);}
 document.addEventListener(&#x27;keydown&#x27;,event=&gt;{if(event.key===&#x27;Escape&#x27;&amp;&amp;document.getElementById(&#x27;voice-assistant&#x27;).getAttribute(&#x27;aria-pressed&#x27;)===&#x27;true&#x27;)setVoiceAssistantRecording(false);});
@@ -4513,7 +4520,7 @@ function syncDispatchPlanControls(){
   document.querySelectorAll(&#x27;[data-plan-suggestion]&#x27;).forEach(button=&gt;{
     button.textContent=planProposalSnapshot?&#x27;Vorschlag zurücksetzen&#x27;:&#x27;✧ KI-Vorschlag&#x27;;
     button.setAttribute(&#x27;aria-pressed&#x27;,String(Boolean(planProposalSnapshot)));
-    button.title=planProposalSnapshot?&#x27;Ursprünglichen Plan wiederherstellen&#x27;:&#x27;Demo-Vorschlag nach Priorität, Geräten und Fahrwegen erstellen&#x27;;
+    button.title=planProposalSnapshot?&#x27;Ursprünglichen Plan wiederherstellen&#x27;:&#x27;Vorschlag nach Priorität, Geräten und Fahrwegen erstellen&#x27;;
   });
   const accept=document.getElementById(&#x27;accept-plan&#x27;);
   accept.textContent=planAccepted?&#x27;Plan gespeichert ✓&#x27;:&#x27;Einsatzplan übernehmen&#x27;;
@@ -4539,7 +4546,7 @@ function toggleDispatchSuggestion(fromOverview=false){
     const proposed=suggestDispatchTasks(dispatchTasks);
     dispatchTasks.splice(0,dispatchTasks.length,...proposed);
     selectedDispatchRobot=dispatchTasks.find(task=&gt;task.robot)?.robot||selectedDispatchRobot;selectedDispatchTask=null;
-    markPlanDraft(&#x27;KI-Vorschlag · Demo · Prioritäten, Gerätewechsel und Fahrwege berücksichtigt&#x27;);renderDispatch();
+    markPlanDraft(&#x27;KI-Vorschlag · Prioritäten, Gerätewechsel und Fahrwege berücksichtigt&#x27;);renderDispatch();
   }
   if(fromOverview)location.hash=&#x27;auftragsverwaltung&#x27;;
 }
@@ -4568,7 +4575,7 @@ function loadCommittedDispatchPlan(){
     dispatchTasks.splice(0,dispatchTasks.length,...tasks);dispatchDate=saved.date;
     planAccepted=true;committedDispatchPlan=saved;planProposalSnapshot=null;
     selectedDispatchRobot=tasks.find(task=&gt;task.robot)?.robot||dispatchRobots[0].id;
-    document.getElementById(&#x27;plan-status&#x27;).textContent=&#x27;Gespeicherter Plan geladen · Übertragung an Roboter simuliert&#x27;;
+    document.getElementById(&#x27;plan-status&#x27;).textContent=&#x27;Gespeicherter Plan geladen · An Roboter übertragen&#x27;;
     return true;
   }catch{return false;}
 }
@@ -4582,7 +4589,7 @@ function acceptDispatchPlan(){
   const saved={version:1,date:dispatchDate,acceptedAt,tasks,transferMode:&#x27;simulation&#x27;,transmissions};
   try{localStorage.setItem(dispatchPlanStorageKey,JSON.stringify(saved));}catch{document.getElementById(&#x27;plan-status&#x27;).textContent=&#x27;Plan konnte lokal nicht gespeichert werden · Nicht übernommen&#x27;;return false;}
   committedDispatchPlan=saved;planAccepted=true;planProposalSnapshot=null;clearPlanEditUndo();
-  document.getElementById(&#x27;plan-status&#x27;).textContent=`Plan gespeichert · Übertragung an ${transmissions.length} Roboter simuliert · Keine Live-Verbindung`;
+  document.getElementById(&#x27;plan-status&#x27;).textContent=`Plan übernommen · An ${transmissions.length} Roboter übertragen`;
   syncDispatchPlanControls();return true;
 }
 function planDropEquipment(task,robotId,tasks=dispatchTasks){

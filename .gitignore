@@ -1,0 +1,4 @@
+# Personenbezogene Testdaten nie einchecken
+studien-daten/
+__pycache__/
+.DS_Store

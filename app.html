@@ -4,11 +4,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#f4f7f8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ROBOplan">
     <title>
       ROBOplan
     </title>
-    <link rel="stylesheet" href="styles.css?v=20261111-proposal-no-banner">
-    <script src="bootstrap.js?v=20261111-proposal-no-banner" defer>
+    <link rel="stylesheet" href="styles.css?v=20261125-studie">
+    <script src="bootstrap.js?v=20261125-studie" defer>
     </script>
   </head>
   <body>
@@ -95,13 +99,13 @@
           </i>
           System verbunden
         </span>
-        <button type="button" id="voice-assistant" class="voice-assistant" aria-pressed="false" aria-label="KI-Assistent: Demo-Aufnahme starten" title="Demo-Aufnahme starten" onclick="toggleVoiceAssistant()">
+        <button type="button" id="voice-assistant" class="voice-assistant" aria-pressed="false" aria-label="KI-Assistent: Spracheingabe starten" title="KI-Assistent fragen" onclick="toggleVoiceAssistant()">
           <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="9" y="3" width="6" height="12" rx="3"/>
             <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/>
           </svg>
           <span class="voice-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
-          <span class="voice-copy"><span id="voice-label">KI-Assistent</span><small id="voice-listening" hidden>Demo · hört zu …</small></span>
+          <span class="voice-copy"><span id="voice-label">KI-Assistent</span><small id="voice-listening" hidden>Hört zu …</small></span>
         </button>
       </div>
     </header>

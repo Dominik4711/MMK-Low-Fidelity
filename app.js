@@ -1029,7 +1029,7 @@ function updateFieldRecord(){
  const f=fields.find(f=>f.id===recordFieldId),year=Number(document.getElementById('record-year').value),layer=document.getElementById('record-layer').value;
  const crops=[f.crop,'Winterweizen','Raps','Wintergerste'],crop=crops[2026-year],yieldValue=[68,82,39,75][2026-year];
  document.getElementById('record-crop').textContent=year+' · '+crop;
- document.getElementById('record-yield').textContent=yieldValue+' dt/ha · Demo';
+ document.getElementById('record-yield').textContent=yieldValue+' dt/ha';
  document.getElementById('record-history-year').textContent=year;
  document.getElementById('record-history').innerHTML=[['18.10.','Grubbern flach','5 cm · 14 km/h'],['24.09.',fieldPlanning[f.id].last,'Abgeschlossen'],['12.08.','Ernte · '+crop,yieldValue+' dt/ha']].map(([date,work,detail])=>`<div class="record-work"><time>${date}${year}</time><div><strong>${work}</strong><span>${detail}</span></div><b>✓</b></div>`).join('');
  document.getElementById('record-next').textContent=fieldPlanning[f.id].next+' · Vorschlag für die aktuelle Saison 2026. Vergleichbare Arbeitsfolge in den Beispieljahren 2024 und 2025.';
@@ -1063,7 +1063,7 @@ function taskInfoGroup(title,rows){return `<section class="panel task-info-group
 function renderTaskOverview(id){
   document.getElementById('task-assignment-status').textContent='';
   const task=dispatchTasks.find(t=>t.id===id);
-  if(!task){document.getElementById('task-overview-title').textContent='Aufgabe nicht verfügbar';document.getElementById('task-overview-subtitle').textContent='Diese Demo-Aufgabe ist in dieser Sitzung nicht vorhanden.';document.getElementById('task-overview-information').innerHTML='';document.getElementById('task-overview-work-data').innerHTML='';document.getElementById('task-overview-map').hidden=true;document.getElementById('task-overview-id').textContent='';document.getElementById('task-overview-status').textContent='';document.getElementById('task-overview-assign').hidden=true;document.getElementById('task-overview-map-caption').textContent='';taskOverviewId=null;return;}
+  if(!task){document.getElementById('task-overview-title').textContent='Aufgabe nicht verfügbar';document.getElementById('task-overview-subtitle').textContent='Diese Aufgabe ist in dieser Sitzung nicht vorhanden.';document.getElementById('task-overview-information').innerHTML='';document.getElementById('task-overview-work-data').innerHTML='';document.getElementById('task-overview-map').hidden=true;document.getElementById('task-overview-id').textContent='';document.getElementById('task-overview-status').textContent='';document.getElementById('task-overview-assign').hidden=true;document.getElementById('task-overview-map-caption').textContent='';taskOverviewId=null;return;}
   taskOverviewId=id;
   if(taskAssignment.taskId!==id)taskAssignment={taskId:id,mode:activeTaskCombinations(task).length?'existing':'new',robotId:null,implementId:null,expanded:!task.robot};
   document.getElementById('task-overview-map').hidden=false;
@@ -1254,8 +1254,9 @@ function updateRobotProfileControls(){
   const status=document.getElementById('robot-profile-status');
   status.textContent=state.action==='stopped'?'Nothalt':state.action==='paused'?'Pause · Manuell':operating?operating.label:'Automatik aktiv';
   status.className=state.action==='stopped'?'robot-status-emergency':state.action==='paused'?'robot-status-paused':operating?'robot-status-'+operating.kind:'robot-status-active';
-  document.getElementById('robot-action-pause').disabled=r.atFarm||state.action!=='running';
-  document.getElementById('robot-action-resume').disabled=r.atFarm||state.action==='running';
+  // Auch Fahrzeuge auf dem Hof lassen sich manuell bedienen (UC 5: Gerätewechsel, Umparken).
+  document.getElementById('robot-action-pause').disabled=state.action!=='running';
+  document.getElementById('robot-action-resume').disabled=state.action==='running';
   document.getElementById('robot-action-stop').disabled=state.action==='stopped';
   document.getElementById('robot-control-mode-label').textContent=state.action==='paused'?'Manuell · Joystick':state.action==='stopped'?'Nothalt aktiv':'Automatik';
   updateRobotImplementControls();
@@ -1263,11 +1264,10 @@ function updateRobotProfileControls(){
   syncCaseTouchscreen();
 }
 function robotManualEnabled(){
-  return !!robotProfileId&&robotProfileState(robotProfileId).action==='paused'&&!data.find(r=>r.id===robotProfileId).atFarm;
+  return !!robotProfileId&&robotProfileState(robotProfileId).action==='paused';
 }
 function setRobotDemoAction(action){
   if(userDemoSignedOut||!robotProfileId||!['pause','resume','stop'].includes(action))return;
-  if(action!=='stop'&&data.find(r=>r.id===robotProfileId).atFarm)return;
   const state=robotProfileState(robotProfileId),values=robotImplementState();
   cancelAnimationFrame(values.liftFrame||0);values.liftFrame=null;
   state.joystick='neutral';
@@ -1546,7 +1546,7 @@ function renderRobotPlan(id,selectedField=null){
   document.getElementById('robot-plan-name').textContent=robot.name;
   document.getElementById('robot-plan-back').onclick=()=>location.hash='roboter-'+id;
   document.getElementById('robot-plan-caption').textContent=(current?'Aktueller Auftrag und nächste Schritte':'Nächste zugewiesene Aufträge')+' · '+upcoming.length+' weitere Aufträge';
-  document.getElementById('robot-plan-caption').textContent+=planAccepted?' · Plan gespeichert · Übertragung simuliert':' · Planentwurf';
+  document.getElementById('robot-plan-caption').textContent+=planAccepted?' · Plan übernommen · An Roboter übertragen':' · Planentwurf';
   const alert=document.getElementById('robot-plan-alert');alert.hidden=!state.alert;
   if(state.alert){alert.className='robot-plan-notice robot-plan-notice-'+state.alert.severity;alert.textContent=(state.alert.severity==='error'?'⛔ ':'⚠ ')+state.alert.message+(state.alert.severity==='error'?' · Zeitplan wartet auf Störungsbehebung':'');}
   const paused=state.alert?.severity==='error'||robotProfileState(id).action!=='running';
@@ -1607,11 +1607,11 @@ function setVoiceAssistantRecording(recording){
   const button=document.getElementById('voice-assistant');
   button.classList.toggle('is-listening',recording);
   button.setAttribute('aria-pressed',String(recording));
-  const label=recording?'Demo-Aufnahme läuft: Aufnahme beenden':'KI-Assistent: Demo-Aufnahme starten';
-  button.setAttribute('aria-label',label);button.title=recording?'Demo-Aufnahme beenden':'Demo-Aufnahme starten';
+  const label=recording?'KI-Assistent hört zu: Spracheingabe beenden':'KI-Assistent: Spracheingabe starten';
+  button.setAttribute('aria-label',label);button.title=recording?'Spracheingabe beenden':'KI-Assistent fragen';
   document.getElementById('voice-label').textContent=recording?'Aufnehmen':'KI-Assistent';
   document.getElementById('voice-listening').hidden=!recording;
-  document.getElementById('voice-status').textContent=recording?'Demo-Aufnahme gestartet. Erneut antippen oder Escape drücken zum Beenden.':'Demo-Aufnahme beendet.';
+  document.getElementById('voice-status').textContent=recording?'Spracheingabe gestartet. Erneut antippen zum Beenden.':'Spracheingabe beendet.';
 }
 function toggleVoiceAssistant(){setVoiceAssistantRecording(document.getElementById('voice-assistant').getAttribute('aria-pressed')!=='true');}
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.getElementById('voice-assistant').getAttribute('aria-pressed')==='true')setVoiceAssistantRecording(false);});
@@ -1934,7 +1934,7 @@ function syncDispatchPlanControls(){
   document.querySelectorAll('[data-plan-suggestion]').forEach(button=>{
     button.textContent=planProposalSnapshot?'Vorschlag zurücksetzen':'✧ KI-Vorschlag';
     button.setAttribute('aria-pressed',String(Boolean(planProposalSnapshot)));
-    button.title=planProposalSnapshot?'Ursprünglichen Plan wiederherstellen':'Demo-Vorschlag nach Priorität, Geräten und Fahrwegen erstellen';
+    button.title=planProposalSnapshot?'Ursprünglichen Plan wiederherstellen':'Vorschlag nach Priorität, Geräten und Fahrwegen erstellen';
   });
   const accept=document.getElementById('accept-plan');
   accept.textContent=planAccepted?'Plan gespeichert ✓':'Einsatzplan übernehmen';
@@ -1960,7 +1960,7 @@ function toggleDispatchSuggestion(fromOverview=false){
     const proposed=suggestDispatchTasks(dispatchTasks);
     dispatchTasks.splice(0,dispatchTasks.length,...proposed);
     selectedDispatchRobot=dispatchTasks.find(task=>task.robot)?.robot||selectedDispatchRobot;selectedDispatchTask=null;
-    markPlanDraft('KI-Vorschlag · Demo · Prioritäten, Gerätewechsel und Fahrwege berücksichtigt');renderDispatch();
+    markPlanDraft('KI-Vorschlag · Prioritäten, Gerätewechsel und Fahrwege berücksichtigt');renderDispatch();
   }
   if(fromOverview)location.hash='auftragsverwaltung';
 }
@@ -1989,7 +1989,7 @@ function loadCommittedDispatchPlan(){
     dispatchTasks.splice(0,dispatchTasks.length,...tasks);dispatchDate=saved.date;
     planAccepted=true;committedDispatchPlan=saved;planProposalSnapshot=null;
     selectedDispatchRobot=tasks.find(task=>task.robot)?.robot||dispatchRobots[0].id;
-    document.getElementById('plan-status').textContent='Gespeicherter Plan geladen · Übertragung an Roboter simuliert';
+    document.getElementById('plan-status').textContent='Gespeicherter Plan geladen · An Roboter übertragen';
     return true;
   }catch{return false;}
 }
@@ -2003,7 +2003,7 @@ function acceptDispatchPlan(){
   const saved={version:1,date:dispatchDate,acceptedAt,tasks,transferMode:'simulation',transmissions};
   try{localStorage.setItem(dispatchPlanStorageKey,JSON.stringify(saved));}catch{document.getElementById('plan-status').textContent='Plan konnte lokal nicht gespeichert werden · Nicht übernommen';return false;}
   committedDispatchPlan=saved;planAccepted=true;planProposalSnapshot=null;clearPlanEditUndo();
-  document.getElementById('plan-status').textContent=`Plan gespeichert · Übertragung an ${transmissions.length} Roboter simuliert · Keine Live-Verbindung`;
+  document.getElementById('plan-status').textContent=`Plan übernommen · An ${transmissions.length} Roboter übertragen`;
   syncDispatchPlanControls();return true;
 }
 function planDropEquipment(task,robotId,tasks=dispatchTasks){
