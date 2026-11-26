@@ -44,14 +44,14 @@
         <div class="account-users-summary"><span id="account-users-count">4 Benutzer</span><span>Angemeldet als <strong data-user-name>Hans Admin</strong> · Admin</span></div>
         <div class="account-users-table-wrap"><table class="account-users-table account-role-table"><thead><tr><th scope="col">Benutzer</th><th scope="col">Rolle</th><th scope="col">Zugriff</th></tr></thead><tbody id="account-managed-users"></tbody></table></div>
         <p id="account-users-status" class="account-users-feedback" role="status"></p>
-        <p class="account-local-note account-users-note">Rollen und Profile sind lokal als Demo hinterlegt. Eine Anmeldung mit diesen Benutzerkonten ist noch nicht angebunden.</p>
+        <p class="account-local-note account-users-note">Neue Profile erhalten ihre Zugangsdaten per E-Mail.</p>
       </div>
       <div id="account-pane-logout" class="account-pane" hidden>
-        <div class="account-pane-heading"><span class="account-eyebrow">BENUTZERKONTO</span><h2>Logout</h2><p>Du verwendest ROBOplan mit dem Demo-Profil <strong data-user-name>Hans Admin</strong>.</p></div>
-        <div class="account-logout-card"><h3>Aus der Demo abmelden?</h3><p>Die Demo-Ansicht wird gesperrt. Deine gespeicherten Profileinstellungen bleiben erhalten.</p><button type="button" class="account-logout-button" onclick="logoutUserDemo()">Abmelden</button><a href="#konto-profil">Zurück zum Profil</a></div>
+        <div class="account-pane-heading"><span class="account-eyebrow">BENUTZERKONTO</span><h2>Logout</h2><p>Du bist bei ROBOplan angemeldet als <strong data-user-name>Hans Admin</strong>.</p></div>
+        <div class="account-logout-card"><h3>Von ROBOplan abmelden?</h3><p>Die Ansicht wird gesperrt. Deine gespeicherten Profileinstellungen bleiben erhalten.</p><button type="button" class="account-logout-button" onclick="logoutUserDemo()">Abmelden</button><a href="#konto-profil">Zurück zum Profil</a></div>
       </div>
       <div id="account-pane-abgemeldet" class="account-pane account-logged-out" hidden>
-        <span class="account-avatar account-avatar-large" aria-hidden="true">✓</span><h2>Du bist abgemeldet.</h2><p>Die Demo ist gesperrt. Du kannst sie jederzeit wieder öffnen.</p><button type="button" class="primary" onclick="resumeUserDemo()">Demo wieder öffnen</button>
+        <span class="account-avatar account-avatar-large" aria-hidden="true">✓</span><h2>Du bist abgemeldet.</h2><p>Du kannst dich jederzeit wieder anmelden.</p><button type="button" class="primary" onclick="resumeUserDemo()">Wieder anmelden</button>
       </div>
     </section>
   </div>

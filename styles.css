@@ -2084,3 +2084,6 @@ body.plan-is-dragging .plan-action-feedback{display:none}
 @media(max-width:760px){.dispatch-map-toggle{font-size:10px;padding:8px}.plan-drop-dock{gap:7px;padding:8px;bottom:12px}.plan-action-target{gap:8px;min-height:72px;padding:10px 8px}.plan-action-target strong{font-size:12px}.plan-action-target>svg{width:24px;height:24px}.plan-action-feedback{font-size:11px;gap:10px}.plan-drop-dock .plan-action-target small{font-size:9px}}
 
 @media(prefers-reduced-motion:reduce){#schedule-viewport .plan-hold-pending:after{animation:none;width:100%}.plan-action-target{transition:none}.plan-drag-ghost{transform:none}}
+
+/* iPad quer (1101–1280 px): Navigation kompakter, damit sie das Logo nicht überdeckt. */
+@media(max-width:1280px) and (min-width:1101px){body>header{padding:0 20px;gap:16px}header nav{flex:0 0 auto}header nav a{padding:10px 10px;gap:6px}.headright{gap:12px}header .brand{font-size:24px}}
